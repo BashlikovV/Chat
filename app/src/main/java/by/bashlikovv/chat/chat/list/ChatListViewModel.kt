@@ -37,5 +37,7 @@ class ChatListViewModel : ViewModel() {
         return _chatListUiState.value.filter { it.name != item.name }
     }
 
-    fun onChatListItemClicked(item: ChatListUiState) = item
+    fun onChatListItemClicked(item: ChatListUiState) {
+        TODO()
+    }
 }
