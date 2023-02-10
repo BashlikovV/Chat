@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Chat</string>
+    <string name="read_chat">Read messages</string>
+    <string name="unread_chat">Make as not read</string>
 </resources>
