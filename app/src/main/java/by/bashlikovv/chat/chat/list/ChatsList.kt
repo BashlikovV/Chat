@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalDrawer
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -15,38 +17,54 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.R
 import by.bashlikovv.chat.chat.list.item.ChatItem
+import by.bashlikovv.chat.nav.DrawerContent
+import by.bashlikovv.chat.nav.DrawerViewModel
 import by.bashlikovv.chat.navbar.TopNavBar
-import by.bashlikovv.chat.navbar.TopNavBarState
 import by.bashlikovv.chat.navbar.TopNavBarViewModel
-import by.bashlikovv.chat.ui.theme.Teal200
 
 @Composable
 fun ChatsList(
-    topNavBarViewModel: TopNavBarViewModel = viewModel()
+    topNavBarViewModel: TopNavBarViewModel = viewModel(),
+    drawerViewModel: DrawerViewModel = viewModel(),
+    navigateToMessage: (ChatListUiState) -> Unit
 ) {
-//    val topNavBarState by topNavBarViewModel.topNavBarState.collectAsState()
+    val drawerUiState by drawerViewModel.drawerState.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopNavBar(
-                modifier = Modifier
-                    .background(Teal200)
-            ) {
-                topNavBarViewModel.onBarChange(TopNavBarViewModel.MENU_IMAGE, TopNavBarViewModel.MENU_DESCRIPTION)
-            }
+    ModalDrawer(
+        drawerState = drawerUiState.drawerState,
+        drawerContent = {
+            DrawerContent(drawerUiState)
         }
     ) {
-        ChatListContent(modifier = Modifier.padding(it))
+        Scaffold(
+            topBar = {
+                TopNavBar(
+                    modifier = Modifier
+                        .background(MaterialTheme.colors.onSurface)
+                ) {
+                    if (topNavBarViewModel.topNavBarState.value.description == TopNavBarViewModel.MENU_DESCRIPTION) {
+                        drawerViewModel.openDrawer()
+                    }
+                    topNavBarViewModel.onBarChange(TopNavBarViewModel.MENU_IMAGE, TopNavBarViewModel.MENU_DESCRIPTION)
+                }
+            }
+        ) { paddingValues ->
+            ChatListContent(modifier = Modifier.padding(paddingValues)) {
+                navigateToMessage(it)
+            }
+        }
     }
+
+
 }
 
 @Composable
 fun ChatListContent(
     modifier: Modifier = Modifier,
     chatListViewModel: ChatListViewModel = viewModel(),
-    topNavBarViewModel: TopNavBarViewModel = viewModel()
+    topNavBarViewModel: TopNavBarViewModel = viewModel(),
+    navigateToMessage: (ChatListUiState) -> Unit
 ) {
     val chatListUiState by chatListViewModel.chatListUiState.collectAsState()
 
@@ -63,9 +81,10 @@ fun ChatListContent(
             ChatItem(
                 data = listItem,
                 onChatsItemSelect = {
-                    chatListViewModel.onChatListItemClicked(it)
+                    navigateToMessage(it)
                 },
-                onLongPress = {
+                onLongPress = { data ->
+                    chatListViewModel.onPressSelect(data)
                     topNavBarViewModel.onBarChange(TopNavBarViewModel.CLOSE_IMAGE, TopNavBarViewModel.CLOSE_DESCRIPTION)
                 }
             )
