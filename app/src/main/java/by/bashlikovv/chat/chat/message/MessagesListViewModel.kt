@@ -34,4 +34,16 @@ class MessagesListViewModel : ViewModel() {
         val newMessage = MessageItemUiState()
         addMessage(newMessage)
     }
+
+    fun onChangeInput(newValue: String) {
+        _messageListUiState.update {
+            it.copy(input = newValue)
+        }
+    }
+
+    fun onActionSend() {
+        _messageListUiState.update {
+            it.copy(input = "")
+        }
+    }
 }

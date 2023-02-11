@@ -14,5 +14,6 @@ data class MessagesListUiSate(
     val userImage: Int = 0,
     val userName: String = "",
     val isOnline: Boolean = false,
-    val messages: List<MessageItemUiState> = listOf(MessageItemUiState())
+    val messages: List<MessageItemUiState> = listOf(MessageItemUiState()),
+    val input: String = "Message"
 )
