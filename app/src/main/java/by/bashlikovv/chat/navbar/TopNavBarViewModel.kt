@@ -2,6 +2,8 @@ package by.bashlikovv.chat.navbar
 
 import androidx.lifecycle.ViewModel
 import by.bashlikovv.chat.R
+import by.bashlikovv.chat.chat.list.ChatListUiState
+import by.bashlikovv.chat.chat.list.ChatListViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -13,8 +15,19 @@ class TopNavBarViewModel : ViewModel() {
 
     fun onBarChange(image: Int, description: String) {
         _topNavBarUiState.update {
-            TopNavBarState(image, description)
+            it.copy(
+                leadingIcon = image,
+                description = description
+            )
         }
+    }
+
+    fun onRemoveElem(elem: ChatListUiState, chatListViewModel: ChatListViewModel) {
+        chatListViewModel.removeChatListItem(elem)
+    }
+
+    fun onReadElem(elem: ChatListUiState, chatListViewModel: ChatListViewModel) {
+        chatListViewModel.readChatListItem(elem)
     }
 
     companion object {
