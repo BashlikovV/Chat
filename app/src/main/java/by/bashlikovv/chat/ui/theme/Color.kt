@@ -8,3 +8,4 @@ val Teal200 = Color(0xFF03DAC5)
 
 val surface = Color(0xFF333333)
 val back = Color(0xFF696969)
+val second = Color(0xFF333333)

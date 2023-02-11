@@ -114,7 +114,10 @@ fun TopNavBarContent(
                             .size(40.dp)
                             .clickable {
                                 onClickListener(topNavBarState.description)
-                                topNavBarViewModel.onReadElem(chatListViewModel.selectedItem.value, chatListViewModel)
+                                topNavBarViewModel.onReadElem(
+                                    chatListViewModel.selectedItem.value,
+                                    chatListViewModel
+                                )
                             }
                     )
                     Image(
@@ -125,7 +128,10 @@ fun TopNavBarContent(
                             .size(40.dp)
                             .clickable {
                                 onClickListener(topNavBarState.description)
-                                topNavBarViewModel.onRemoveElem(chatListViewModel.selectedItem.value, chatListViewModel)
+                                topNavBarViewModel.onRemoveElem(
+                                    chatListViewModel.selectedItem.value,
+                                    chatListViewModel
+                                )
                             }
                     )
                 }

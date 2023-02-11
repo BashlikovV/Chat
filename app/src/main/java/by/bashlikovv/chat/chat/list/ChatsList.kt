@@ -32,21 +32,21 @@ fun ChatsList(
     val drawerUiState by drawerViewModel.drawerState.collectAsState()
 
     ModalDrawer(
+        gesturesEnabled = true,
         drawerState = drawerUiState.drawerState,
-        drawerContent = {
-            DrawerContent(drawerUiState)
-        }
+        drawerContent = { DrawerContent(drawerUiState, modifier = Modifier.fillMaxSize()) }
     ) {
         Scaffold(
             topBar = {
                 TopNavBar(
-                    modifier = Modifier
-                        .background(MaterialTheme.colors.onSurface)
+                    modifier = Modifier.background(MaterialTheme.colors.onSurface)
                 ) {
                     if (topNavBarViewModel.topNavBarState.value.description == TopNavBarViewModel.MENU_DESCRIPTION) {
                         drawerViewModel.openDrawer()
                     }
-                    topNavBarViewModel.onBarChange(TopNavBarViewModel.MENU_IMAGE, TopNavBarViewModel.MENU_DESCRIPTION)
+                    topNavBarViewModel.onBarChange(
+                        TopNavBarViewModel.MENU_IMAGE, TopNavBarViewModel.MENU_DESCRIPTION
+                    )
                 }
             }
         ) { paddingValues ->
@@ -55,8 +55,6 @@ fun ChatsList(
             }
         }
     }
-
-
 }
 
 @Composable
@@ -79,13 +77,13 @@ fun ChatListContent(
     ) {
         items(chatListUiState) { listItem ->
             ChatItem(
-                data = listItem,
-                onChatsItemSelect = {
-                    navigateToMessage(it)
-                },
+                index = chatListUiState.indexOf(listItem),
+                onChatsItemSelect = { navigateToMessage(it) },
                 onLongPress = { data ->
                     chatListViewModel.onPressSelect(data)
-                    topNavBarViewModel.onBarChange(TopNavBarViewModel.CLOSE_IMAGE, TopNavBarViewModel.CLOSE_DESCRIPTION)
+                    topNavBarViewModel.onBarChange(
+                        TopNavBarViewModel.CLOSE_IMAGE, TopNavBarViewModel.CLOSE_DESCRIPTION
+                    )
                 }
             )
         }

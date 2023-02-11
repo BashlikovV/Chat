@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 private val DarkColorPalette = darkColors(
     primary = back,
     primaryVariant = Purple700,
-    secondary = Teal200,
+    secondary = second,
     onSurface = surface
 )
 
