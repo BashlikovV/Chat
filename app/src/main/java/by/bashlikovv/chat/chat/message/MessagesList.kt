@@ -1,23 +1,80 @@
 package by.bashlikovv.chat.chat.message
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.Text
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Scaffold
+import androidx.compose.material.TextField
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import by.bashlikovv.chat.R
+import by.bashlikovv.chat.chat.message.item.MessagesItem
 
 @Composable
 fun MessagesList(
-    data: MessagesListUiSate
+    modifier: Modifier = Modifier,
+    messagesListViewModel: MessagesListViewModel = viewModel(),
+    data: MessagesListUiSate,
+    navigateBack: () -> Unit
 ) {
-    LazyHorizontalGrid(
-        rows = GridCells.Fixed(1)
+    val messagesListUiSate by messagesListViewModel.messagesListUiSate.collectAsState()
+
+    Scaffold(
+        topBar = {
+            TopAppBar {
+                Image(
+                    painter = painterResource(R.drawable.arrow_back),
+                    contentDescription = "back",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(35.dp)
+                        .clickable {
+                            navigateBack()
+                        }
+                )
+            }
+        },
+        bottomBar = {
+            TextField(
+                value = messagesListUiSate.input,
+                onValueChange = {
+                    messagesListViewModel.onChangeInput(it)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Send
+                ),
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        messagesListViewModel.onActionSend()
+                    }
+                )
+            )
+        }
     ) {
-        items(data.messages) { message ->
-            Row {
-                Text(text = message.message)
-                Text(text = message.time)
+        Row(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(it)
+            ) {
+                items(data.messages) { message ->
+                    MessagesItem(message)
+                }
             }
         }
     }
