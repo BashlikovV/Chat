@@ -1,6 +1,7 @@
 package by.bashlikovv.chat.chat.list
 
 import by.bashlikovv.chat.R
+import by.bashlikovv.chat.chat.message.MessageListTestData
 
 object ChatListUiTestData {
     val chatListTestData = (0..90).map {
@@ -9,7 +10,8 @@ object ChatListUiTestData {
             name = "user name $it",
             displayedMessage = "displayed message $it",
             time = getRandomTime(),
-            unreadMessagesCount = (0..20).random()
+            unreadMessagesCount = (0..20).random(),
+            messagesListUiSate = MessageListTestData.tmpData
         )
     }
 

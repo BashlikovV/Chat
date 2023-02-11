@@ -1,5 +1,6 @@
 package by.bashlikovv.chat.chat.list
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,6 +11,9 @@ class ChatListViewModel : ViewModel() {
 
     private val _chatListUiState = MutableStateFlow(listOf(ChatListUiState()))
     val chatListUiState: StateFlow<List<ChatListUiState>> = _chatListUiState.asStateFlow()
+
+    var selectedItem = mutableStateOf(ChatListUiState())
+        private set
 
     init {
         initChatListUiState()
@@ -32,12 +36,28 @@ class ChatListViewModel : ViewModel() {
             removeListItem(item)
         }
     }
+
+    fun readChatListItem(item: ChatListUiState) {
+        _chatListUiState.update {
+            readListItem(item)
+        }
+    }
     
     private fun removeListItem(item: ChatListUiState): List<ChatListUiState> {
         return _chatListUiState.value.filter { it.name != item.name }
     }
 
-    fun onChatListItemClicked(item: ChatListUiState) {
-        TODO()
+    private fun readListItem(item: ChatListUiState): List<ChatListUiState> {
+        return _chatListUiState.value.map {
+            if(it.name == item.name) {
+                it.copy(unreadMessagesCount = 0)
+            } else {
+                it
+            }
+        }
+    }
+
+    fun onPressSelect(item: ChatListUiState) {
+        selectedItem.value = item
     }
 }

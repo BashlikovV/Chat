@@ -2,18 +2,17 @@ package by.bashlikovv.chat.chat.list.item
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
@@ -34,24 +33,21 @@ fun ChatItem(
     modifier: Modifier = Modifier,
     data: ChatListUiState,
     onChatsItemSelect: (ChatListUiState) -> Unit,
-    onLongPress: (Offset) -> Unit
+    onLongPress: (ChatListUiState) -> Unit
 ) {
     Card(
         modifier = modifier
-            .clip(RoundedCornerShape(15.dp))
-            .clickable {
-                onChatsItemSelect(data)
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = {
-                        onLongPress(it)
-                    }
-                )
-            }
             .fillMaxWidth()
     ) {
-        ChatItemContent(data = data)
+        ChatItemContent(
+            data = data,
+            onChatsItemSelect =  {
+                onChatsItemSelect(it)
+            },
+            onLongPress = {
+                onLongPress(data)
+            }
+        )
     }
 }
 
@@ -93,10 +89,23 @@ private fun getChatItemConstraints(): ConstraintSet {
 @Composable
 fun ChatItemContent(
     modifier: Modifier = Modifier,
-    data: ChatListUiState
+    data: ChatListUiState,
+    onChatsItemSelect: (ChatListUiState) -> Unit,
+    onLongPress: (ChatListUiState) -> Unit
 ) {
     BoxWithConstraints(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = {
+                        onLongPress(data)
+                    },
+                    onTap = {
+                        onChatsItemSelect(data)
+                    }
+                )
+            }
     ) {
         val constraints = getChatItemConstraints()
 
