@@ -38,6 +38,6 @@ class ChatListViewModel : ViewModel() {
     }
 
     fun onChatListItemClicked(item: ChatListUiState) {
-        TODO()
+
     }
 }
