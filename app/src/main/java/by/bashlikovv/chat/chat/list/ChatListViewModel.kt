@@ -44,7 +44,9 @@ class ChatListViewModel : ViewModel() {
     }
     
     private fun removeListItem(item: ChatListUiState): List<ChatListUiState> {
-        return _chatListUiState.value.filter { it.name != item.name }
+        val tmp = _chatListUiState.value.toMutableList()
+        tmp.remove(item)
+        return tmp
     }
 
     private fun readListItem(item: ChatListUiState): List<ChatListUiState> {

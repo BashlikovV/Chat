@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
@@ -24,29 +26,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
-import by.bashlikovv.chat.R
+import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.chat.list.ChatListUiState
+import by.bashlikovv.chat.chat.list.ChatListViewModel
 import by.bashlikovv.chat.ui.theme.Teal200
 
 @Composable
 fun ChatItem(
     modifier: Modifier = Modifier,
-    data: ChatListUiState,
+    chatListViewModel: ChatListViewModel = viewModel(),
+    index: Int,
     onChatsItemSelect: (ChatListUiState) -> Unit,
     onLongPress: (ChatListUiState) -> Unit
 ) {
+    val chatListUiState by chatListViewModel.chatListUiState.collectAsState()
+
     Card(
         modifier = modifier
             .fillMaxWidth()
     ) {
         ChatItemContent(
-            data = data,
-            onChatsItemSelect =  {
-                onChatsItemSelect(it)
-            },
-            onLongPress = {
-                onLongPress(data)
-            }
+            data = chatListUiState[index],
+            onChatsItemSelect =  { onChatsItemSelect(it) },
+            onLongPress = { onLongPress(chatListUiState[index]) }
         )
     }
 }
@@ -98,12 +100,8 @@ fun ChatItemContent(
             .fillMaxWidth()
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onLongPress = {
-                        onLongPress(data)
-                    },
-                    onTap = {
-                        onChatsItemSelect(data)
-                    }
+                    onLongPress = { onLongPress(data) },
+                    onTap = { onChatsItemSelect(data) }
                 )
             }
     ) {
@@ -180,13 +178,7 @@ fun MessagesCount(
 @Composable
 fun ChatItemPreview() {
     ChatItem(
-        data = ChatListUiState(
-            image = R.drawable.test_face_man,
-            name = "Vasy Pupkin",
-            displayedMessage = "Please, buy my NFT cart",
-            time = "00:00",
-            unreadMessagesCount = 3
-        ),
+        index = 0,
         onLongPress = {},
         onChatsItemSelect = {}
     )

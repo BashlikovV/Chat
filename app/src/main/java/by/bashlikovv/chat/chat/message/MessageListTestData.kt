@@ -19,4 +19,23 @@ object MessageListTestData {
         isOnline = false,
         messages = tmpMessages
     )
+
+    fun getData(userName: String): MessagesListUiSate {
+        return MessagesListUiSate(
+            userImage = listOf(R.drawable.test_face_man, R.drawable.test_face_woman).random(),
+            userName = "User name",
+            isOnline = false,
+            messages = getMessages(userName)
+        )
+    }
+
+    fun getMessages(userName: String): List<MessageItemUiState> {
+        return (0..30).map {
+            MessageItemUiState(
+                image = listOf(R.drawable.test_face_man, R.drawable.test_face_woman).random(),
+                message = "message $it from user $userName",
+                time = ChatListUiTestData.getRandomTime()
+            )
+        }
+    }
 }

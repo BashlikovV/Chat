@@ -11,7 +11,7 @@ object ChatListUiTestData {
             displayedMessage = "displayed message $it",
             time = getRandomTime(),
             unreadMessagesCount = (0..20).random(),
-            messagesListUiSate = MessageListTestData.tmpData
+            messagesListUiSate = MessageListTestData.getData("user name $it")
         )
     }
 

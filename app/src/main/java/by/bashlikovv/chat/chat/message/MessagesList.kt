@@ -21,15 +21,24 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.chat.message.item.MessagesItem
+import by.bashlikovv.chat.content.MainContentViewModel
+
+/**
+ * [MessagesList] -> list of messages between two users
+ * * [messagesListViewModel] -> contains input value of the current chat
+ * * [mainContentViewModel] -> contains list of messages between two users
+ * mainContentUiState.data.messages -> list of messages
+ * */
 
 @Composable
 fun MessagesList(
     modifier: Modifier = Modifier,
     messagesListViewModel: MessagesListViewModel = viewModel(),
-    data: MessagesListUiSate,
+    mainContentViewModel: MainContentViewModel = viewModel(),
     navigateBack: () -> Unit
 ) {
     val messagesListUiSate by messagesListViewModel.messagesListUiSate.collectAsState()
+    val mainContentUiState by mainContentViewModel.mainContentUiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -72,7 +81,7 @@ fun MessagesList(
                     .fillMaxSize()
                     .padding(it)
             ) {
-                items(data.messages) { message ->
+                items(mainContentUiState.data.messages) { message ->
                     MessagesItem(message)
                 }
             }
