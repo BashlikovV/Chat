@@ -1,19 +1,28 @@
 package by.bashlikovv.chat.messenger
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.NavigationBar
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.TextField
+import androidx.compose.material3.NavigationBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
@@ -52,7 +61,6 @@ private fun getNavBarContentConstraints(): ConstraintSet {
 fun TopNavBarContent(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
-
     BoxWithConstraints(modifier = Modifier.height(55.dp)) {
         val constraintSet = getNavBarContentConstraints()
 
@@ -60,49 +68,120 @@ fun TopNavBarContent(messengerViewModel: MessengerViewModel = viewModel()) {
             constraintSet = constraintSet,
             modifier = Modifier.fillMaxWidth().height(55.dp).background(MaterialTheme.colors.primary)
         ) {
-            Image(
-                painter = painterResource(R.drawable.menu),
-                contentDescription = "Menu",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(50.dp)
-                    .clickable {
-                        messengerViewModel.onActionMenu()
-                    }
-                    .layoutId("leftItem")
-            )
-            AnimatedVisibility(visible = messengerUiState.visible, modifier = Modifier.layoutId("rightItems")) {
-                Row {
-                    Image(
-                        painter = painterResource(R.drawable.pin),
-                        contentDescription = "Pin chat with ${messengerUiState.selectedItem.user.userName}",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(40.dp).clickable {
-                            messengerViewModel.onActionPin()
+            AnimatedVisibility(visible = true, modifier = Modifier.layoutId("leftItem")) {
+                Image(
+                    painter = painterResource(if (messengerUiState.expanded) R.drawable.arrow_back else R.drawable.menu),
+                    contentDescription = if (messengerUiState.expanded) "Close search" else "Menu",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable {
+                            if (messengerUiState.expanded) {
+                                messengerViewModel.onAnimateContentClick()
+                            } else {
+                                messengerViewModel.onActionMenu()
+                            }
                         }
-                    )
-                    Image(
-                        painter = painterResource(R.drawable.mark_chat_read),
-                        contentDescription = "mark chat as read",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clickable {
-                                messengerViewModel.onActionRead(messengerUiState.selectedItem)
+                )
+            }
+            AnimatedVisibility(visible = true, modifier = Modifier.layoutId("rightItems")) {
+                AnimatedContent(
+                    targetState = messengerUiState.expanded,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(150, 150)) with
+                            fadeOut(animationSpec = tween(150)) using
+                                SizeTransform { initialSize, targetSize ->
+                                    if (targetState) {
+                                        keyframes {
+                                            IntSize(targetSize.width, initialSize.height) at 150
+                                            durationMillis = 300
+                                        }
+                                    } else {
+                                        keyframes {
+                                            IntSize(initialSize.width, targetSize.height) at 150
+                                            durationMillis = 300
+                                        }
+                                    }
+                                }
+                    }
+                ) { targetState ->
+                    if (targetState) {
+                        Expanded()
+                    } else {
+                        ContentIcon()
+                    }
+                }
+                AnimatedVisibility(visible = messengerUiState.visible) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(15.dp)) {
+                        Image(
+                            painter = painterResource(R.drawable.pin),
+                            contentDescription = "Pin chat with ${messengerUiState.selectedItem.user.userName}",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(40.dp).clickable {
+                                messengerViewModel.onActionPin()
                             }
-                    )
-                    Image(
-                        painter = painterResource(R.drawable.delete_outline),
-                        contentDescription = "delete",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clickable {
-                                messengerViewModel.onActionDelete(messengerUiState.selectedItem)
-                            }
-                    )
+                        )
+                        Image(
+                            painter = painterResource(R.drawable.mark_chat_read),
+                            contentDescription = "mark chat as read",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clickable {
+                                    messengerViewModel.onActionRead(messengerUiState.selectedItem)
+                                }
+                        )
+                        Image(
+                            painter = painterResource(R.drawable.delete_outline),
+                            contentDescription = "delete",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clickable {
+                                    messengerViewModel.onActionDelete(messengerUiState.selectedItem)
+                                }
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
+    val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+
+    TextField(
+        value = messengerUiState.searchInput,
+        onValueChange = { messengerViewModel.onSearchInputChange(it) },
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Search
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                messengerViewModel.onSearchCalled()
+            }
+        ),
+        maxLines = 1,
+        modifier = Modifier.background(MaterialTheme.colors.primary).padding(
+            top = 3.dp, bottom = 2.5.dp, end = 5.dp, start = 5.dp
+        ).fillMaxWidth(0.9f)
+    )
+}
+
+@Composable
+fun ContentIcon(messengerViewModel: MessengerViewModel = viewModel()) {
+    val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+
+    AnimatedVisibility(visible = !messengerUiState.visible) {
+        Image(
+            painter = painterResource(R.drawable.search),
+            contentDescription = "Search",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(50.dp).clip(RoundedCornerShape(25.dp)).clickable {
+                    messengerViewModel.onAnimateContentClick()
+                }
+        )
     }
 }
