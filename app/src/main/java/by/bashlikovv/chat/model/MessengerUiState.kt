@@ -12,7 +12,9 @@ data class MessengerUiState(
     val visible: Boolean = false,
     val selectedItem: Chat = Chat(),
     val drawerState: DrawerState = DrawerState(DrawerValue.Closed),
-    val darkTheme: Boolean = true
+    val darkTheme: Boolean = true,
+    val expanded: Boolean = false,
+    val searchInput: String = ""
 )
 
 object MessengerTestData {
