@@ -23,7 +23,7 @@ import by.bashlikovv.chat.R
 @Composable
 fun TopAppBar() {
     NavigationBar(
-        modifier = Modifier.fillMaxWidth().height(55.dp)
+        modifier = Modifier.fillMaxWidth().height(55.dp).padding(bottom = 1.dp)
     ) {
         TopNavBarContent()
     }
