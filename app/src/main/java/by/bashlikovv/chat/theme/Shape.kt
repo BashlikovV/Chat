@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.ui.theme
+package by.bashlikovv.chat.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Shapes

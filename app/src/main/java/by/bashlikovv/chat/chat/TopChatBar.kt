@@ -1,8 +1,8 @@
-package by.bashlikovv.chat.login
+package by.bashlikovv.chat.chat
 
 import androidx.compose.runtime.Composable
 
 @Composable
-fun LogIn() {
+fun TopChatBar() {
 
 }

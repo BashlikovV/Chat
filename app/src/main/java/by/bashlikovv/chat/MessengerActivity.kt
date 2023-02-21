@@ -3,27 +3,28 @@ package by.bashlikovv.chat
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.content.MainContent
-import by.bashlikovv.chat.nav.DrawerViewModel
-import by.bashlikovv.chat.ui.theme.ChatTheme
+import by.bashlikovv.chat.messenger.MessengerView
+import by.bashlikovv.chat.messenger.MessengerViewModel
+import by.bashlikovv.chat.theme.MessengerTheme
 
-class ChatActivity : ComponentActivity() {
+class MessengerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val drawerViewModel: DrawerViewModel = viewModel()
-            val drawerUiState by drawerViewModel.drawerState.collectAsState()
+            val messengerViewModel: MessengerViewModel by viewModels()
+            val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
-            ChatTheme(darkTheme = drawerUiState.darkTheme) {
+            MessengerTheme(darkTheme = messengerUiState.darkTheme) {
+                // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.primary) {
-                    MainContent(drawerViewModel = drawerViewModel)
+                    MessengerView()
                 }
             }
         }
