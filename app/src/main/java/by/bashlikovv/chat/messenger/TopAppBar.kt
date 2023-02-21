@@ -29,15 +29,6 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 
-@Composable
-fun TopAppBar() {
-    NavigationBar(
-        modifier = Modifier.fillMaxWidth().height(55.dp).padding(bottom = 1.dp)
-    ) {
-        TopNavBarContent()
-    }
-}
-
 private fun getNavBarContentConstraints(): ConstraintSet {
     return ConstraintSet {
         val leftItem = createRefFor("leftItem")
@@ -56,93 +47,109 @@ private fun getNavBarContentConstraints(): ConstraintSet {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun TopNavBarContent(messengerViewModel: MessengerViewModel = viewModel()) {
+fun TopAppBar() {
+    NavigationBar(
+        modifier = Modifier.fillMaxWidth().height(55.dp).padding(bottom = 1.dp)
+    ) {
+        BoxWithConstraints(modifier = Modifier.height(55.dp)) {
+            val constraintSet = getNavBarContentConstraints()
+
+            ConstraintLayout(
+                constraintSet = constraintSet,
+                modifier = Modifier.fillMaxWidth().height(55.dp).background(MaterialTheme.colors.primary)
+            ) {
+                LeftItem()
+                RightItems()
+            }
+        }
+    }
+}
+
+@Composable
+fun LeftItem(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
-    BoxWithConstraints(modifier = Modifier.height(55.dp)) {
-        val constraintSet = getNavBarContentConstraints()
+    AnimatedVisibility(visible = true, modifier = Modifier.layoutId("leftItem")) {
+        Image(
+            painter = painterResource(if (messengerUiState.expanded) R.drawable.arrow_back else R.drawable.menu),
+            contentDescription = if (messengerUiState.expanded) "Close search" else "Menu",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(40.dp)
+                .clickable {
+                    if (messengerUiState.expanded) {
+                        messengerViewModel.onAnimateContentClick()
+                    } else {
+                        messengerViewModel.onActionMenu()
+                    }
+                }
+        )
+    }
+}
 
-        ConstraintLayout(
-            constraintSet = constraintSet,
-            modifier = Modifier.fillMaxWidth().height(55.dp).background(MaterialTheme.colors.primary)
-        ) {
-            AnimatedVisibility(visible = true, modifier = Modifier.layoutId("leftItem")) {
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+fun RightItems(messengerViewModel: MessengerViewModel = viewModel()) {
+    val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+
+    AnimatedVisibility(visible = true, modifier = Modifier.layoutId("rightItems")) {
+        AnimatedContent(
+            targetState = messengerUiState.expanded,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(150, 150)) with
+                    fadeOut(animationSpec = tween(150)) using
+                        SizeTransform { initialSize, targetSize ->
+                            if (targetState) {
+                                keyframes {
+                                    IntSize(targetSize.width, initialSize.height) at 150
+                                    durationMillis = 300
+                                }
+                            } else {
+                                keyframes {
+                                    IntSize(initialSize.width, targetSize.height) at 150
+                                    durationMillis = 300
+                                }
+                            }
+                        }
+            }
+        ) { targetState ->
+            if (targetState) {
+                Expanded()
+            } else {
+                ContentIcon()
+            }
+        }
+        AnimatedVisibility(visible = messengerUiState.visible) {
+            Row(horizontalArrangement = Arrangement.spacedBy(15.dp)) {
                 Image(
-                    painter = painterResource(if (messengerUiState.expanded) R.drawable.arrow_back else R.drawable.menu),
-                    contentDescription = if (messengerUiState.expanded) "Close search" else "Menu",
+                    painter = painterResource(R.drawable.pin),
+                    contentDescription = "Pin chat with ${messengerUiState.selectedItem.user.userName}",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(40.dp).clickable {
+                        messengerViewModel.onActionPin()
+                    }
+                )
+                Image(
+                    painter = painterResource(R.drawable.mark_chat_read),
+                    contentDescription = "mark chat as read",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(40.dp)
                         .clickable {
-                            if (messengerUiState.expanded) {
-                                messengerViewModel.onAnimateContentClick()
-                            } else {
-                                messengerViewModel.onActionMenu()
-                            }
+                            messengerViewModel.onActionRead(messengerUiState.selectedItem)
                         }
                 )
-            }
-            AnimatedVisibility(visible = true, modifier = Modifier.layoutId("rightItems")) {
-                AnimatedContent(
-                    targetState = messengerUiState.expanded,
-                    transitionSpec = {
-                        fadeIn(animationSpec = tween(150, 150)) with
-                            fadeOut(animationSpec = tween(150)) using
-                                SizeTransform { initialSize, targetSize ->
-                                    if (targetState) {
-                                        keyframes {
-                                            IntSize(targetSize.width, initialSize.height) at 150
-                                            durationMillis = 300
-                                        }
-                                    } else {
-                                        keyframes {
-                                            IntSize(initialSize.width, targetSize.height) at 150
-                                            durationMillis = 300
-                                        }
-                                    }
-                                }
-                    }
-                ) { targetState ->
-                    if (targetState) {
-                        Expanded()
-                    } else {
-                        ContentIcon()
-                    }
-                }
-                AnimatedVisibility(visible = messengerUiState.visible) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(15.dp)) {
-                        Image(
-                            painter = painterResource(R.drawable.pin),
-                            contentDescription = "Pin chat with ${messengerUiState.selectedItem.user.userName}",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(40.dp).clickable {
-                                messengerViewModel.onActionPin()
-                            }
-                        )
-                        Image(
-                            painter = painterResource(R.drawable.mark_chat_read),
-                            contentDescription = "mark chat as read",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clickable {
-                                    messengerViewModel.onActionRead(messengerUiState.selectedItem)
-                                }
-                        )
-                        Image(
-                            painter = painterResource(R.drawable.delete_outline),
-                            contentDescription = "delete",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clickable {
-                                    messengerViewModel.onActionDelete(messengerUiState.selectedItem)
-                                }
-                        )
-                    }
-                }
+                Image(
+                    painter = painterResource(R.drawable.delete_outline),
+                    contentDescription = "delete",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable {
+                            messengerViewModel.onActionDelete(messengerUiState.selectedItem)
+                        }
+                )
             }
         }
     }
