@@ -116,9 +116,9 @@ fun MessengerItem(chat: Chat, messengerViewModel: MessengerViewModel = viewModel
             ConstraintLayout(
                 modifier = Modifier.fillMaxWidth().background(
                     if (chat.user.userId == messengerUiState.selectedItem.user.userId) {
-                        MaterialTheme.colors.secondary
-                    } else {
                         MaterialTheme.colors.primary
+                    } else {
+                        MaterialTheme.colors.background
                     }
                 ).pointerInput(chat) {
                     detectTapGestures(
@@ -177,7 +177,7 @@ fun MessagesCount(count: Int, modifier: Modifier) {
             fontSize = 14.sp,
             maxLines = 1,
             overflow = TextOverflow.Clip,
-            modifier = modifier.clip(RoundedCornerShape(25.dp)).background(MaterialTheme.colors.secondary).padding(
+            modifier = modifier.clip(RoundedCornerShape(25.dp)).background(MaterialTheme.colors.primary).padding(
                     horizontal = 7.5.dp, vertical = 2.dp
                 ),
             color = PrimaryLight

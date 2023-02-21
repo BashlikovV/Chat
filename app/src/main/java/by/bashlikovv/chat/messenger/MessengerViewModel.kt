@@ -40,7 +40,7 @@ class MessengerViewModel : ViewModel() {
      * [onActionCloseItems] - function that closing items in top bar when some action activated
      * */
     private fun onActionCloseItems() {
-        _messengerUiState.update { it.copy(visible = false, selectedItem = Chat(User(userId = -1))) }
+        _messengerUiState.update { it.copy(visible = false, selectedItem = Chat(User(userId = -1)), expanded = false) }
     }
 
     /**
@@ -83,7 +83,7 @@ class MessengerViewModel : ViewModel() {
      * */
     fun onActionSelect(chat: Chat) {
         onLongPress()
-        _messengerUiState.update { it.copy(selectedItem = chat) }
+        _messengerUiState.update { it.copy(selectedItem = chat, expanded = false) }
     }
 
     /**
@@ -115,6 +115,9 @@ class MessengerViewModel : ViewModel() {
         _messengerUiState.update { it.copy(darkTheme = !it.darkTheme) }
     }
 
+    /**
+     * [getTextColor] - function that return text color for item from list of [Chat]
+     * */
     @Composable
     fun getTextColor(chat: Chat): Color {
         return if (chat.user.userId == selectedItem.user.userId) {
@@ -122,5 +125,26 @@ class MessengerViewModel : ViewModel() {
         } else {
             MaterialTheme.colors.primaryVariant
         }
+    }
+
+    /**
+     * [onAnimateContentClick] - function that opens and closes input field used for search. [MessengerUiState.expanded]
+     * */
+    fun onAnimateContentClick() {
+        _messengerUiState.update { it.copy(expanded = !it.expanded) }
+    }
+
+    /**
+     * [onSearchInputChange] - function that updates search input state in [MessengerUiState.searchInput]
+     * */
+    fun onSearchInputChange(newValue: String) {
+        _messengerUiState.update { it.copy(searchInput = newValue) }
+    }
+
+    /**
+     * [onSearchInputChange] - function that search concurrence between search input and list of [Chat]
+     * */
+    fun onSearchCalled(result: (List<Chat>) -> Unit = {}) {
+        result(_messengerUiState.value.chats.filter { it.user.userName == _messengerUiState.value.searchInput })
     }
 }
