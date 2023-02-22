@@ -128,6 +128,42 @@ class MessengerViewModel : ViewModel() {
     }
 
     /**
+     * [getTintColor] - function that return tint color for images from list of [Chat]
+     * */
+    @Composable
+    fun getTintColor(chat: Chat): Color {
+        return if (chat.user.userId == selectedItem.user.userId) {
+            MaterialTheme.colors.background
+        } else {
+            MaterialTheme.colors.primary
+        }
+    }
+
+    /**
+     * [getCountColor] - function that return count background color for item from list of [Chat]
+     * */
+    @Composable
+    fun getCountColor(chat: Chat): Color {
+        return if (chat.user.userId == selectedItem.user.userId) {
+            MaterialTheme.colors.primary
+        } else {
+            MaterialTheme.colors.secondary
+        }
+    }
+
+    /**
+     * [getChatBackground] - function that return background color for item from list of [Chat]
+     * */
+    @Composable
+    fun getChatBackground(chat: Chat): Color {
+        return if (chat.user.userId == selectedItem.user.userId) {
+            MaterialTheme.colors.primary
+        } else {
+            MaterialTheme.colors.background
+        }
+    }
+
+    /**
      * [onAnimateContentClick] - function that opens and closes input field used for search. [MessengerUiState.expanded]
      * */
     fun onAnimateContentClick() {
@@ -145,6 +181,6 @@ class MessengerViewModel : ViewModel() {
      * [onSearchInputChange] - function that search concurrence between search input and list of [Chat]
      * */
     fun onSearchCalled(result: (List<Chat>) -> Unit = {}) {
-        result(_messengerUiState.value.chats.filter { it.user.userName == _messengerUiState.value.searchInput })
+        result(emptyList())
     }
 }

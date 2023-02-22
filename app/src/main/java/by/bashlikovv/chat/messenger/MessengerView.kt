@@ -14,6 +14,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
@@ -29,7 +31,6 @@ import by.bashlikovv.chat.drawer.DrawerContent
 import by.bashlikovv.chat.model.MessengerTestData
 import by.bashlikovv.chat.model.MessengerUiState
 import by.bashlikovv.chat.struct.Chat
-import by.bashlikovv.chat.theme.PrimaryLight
 
 @Composable
 fun MessengerView(modifier: Modifier = Modifier, messengerViewModel: MessengerViewModel = viewModel()) {
@@ -97,7 +98,7 @@ private fun getMessengerItemConstraints(): ConstraintSet {
         }
         constrain(count) {
             end.linkTo(anchor = parent.end, margin = 10.dp)
-            top.linkTo(anchor = parent.top)
+            top.linkTo(anchor = parent.top, margin = 15.dp)
             bottom.linkTo(anchor = parent.bottom)
         }
     }
@@ -107,61 +108,49 @@ private fun getMessengerItemConstraints(): ConstraintSet {
 fun MessengerItem(chat: Chat, messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            val constraints = getMessengerItemConstraints()
-
+    Card {
+        BoxWithConstraints {
             ConstraintLayout(
-                modifier = Modifier.fillMaxWidth().background(
-                    if (chat.user.userId == messengerUiState.selectedItem.user.userId) {
-                        MaterialTheme.colors.primary
-                    } else {
-                        MaterialTheme.colors.background
+                constraintSet = getMessengerItemConstraints(),
+                modifier = Modifier.fillMaxWidth().background(messengerViewModel.getChatBackground(chat))
+                    .pointerInput(chat) {
+                        detectTapGestures(
+                            onLongPress = { messengerViewModel.onActionSelect(chat) },
+                            onTap = { messengerViewModel.onActionOpenChat(chat) }
+                        )
                     }
-                ).pointerInput(chat) {
-                    detectTapGestures(
-                        onLongPress = { messengerViewModel.onActionSelect(chat) },
-                        onTap = { messengerViewModel.onActionOpenChat(chat) }
-                    )
-                }, constraintSet = constraints
             ) {
                 Image(
                     painter = painterResource(chat.user.userImage),
                     contentDescription = "chat with ${chat.user.userName}",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(50.dp).layoutId("image")
+                    colorFilter = ColorFilter.tint(color = messengerViewModel.getTintColor(chat)),
+                    modifier = Modifier.clip(RoundedCornerShape(25.dp)).size(50.dp).layoutId("image")
                 )
-                Text(
+                MessengerItemText(
                     text = chat.user.userName,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    modifier = Modifier.layoutId("name"),
-                    color = messengerViewModel.getTextColor(chat)
+                    fontSize = 16,
+                    layoutId = "name",
+                    textColor = messengerViewModel.getTextColor(chat)
                 )
-                Text(
+                MessengerItemText(
                     text = chat.messages[messengerUiState.chats.indexOf(chat)].value,
                     fontWeight = FontWeight.Light,
-                    fontSize = 14.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    modifier = Modifier.layoutId("message"),
-                    color = messengerViewModel.getTextColor(chat)
+                    fontSize = 14,
+                    layoutId = "message",
+                    textColor = messengerViewModel.getTextColor(chat)
                 )
-                Text(
-                    text = chat.messages.last().time,
+                MessengerItemText(
+                    text = chat.messages[messengerUiState.chats.indexOf(chat)].time,
                     fontWeight = FontWeight.Thin,
-                    fontSize = 7.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Visible,
-                    modifier = Modifier.layoutId("time"),
-                    color = messengerViewModel.getTextColor(chat)
+                    fontSize = 13,
+                    layoutId = "time",
+                    textColor = messengerViewModel.getTextColor(chat)
                 )
                 MessagesCount(
-                    count = chat.count, modifier = Modifier.layoutId("count")
+                    count = chat.count, color = messengerViewModel.getTintColor(chat),
+                    countColor = messengerViewModel.getCountColor(chat), modifier = Modifier.layoutId("count")
                 )
             }
         }
@@ -169,7 +158,20 @@ fun MessengerItem(chat: Chat, messengerViewModel: MessengerViewModel = viewModel
 }
 
 @Composable
-fun MessagesCount(count: Int, modifier: Modifier) {
+fun MessengerItemText(text: String, fontWeight: FontWeight, fontSize: Int, textColor: Color, layoutId: String) {
+    Text(
+        text = text,
+        fontWeight = fontWeight,
+        fontSize = fontSize.sp,
+        maxLines = 1,
+        overflow = TextOverflow.Clip,
+        modifier = Modifier.layoutId(layoutId),
+        color = textColor
+    )
+}
+
+@Composable
+fun MessagesCount(count: Int, color: Color, countColor: Color, modifier: Modifier) {
     if (count != 0) {
         Text(
             text = "$count",
@@ -177,10 +179,10 @@ fun MessagesCount(count: Int, modifier: Modifier) {
             fontSize = 14.sp,
             maxLines = 1,
             overflow = TextOverflow.Clip,
-            modifier = modifier.clip(RoundedCornerShape(25.dp)).background(MaterialTheme.colors.primary).padding(
+            modifier = modifier.clip(RoundedCornerShape(25.dp)).background(color).padding(
                     horizontal = 7.5.dp, vertical = 2.dp
                 ),
-            color = PrimaryLight
+            color = countColor
         )
     }
 }

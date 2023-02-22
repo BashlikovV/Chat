@@ -7,17 +7,23 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.TextField
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.NavigationBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
@@ -28,6 +34,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
+import by.bashlikovv.chat.struct.Chat
 
 private fun getNavBarContentConstraints(): ConstraintSet {
     return ConstraintSet {
@@ -57,7 +64,8 @@ fun TopAppBar() {
 
             ConstraintLayout(
                 constraintSet = constraintSet,
-                modifier = Modifier.fillMaxWidth().height(55.dp).background(MaterialTheme.colors.primary)
+                modifier = Modifier.fillMaxWidth().height(55.dp).background(MaterialTheme.colors.primary),
+                optimizationLevel = 10
             ) {
                 LeftItem()
                 RightItems()
@@ -75,6 +83,7 @@ fun LeftItem(messengerViewModel: MessengerViewModel = viewModel()) {
             painter = painterResource(if (messengerUiState.expanded) R.drawable.arrow_back else R.drawable.menu),
             contentDescription = if (messengerUiState.expanded) "Close search" else "Menu",
             contentScale = ContentScale.Crop,
+            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
             modifier = Modifier
                 .size(40.dp)
                 .clickable {
@@ -122,44 +131,44 @@ fun RightItems(messengerViewModel: MessengerViewModel = viewModel()) {
         }
         AnimatedVisibility(visible = messengerUiState.visible) {
             Row(horizontalArrangement = Arrangement.spacedBy(15.dp)) {
-                Image(
-                    painter = painterResource(R.drawable.pin),
+                RightItem(
+                    image = R.drawable.pin,
                     contentDescription = "Pin chat with ${messengerUiState.selectedItem.user.userName}",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(40.dp).clickable {
-                        messengerViewModel.onActionPin()
-                    }
-                )
-                Image(
-                    painter = painterResource(R.drawable.mark_chat_read),
-                    contentDescription = "mark chat as read",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clickable {
-                            messengerViewModel.onActionRead(messengerUiState.selectedItem)
-                        }
-                )
-                Image(
-                    painter = painterResource(R.drawable.delete_outline),
-                    contentDescription = "delete",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clickable {
-                            messengerViewModel.onActionDelete(messengerUiState.selectedItem)
-                        }
-                )
+                    chat = messengerUiState.selectedItem
+                ) { messengerViewModel.onActionPin() }
+                RightItem(
+                    image = R.drawable.mark_chat_read,
+                    contentDescription = "mark chat with ${messengerUiState.selectedItem.user.userName} as read",
+                    chat = messengerUiState.selectedItem
+                ) { messengerViewModel.onActionRead(it) }
+                RightItem(
+                    image = R.drawable.delete_outline,
+                    contentDescription = "delete chat with \${messengerUiState.selectedItem.user.userName} outline",
+                    chat = messengerUiState.selectedItem
+                ) { messengerViewModel.onActionDelete(it) }
             }
         }
     }
 }
 
 @Composable
+fun RightItem(image: Int, contentDescription: String, chat: Chat, actionListener: (Chat) -> Unit) {
+    Image(
+        painter = painterResource(image),
+        contentDescription = contentDescription,
+        contentScale = ContentScale.Crop,
+        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
+        modifier = Modifier.size(40.dp).clickable {
+            actionListener(chat)
+        }
+    )
+}
+
+@Composable
 fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
-    TextField(
+    OutlinedTextField(
         value = messengerUiState.searchInput,
         onValueChange = { messengerViewModel.onSearchInputChange(it) },
         keyboardOptions = KeyboardOptions.Default.copy(
@@ -173,8 +182,21 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
         maxLines = 1,
         modifier = Modifier.background(MaterialTheme.colors.primary).padding(
             top = 3.dp, bottom = 2.5.dp, end = 5.dp, start = 5.dp
-        ).fillMaxWidth(0.9f)
+        ).fillMaxWidth(0.9f),
+        colors = TextFieldDefaults.textFieldColors(
+            backgroundColor = Color.Transparent,
+            textColor = MaterialTheme.colors.secondary,
+            focusedIndicatorColor = MaterialTheme.colors.secondary
+        )
     )
+    //TODO("need to implement")
+    LazyColumn {
+        messengerViewModel.onSearchCalled { list ->
+            items(list) {
+                Text(text = it.messages.last().toString())
+            }
+        }
+    }
 }
 
 @Composable
@@ -186,6 +208,7 @@ fun ContentIcon(messengerViewModel: MessengerViewModel = viewModel()) {
             painter = painterResource(R.drawable.search),
             contentDescription = "Search",
             contentScale = ContentScale.Crop,
+            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
             modifier = Modifier.size(50.dp).clip(RoundedCornerShape(25.dp)).clickable {
                     messengerViewModel.onAnimateContentClick()
                 }

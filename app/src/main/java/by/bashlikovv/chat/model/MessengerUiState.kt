@@ -34,7 +34,7 @@ object MessengerTestData {
                         userName = "user$chatIndex"
                     ),
                     isRead = listOf(true, false).random(),
-                    time = "22:22:22"
+                    time = "22:22"
                 )
             },
             count = (0..15).random()
