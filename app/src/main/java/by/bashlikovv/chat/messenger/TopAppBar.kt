@@ -28,6 +28,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
+import by.bashlikovv.chat.struct.Chat
 
 private fun getNavBarContentConstraints(): ConstraintSet {
     return ConstraintSet {
@@ -57,7 +58,8 @@ fun TopAppBar() {
 
             ConstraintLayout(
                 constraintSet = constraintSet,
-                modifier = Modifier.fillMaxWidth().height(55.dp).background(MaterialTheme.colors.primary)
+                modifier = Modifier.fillMaxWidth().height(55.dp).background(MaterialTheme.colors.primary),
+                optimizationLevel = 10
             ) {
                 LeftItem()
                 RightItems()
@@ -122,37 +124,36 @@ fun RightItems(messengerViewModel: MessengerViewModel = viewModel()) {
         }
         AnimatedVisibility(visible = messengerUiState.visible) {
             Row(horizontalArrangement = Arrangement.spacedBy(15.dp)) {
-                Image(
-                    painter = painterResource(R.drawable.pin),
+                RightItem(
+                    image = R.drawable.pin,
                     contentDescription = "Pin chat with ${messengerUiState.selectedItem.user.userName}",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(40.dp).clickable {
-                        messengerViewModel.onActionPin()
-                    }
-                )
-                Image(
-                    painter = painterResource(R.drawable.mark_chat_read),
-                    contentDescription = "mark chat as read",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clickable {
-                            messengerViewModel.onActionRead(messengerUiState.selectedItem)
-                        }
-                )
-                Image(
-                    painter = painterResource(R.drawable.delete_outline),
-                    contentDescription = "delete",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clickable {
-                            messengerViewModel.onActionDelete(messengerUiState.selectedItem)
-                        }
-                )
+                    chat = messengerUiState.selectedItem
+                ) { messengerViewModel.onActionPin() }
+                RightItem(
+                    image = R.drawable.mark_chat_read,
+                    contentDescription = "mark chat with ${messengerUiState.selectedItem.user.userName} as read",
+                    chat = messengerUiState.selectedItem
+                ) { messengerViewModel.onActionRead(it) }
+                RightItem(
+                    image = R.drawable.delete_outline,
+                    contentDescription = "delete chat with \${messengerUiState.selectedItem.user.userName} outline",
+                    chat = messengerUiState.selectedItem
+                ) { messengerViewModel.onActionDelete(it) }
             }
         }
     }
+}
+
+@Composable
+fun RightItem(image: Int, contentDescription: String, chat: Chat, actionListener: (Chat) -> Unit) {
+    Image(
+        painter = painterResource(image),
+        contentDescription = contentDescription,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.size(40.dp).clickable {
+            actionListener(chat)
+        }
+    )
 }
 
 @Composable
