@@ -85,18 +85,12 @@ private fun bottomItemsConstraint(): ConstraintSet {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DrawerContent() {
-    ModalDrawerSheet(
-        drawerContainerColor = MaterialTheme.colors.primary, modifier = Modifier
-    ) {
+    ModalDrawerSheet(drawerContainerColor = MaterialTheme.colors.primary) {
         BoxWithConstraints(modifier = Modifier) {
-
-            ConstraintLayout(
-                constraintSet = constraints()
-            ) {
+            ConstraintLayout(constraintSet = constraints()) {
                 ConstraintLayout(
                     constraintSet = getDrawerContentConstraints(),
-                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.primary)
-                        .layoutId("topElements")
+                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.primary).layoutId("topElements")
                 ) {
                     TopContent()
                 }
@@ -143,20 +137,18 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
 
 @Composable
 fun BottomContent() {
+    BottomContentItem(text = "Settings", layoutId = "settingsBtn") {}
+    BottomContentItem(text = "Contacts", layoutId = "contactsBtn") {}
+}
+
+@Composable
+fun BottomContentItem(text: String, layoutId: String, onClickListener: () -> Unit) {
     TextButton(
-        onClick = { /*TODO*/ },
-        modifier = Modifier.layoutId("settingsBtn").background(MaterialTheme.colors.primary).fillMaxWidth()
+        onClick = { onClickListener() },
+        modifier = Modifier.layoutId(layoutId).background(MaterialTheme.colors.primary).fillMaxWidth()
     ) {
         Text(
-            text = "Settings", fontSize = 20.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colors.secondary
-        )
-    }
-    TextButton(
-        onClick = { /*TODO*/ },
-        modifier = Modifier.layoutId("contactsBtn").background(MaterialTheme.colors.primary).fillMaxWidth()
-    ) {
-        Text(
-            text = "Contacts", fontSize = 20.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colors.secondary
+            text = text, fontSize = 20.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colors.secondary
         )
     }
 }
