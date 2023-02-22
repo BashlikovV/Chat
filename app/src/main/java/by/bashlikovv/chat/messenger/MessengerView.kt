@@ -31,7 +31,6 @@ import by.bashlikovv.chat.drawer.DrawerContent
 import by.bashlikovv.chat.model.MessengerTestData
 import by.bashlikovv.chat.model.MessengerUiState
 import by.bashlikovv.chat.struct.Chat
-import by.bashlikovv.chat.theme.PrimaryLight
 
 @Composable
 fun MessengerView(modifier: Modifier = Modifier, messengerViewModel: MessengerViewModel = viewModel()) {
@@ -109,33 +108,24 @@ private fun getMessengerItemConstraints(): ConstraintSet {
 fun MessengerItem(chat: Chat, messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            val constraints = getMessengerItemConstraints()
-
+    Card {
+        BoxWithConstraints {
             ConstraintLayout(
-                constraintSet = constraints,
-                modifier = Modifier.fillMaxWidth().background(
-                    if (chat.user.userId == messengerUiState.selectedItem.user.userId) {
-                        MaterialTheme.colors.primary
-                    } else {
-                        MaterialTheme.colors.background
+                constraintSet = getMessengerItemConstraints(),
+                modifier = Modifier.fillMaxWidth().background(messengerViewModel.getChatBackground(chat))
+                    .pointerInput(chat) {
+                        detectTapGestures(
+                            onLongPress = { messengerViewModel.onActionSelect(chat) },
+                            onTap = { messengerViewModel.onActionOpenChat(chat) }
+                        )
                     }
-                ).pointerInput(chat) {
-                    detectTapGestures(
-                        onLongPress = { messengerViewModel.onActionSelect(chat) },
-                        onTap = { messengerViewModel.onActionOpenChat(chat) }
-                    )
-                }
             ) {
                 Image(
                     painter = painterResource(chat.user.userImage),
                     contentDescription = "chat with ${chat.user.userName}",
                     contentScale = ContentScale.Crop,
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-                    modifier = Modifier.size(50.dp).layoutId("image")
+                    colorFilter = ColorFilter.tint(color = messengerViewModel.getTintColor(chat)),
+                    modifier = Modifier.clip(RoundedCornerShape(25.dp)).size(50.dp).layoutId("image")
                 )
                 MessengerItemText(
                     text = chat.user.userName,
@@ -159,7 +149,8 @@ fun MessengerItem(chat: Chat, messengerViewModel: MessengerViewModel = viewModel
                     textColor = messengerViewModel.getTextColor(chat)
                 )
                 MessagesCount(
-                    count = chat.count, modifier = Modifier.layoutId("count")
+                    count = chat.count, color = messengerViewModel.getTintColor(chat),
+                    countColor = messengerViewModel.getCountColor(chat), modifier = Modifier.layoutId("count")
                 )
             }
         }
@@ -180,7 +171,7 @@ fun MessengerItemText(text: String, fontWeight: FontWeight, fontSize: Int, textC
 }
 
 @Composable
-fun MessagesCount(count: Int, modifier: Modifier) {
+fun MessagesCount(count: Int, color: Color, countColor: Color, modifier: Modifier) {
     if (count != 0) {
         Text(
             text = "$count",
@@ -188,10 +179,10 @@ fun MessagesCount(count: Int, modifier: Modifier) {
             fontSize = 14.sp,
             maxLines = 1,
             overflow = TextOverflow.Clip,
-            modifier = modifier.clip(RoundedCornerShape(25.dp)).background(MaterialTheme.colors.primary).padding(
+            modifier = modifier.clip(RoundedCornerShape(25.dp)).background(color).padding(
                     horizontal = 7.5.dp, vertical = 2.dp
                 ),
-            color = PrimaryLight
+            color = countColor
         )
     }
 }
