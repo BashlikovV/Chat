@@ -7,11 +7,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.NavigationBar
 import androidx.compose.runtime.Composable
@@ -186,6 +189,14 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
             focusedIndicatorColor = MaterialTheme.colors.secondary
         )
     )
+    //TODO("need to implement")
+    LazyColumn {
+        messengerViewModel.onSearchCalled { list ->
+            items(list) {
+                Text(text = it.messages.last().toString())
+            }
+        }
+    }
 }
 
 @Composable
