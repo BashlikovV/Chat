@@ -2,21 +2,21 @@ package by.bashlikovv.chat.drawer
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
@@ -38,16 +38,14 @@ private fun getDrawerContentConstraints(): ConstraintSet {
         constrain(userImage) {
             top.linkTo(anchor = parent.top, margin = 5.dp)
             start.linkTo(anchor = parent.start, margin = 5.dp)
-            end.linkTo(anchor = parent.end, margin = 5.dp)
         }
         constrain(themeBtn) {
-            top.linkTo(anchor = parent.top, margin = 5.dp)
-            end.linkTo(anchor = parent.end, margin = 5.dp)
+            top.linkTo(anchor = parent.top, margin = 15.dp)
+            end.linkTo(anchor = parent.end, margin = 15.dp)
         }
         constrain(username) {
             top.linkTo(anchor = userImage.bottom, margin = 5.dp)
-            start.linkTo(anchor = parent.start)
-            end.linkTo(anchor = parent.end)
+            start.linkTo(anchor = parent.start, margin = 5.dp)
         }
     }
 }
@@ -58,10 +56,12 @@ private fun constraints(): ConstraintSet {
         val bottomElements = createRefFor("bottomElements")
 
         constrain(topElements) {
-            bottom.linkTo(bottomElements.top)
+            bottom.linkTo(anchor = bottomElements.top)
+            start.linkTo(anchor = parent.start)
         }
         constrain(bottomElements) {
-            top.linkTo(topElements.bottom)
+            top.linkTo(anchor = topElements.bottom)
+            start.linkTo(anchor = parent.start)
         }
     }
 }
@@ -96,7 +96,7 @@ fun DrawerContent() {
                 }
                 ConstraintLayout(
                     constraintSet = bottomItemsConstraint(),
-                    modifier = Modifier.background(MaterialTheme.colors.primary).layoutId("bottomElements"),
+                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.primary).layoutId("bottomElements"),
                 ) {
                     BottomContent()
                 }
@@ -113,42 +113,50 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
         painter = painterResource(R.drawable.test_face_man),
         contentDescription = "user image",
         contentScale = ContentScale.Crop,
-        modifier = Modifier.clip(RoundedCornerShape(15.dp)).background(MaterialTheme.colors.secondary).size(200.dp)
+        modifier = Modifier.clip(RoundedCornerShape(15.dp)).background(MaterialTheme.colors.secondary).size(75.dp)
             .layoutId("userImage")
     )
-    FloatingActionButton(
-        backgroundColor = MaterialTheme.colors.primary,
-        onClick = {
-            messengerViewModel.onThemeChange()
-        },
-        shape = RoundedCornerShape(50.dp), modifier = Modifier.layoutId("themeBtn")
-    ) {
-        Image(
-            painter = painterResource(if (messengerUiState.darkTheme) R.drawable.wb_cloudy else R.drawable.wb_sunny),
-            contentDescription = "theme",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.size(25.dp)
-        )
-    }
+    Image(
+        painter = painterResource(if (messengerUiState.darkTheme) R.drawable.wb_cloudy else R.drawable.wb_sunny),
+        contentDescription = "theme",
+        contentScale = ContentScale.Crop,
+        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
+        modifier = Modifier.size(40.dp).clickable { messengerViewModel.onThemeChange() }.layoutId("themeBtn")
+    )
     Text(
-        text = "User name", fontSize = 24.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.layoutId("username")
+        text = "User name", fontSize = 24.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.layoutId("username"),
+        color = MaterialTheme.colors.secondary
     )
 }
 
 @Composable
 fun BottomContent() {
-    BottomContentItem(text = "Settings", layoutId = "settingsBtn") {}
-    BottomContentItem(text = "Contacts", layoutId = "contactsBtn") {}
+    BottomContentItem(text = "Settings", layoutId = "settingsBtn", leadingIcon = R.drawable.settings) {}
+    BottomContentItem(text = "Contacts", layoutId = "contactsBtn", leadingIcon = R.drawable.person) {}
 }
 
 @Composable
-fun BottomContentItem(text: String, layoutId: String, onClickListener: () -> Unit) {
-    TextButton(
-        onClick = { onClickListener() },
-        modifier = Modifier.layoutId(layoutId).background(MaterialTheme.colors.primary).fillMaxWidth()
+fun BottomContentItem(text: String, layoutId: String, leadingIcon: Int, onClickListener: () -> Unit) {
+    Row(
+        modifier = Modifier.layoutId(layoutId).clickable { onClickListener() },
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        Image(
+            painter = painterResource(leadingIcon),
+            contentDescription = text,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(35.dp),
+            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary)
+        )
         Text(
-            text = text, fontSize = 20.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colors.secondary
+            text = text, fontSize = 20.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colors.secondary,
+            modifier = Modifier
+                .background(Color.Transparent).fillMaxWidth().padding(
+                    start = 5.dp,
+                    end = 5.dp,
+                    top = 10.dp,
+                    bottom = 10.dp
+                )
         )
     }
 }

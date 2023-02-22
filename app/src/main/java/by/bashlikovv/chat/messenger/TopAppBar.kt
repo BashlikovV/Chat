@@ -11,13 +11,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.TextField
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.NavigationBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
@@ -77,6 +80,7 @@ fun LeftItem(messengerViewModel: MessengerViewModel = viewModel()) {
             painter = painterResource(if (messengerUiState.expanded) R.drawable.arrow_back else R.drawable.menu),
             contentDescription = if (messengerUiState.expanded) "Close search" else "Menu",
             contentScale = ContentScale.Crop,
+            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
             modifier = Modifier
                 .size(40.dp)
                 .clickable {
@@ -150,6 +154,7 @@ fun RightItem(image: Int, contentDescription: String, chat: Chat, actionListener
         painter = painterResource(image),
         contentDescription = contentDescription,
         contentScale = ContentScale.Crop,
+        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
         modifier = Modifier.size(40.dp).clickable {
             actionListener(chat)
         }
@@ -160,7 +165,7 @@ fun RightItem(image: Int, contentDescription: String, chat: Chat, actionListener
 fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
-    TextField(
+    OutlinedTextField(
         value = messengerUiState.searchInput,
         onValueChange = { messengerViewModel.onSearchInputChange(it) },
         keyboardOptions = KeyboardOptions.Default.copy(
@@ -174,7 +179,12 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
         maxLines = 1,
         modifier = Modifier.background(MaterialTheme.colors.primary).padding(
             top = 3.dp, bottom = 2.5.dp, end = 5.dp, start = 5.dp
-        ).fillMaxWidth(0.9f)
+        ).fillMaxWidth(0.9f),
+        colors = TextFieldDefaults.textFieldColors(
+            backgroundColor = Color.Transparent,
+            textColor = MaterialTheme.colors.secondary,
+            focusedIndicatorColor = MaterialTheme.colors.secondary
+        )
     )
 }
 
@@ -187,6 +197,7 @@ fun ContentIcon(messengerViewModel: MessengerViewModel = viewModel()) {
             painter = painterResource(R.drawable.search),
             contentDescription = "Search",
             contentScale = ContentScale.Crop,
+            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
             modifier = Modifier.size(50.dp).clip(RoundedCornerShape(25.dp)).clickable {
                     messengerViewModel.onAnimateContentClick()
                 }

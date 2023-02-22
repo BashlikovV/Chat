@@ -14,6 +14,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
@@ -97,7 +99,7 @@ private fun getMessengerItemConstraints(): ConstraintSet {
         }
         constrain(count) {
             end.linkTo(anchor = parent.end, margin = 10.dp)
-            top.linkTo(anchor = parent.top)
+            top.linkTo(anchor = parent.top, margin = 15.dp)
             bottom.linkTo(anchor = parent.bottom)
         }
     }
@@ -114,6 +116,7 @@ fun MessengerItem(chat: Chat, messengerViewModel: MessengerViewModel = viewModel
             val constraints = getMessengerItemConstraints()
 
             ConstraintLayout(
+                constraintSet = constraints,
                 modifier = Modifier.fillMaxWidth().background(
                     if (chat.user.userId == messengerUiState.selectedItem.user.userId) {
                         MaterialTheme.colors.primary
@@ -125,40 +128,35 @@ fun MessengerItem(chat: Chat, messengerViewModel: MessengerViewModel = viewModel
                         onLongPress = { messengerViewModel.onActionSelect(chat) },
                         onTap = { messengerViewModel.onActionOpenChat(chat) }
                     )
-                }, constraintSet = constraints
+                }
             ) {
                 Image(
                     painter = painterResource(chat.user.userImage),
                     contentDescription = "chat with ${chat.user.userName}",
                     contentScale = ContentScale.Crop,
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
                     modifier = Modifier.size(50.dp).layoutId("image")
                 )
-                Text(
+                MessengerItemText(
                     text = chat.user.userName,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    modifier = Modifier.layoutId("name"),
-                    color = messengerViewModel.getTextColor(chat)
+                    fontSize = 16,
+                    layoutId = "name",
+                    textColor = messengerViewModel.getTextColor(chat)
                 )
-                Text(
+                MessengerItemText(
                     text = chat.messages[messengerUiState.chats.indexOf(chat)].value,
                     fontWeight = FontWeight.Light,
-                    fontSize = 14.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    modifier = Modifier.layoutId("message"),
-                    color = messengerViewModel.getTextColor(chat)
+                    fontSize = 14,
+                    layoutId = "message",
+                    textColor = messengerViewModel.getTextColor(chat)
                 )
-                Text(
-                    text = chat.messages.last().time,
+                MessengerItemText(
+                    text = chat.messages[messengerUiState.chats.indexOf(chat)].time,
                     fontWeight = FontWeight.Thin,
-                    fontSize = 7.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Visible,
-                    modifier = Modifier.layoutId("time"),
-                    color = messengerViewModel.getTextColor(chat)
+                    fontSize = 13,
+                    layoutId = "time",
+                    textColor = messengerViewModel.getTextColor(chat)
                 )
                 MessagesCount(
                     count = chat.count, modifier = Modifier.layoutId("count")
@@ -166,6 +164,19 @@ fun MessengerItem(chat: Chat, messengerViewModel: MessengerViewModel = viewModel
             }
         }
     }
+}
+
+@Composable
+fun MessengerItemText(text: String, fontWeight: FontWeight, fontSize: Int, textColor: Color, layoutId: String) {
+    Text(
+        text = text,
+        fontWeight = fontWeight,
+        fontSize = fontSize.sp,
+        maxLines = 1,
+        overflow = TextOverflow.Clip,
+        modifier = Modifier.layoutId(layoutId),
+        color = textColor
+    )
 }
 
 @Composable
