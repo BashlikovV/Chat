@@ -7,14 +7,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.NavigationBar
 import androidx.compose.runtime.Composable
@@ -26,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.IntSize
@@ -55,16 +53,21 @@ private fun getNavBarContentConstraints(): ConstraintSet {
 }
 
 @Composable
-fun TopAppBar() {
+fun TopAppBar(messengerViewModel: MessengerViewModel = viewModel()) {
+    val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+
     NavigationBar(
-        modifier = Modifier.fillMaxWidth().height(55.dp).padding(bottom = 1.dp)
+        modifier = Modifier.fillMaxWidth().padding(bottom = 1.dp).animateContentSize().height(55.dp)
     ) {
-        BoxWithConstraints(modifier = Modifier.height(55.dp)) {
+        BoxWithConstraints(modifier = Modifier.background(MaterialTheme.colors.primary).height(55.dp)
+        ) {
             val constraintSet = getNavBarContentConstraints()
 
             ConstraintLayout(
                 constraintSet = constraintSet,
-                modifier = Modifier.fillMaxWidth().height(55.dp).background(MaterialTheme.colors.primary),
+                modifier = Modifier.fillMaxWidth()
+                    .height(if (messengerUiState.expanded) LocalConfiguration.current.screenHeightDp.dp else 55.dp)
+                    .background(MaterialTheme.colors.primary),
                 optimizationLevel = 10
             ) {
                 LeftItem()
@@ -189,14 +192,11 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
             focusedIndicatorColor = MaterialTheme.colors.secondary
         )
     )
-    //TODO("need to implement")
-    LazyColumn {
-        messengerViewModel.onSearchCalled { list ->
-            items(list) {
-                Text(text = it.messages.last().toString())
-            }
-        }
-    }
+//    LazyColumn(modifier = Modifier.padding(top = 65.dp)) {
+//        items(messengerUiState.searchedItems) {
+//            MessengerItem(it)
+//        }
+//    }
 }
 
 @Composable

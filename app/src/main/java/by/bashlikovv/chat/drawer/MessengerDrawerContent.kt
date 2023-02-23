@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
@@ -29,7 +28,6 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.messenger.MessengerViewModel
-import by.bashlikovv.chat.theme.Shapes
 
 private fun getDrawerContentConstraints(): ConstraintSet {
     return ConstraintSet {
@@ -86,7 +84,7 @@ private fun bottomItemsConstraint(): ConstraintSet {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DrawerContent() {
+fun MessengerDrawerContent() {
     ModalDrawerSheet(drawerContainerColor = MaterialTheme.colors.primary) {
         BoxWithConstraints(modifier = Modifier) {
             ConstraintLayout(constraintSet = constraints()) {
