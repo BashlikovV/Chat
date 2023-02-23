@@ -14,10 +14,12 @@ data class MessengerUiState(
     val drawerState: DrawerState = DrawerState(DrawerValue.Closed),
     val darkTheme: Boolean = true,
     val expanded: Boolean = false,
-    val searchInput: String = ""
+    val searchInput: String = "",
+    val searchedItems: List<Chat> = emptyList()
 )
 
 object MessengerTestData {
+    private val me = User(userId = 0, userName = "appice", userImage = R.drawable.test_face_man)
     val testData = (0..30).map { chatIndex ->
         Chat(
             user = User(
@@ -27,12 +29,11 @@ object MessengerTestData {
             ),
             messages = (0..30).map {
                 Message(
-                    value = "Message from user$chatIndex",
-                    user = User(
+                    value = "Message from user${chatIndex + 1}",
+                    user = listOf(me, User(
                         userId = chatIndex.toLong(),
-                        userImage = listOf(R.drawable.test_face_man, R.drawable.test_face_woman).random(),
-                        userName = "user$chatIndex"
-                    ),
+                        userName = "user name $chatIndex"
+                    )).random(),
                     isRead = listOf(true, false).random(),
                     time = "22:22"
                 )

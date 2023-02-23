@@ -180,7 +180,15 @@ class MessengerViewModel : ViewModel() {
     /**
      * [onSearchInputChange] - function that search concurrence between search input and list of [Chat]
      * */
-    fun onSearchCalled(result: (List<Chat>) -> Unit = {}) {
-        result(emptyList())
+    fun onSearchCalled() {
+        var result = _messengerUiState.value.chats.map {
+            if (it.user.userName.contains(_messengerUiState.value.searchInput)) {
+                it
+            } else {
+                Chat(time = (-1).toString())
+            }
+        }
+        result = result.filter { it.time != (-1).toString() }
+        _messengerUiState.update { it.copy(searchedItems = result) }
     }
 }
