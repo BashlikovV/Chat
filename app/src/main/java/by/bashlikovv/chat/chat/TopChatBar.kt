@@ -39,7 +39,6 @@ private fun getTopChatBarConstraints(): ConstraintSet {
 
 @Composable
 fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> Unit) {
-    val chatUiState by chatViewModel.chatUiState.collectAsState()
 
     BoxWithConstraints {
         ConstraintLayout(
