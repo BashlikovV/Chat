@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalDrawer
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -27,17 +29,14 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.drawer.DrawerContent
-import by.bashlikovv.chat.model.MessengerTestData
-import by.bashlikovv.chat.model.MessengerUiState
+import by.bashlikovv.chat.drawer.MessengerDrawerContent
 import by.bashlikovv.chat.struct.Chat
 
 @Composable
-fun MessengerView(modifier: Modifier = Modifier, messengerViewModel: MessengerViewModel = viewModel()) {
-    LaunchedEffect(Unit) {
-        messengerViewModel.applyMessengerUiState(MessengerUiState(MessengerTestData.testData))
-    }
-
+fun MessengerView(
+    modifier: Modifier = Modifier, messengerViewModel: MessengerViewModel = viewModel(),
+    onOpenChat: (Chat) -> Unit
+) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
     ModalDrawer(
@@ -46,18 +45,19 @@ fun MessengerView(modifier: Modifier = Modifier, messengerViewModel: MessengerVi
         drawerBackgroundColor = MaterialTheme.colors.primary,
         drawerContentColor = MaterialTheme.colors.primary,
         drawerContent = {
-            DrawerContent()
+            MessengerDrawerContent()
         }
     ) {
-        Scaffold(topBar = { TopAppBar() }) {
-            MessengerContent(modifier = modifier.padding(it).fillMaxSize())
+        Scaffold(topBar = { TopAppBar() }) { paddingValues ->
+            MessengerContent(modifier = modifier.padding(paddingValues).fillMaxSize()) { onOpenChat(it) }
         }
     }
 }
 
 @Composable
 fun MessengerContent(
-    modifier: Modifier = Modifier, messengerViewModel: MessengerViewModel = viewModel()
+    modifier: Modifier = Modifier, messengerViewModel: MessengerViewModel = viewModel(),
+    onOpenChat: (Chat) -> Unit
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
@@ -65,7 +65,7 @@ fun MessengerContent(
         modifier = modifier.background(MaterialTheme.colors.primary),
         verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
-        items(messengerUiState.chats) { MessengerItem(it) }
+        items(messengerUiState.chats) { chat -> MessengerItem(chat) { onOpenChat(it) } }
     }
 }
 
@@ -105,54 +105,58 @@ private fun getMessengerItemConstraints(): ConstraintSet {
 }
 
 @Composable
-fun MessengerItem(chat: Chat, messengerViewModel: MessengerViewModel = viewModel()) {
+fun MessengerItem(
+    chat: Chat, modifier: Modifier = Modifier, messengerViewModel: MessengerViewModel = viewModel(),
+    onOpenChat: (Chat) -> Unit
+) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
-    Card {
-        BoxWithConstraints {
-            ConstraintLayout(
-                constraintSet = getMessengerItemConstraints(),
-                modifier = Modifier.fillMaxWidth().background(messengerViewModel.getChatBackground(chat))
-                    .pointerInput(chat) {
-                        detectTapGestures(
-                            onLongPress = { messengerViewModel.onActionSelect(chat) },
-                            onTap = { messengerViewModel.onActionOpenChat(chat) }
-                        )
-                    }
-            ) {
-                Image(
-                    painter = painterResource(chat.user.userImage),
-                    contentDescription = "chat with ${chat.user.userName}",
-                    contentScale = ContentScale.Crop,
-                    colorFilter = ColorFilter.tint(color = messengerViewModel.getTintColor(chat)),
-                    modifier = Modifier.clip(RoundedCornerShape(25.dp)).size(50.dp).layoutId("image")
-                )
-                MessengerItemText(
-                    text = chat.user.userName,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16,
-                    layoutId = "name",
-                    textColor = messengerViewModel.getTextColor(chat)
-                )
-                MessengerItemText(
-                    text = chat.messages[messengerUiState.chats.indexOf(chat)].value,
-                    fontWeight = FontWeight.Light,
-                    fontSize = 14,
-                    layoutId = "message",
-                    textColor = messengerViewModel.getTextColor(chat)
-                )
-                MessengerItemText(
-                    text = chat.messages[messengerUiState.chats.indexOf(chat)].time,
-                    fontWeight = FontWeight.Thin,
-                    fontSize = 13,
-                    layoutId = "time",
-                    textColor = messengerViewModel.getTextColor(chat)
-                )
-                MessagesCount(
-                    count = chat.count, color = messengerViewModel.getTintColor(chat),
-                    countColor = messengerViewModel.getCountColor(chat), modifier = Modifier.layoutId("count")
-                )
-            }
+    BoxWithConstraints {
+        ConstraintLayout(
+            constraintSet = getMessengerItemConstraints(),
+            modifier = modifier.fillMaxWidth().background(messengerViewModel.getChatBackground(chat))
+                .pointerInput(chat) {
+                    detectTapGestures(
+                        onLongPress = { messengerViewModel.onActionSelect(chat) },
+                        onTap = {
+                            messengerViewModel.onActionOpenChat(chat)
+                            onOpenChat(chat)
+                        }
+                    )
+                }
+        ) {
+            Image(
+                painter = painterResource(chat.user.userImage),
+                contentDescription = "chat with ${chat.user.userName}",
+                contentScale = ContentScale.Crop,
+                colorFilter = ColorFilter.tint(color = messengerViewModel.getTintColor(chat)),
+                modifier = Modifier.clip(RoundedCornerShape(25.dp)).size(50.dp).layoutId("image")
+            )
+            MessengerItemText(
+                text = chat.user.userName,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16,
+                layoutId = "name",
+                textColor = messengerViewModel.getTextColor(chat)
+            )
+            MessengerItemText(
+                text = chat.messages[messengerUiState.chats.indexOf(chat)].value,
+                fontWeight = FontWeight.Light,
+                fontSize = 14,
+                layoutId = "message",
+                textColor = messengerViewModel.getTextColor(chat)
+            )
+            MessengerItemText(
+                text = chat.messages[messengerUiState.chats.indexOf(chat)].time,
+                fontWeight = FontWeight.Thin,
+                fontSize = 13,
+                layoutId = "time",
+                textColor = messengerViewModel.getTextColor(chat)
+            )
+            MessagesCount(
+                count = chat.count, color = messengerViewModel.getTintColor(chat),
+                countColor = messengerViewModel.getCountColor(chat), modifier = Modifier.layoutId("count")
+            )
         }
     }
 }
