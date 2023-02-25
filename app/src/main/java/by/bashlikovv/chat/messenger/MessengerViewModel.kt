@@ -1,10 +1,10 @@
 package by.bashlikovv.chat.messenger
 
-import androidx.compose.ui.graphics.Color
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import by.bashlikovv.chat.model.MessengerUiState
 import by.bashlikovv.chat.struct.Chat
@@ -190,5 +190,12 @@ class MessengerViewModel : ViewModel() {
         }
         result = result.filter { it.time != (-1).toString() }
         _messengerUiState.update { it.copy(searchedItems = result) }
+    }
+
+    /**
+     * [applyMe] - function for applying current user data after registration
+     * */
+    fun applyMe(me: User) {
+        _messengerUiState.update { it.copy(me = me) }
     }
 }

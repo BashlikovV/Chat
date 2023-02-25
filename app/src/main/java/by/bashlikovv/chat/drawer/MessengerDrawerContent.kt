@@ -124,7 +124,7 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
         modifier = Modifier.size(40.dp).clickable { messengerViewModel.onThemeChange() }.layoutId("themeBtn")
     )
     Text(
-        text = "User name", fontSize = 24.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.layoutId("username"),
+        text = messengerUiState.me.userName, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.layoutId("username"),
         color = MaterialTheme.colors.secondary
     )
 }

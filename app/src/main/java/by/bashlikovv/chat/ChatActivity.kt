@@ -1,7 +1,6 @@
 package by.bashlikovv.chat
 
 import android.os.Bundle
-import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -30,7 +29,6 @@ class ChatActivity : ComponentActivity() {
             val chatUiState by chatViewModel.chatUiState.collectAsState()
 
             MessengerTheme(darkTheme = darkTheme ?: true) {
-                // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     ChatView {
                         intent.apply {
@@ -41,12 +39,5 @@ class ChatActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            onBackPressed()
-        }
-        return super.onKeyDown(keyCode, event)
     }
 }
