@@ -1,5 +1,7 @@
 package by.bashlikovv.chat.chat
 
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import by.bashlikovv.chat.model.ChatUiState
@@ -39,11 +41,12 @@ class ChatViewModel : ViewModel() {
                 it.copy(value = "my extended long long message message ${it.value.last()}")
             }
         }
-        _chatUiState.update { it.copy(chat.copy(messages = testData)) }
+        _chatUiState.update { it.copy(chat = chat.copy(messages = testData)) }
     }
 
     fun onTextInputChange(newValue: String) {
         _chatUiState.update { it.copy(textInputState = newValue) }
+        isCanSend()
     }
 
     private fun clearInput() {
@@ -71,5 +74,18 @@ class ChatViewModel : ViewModel() {
         }
         delay(1000)
         clearInput()
+    }
+
+    private fun isCanSend() {
+        _chatUiState.update { it.copy(isCanSend = it.textInputState.isNotEmpty()) }
+    }
+
+    fun onActionGallery(context: Context) {
+        val galleryIntent = Intent().apply {
+            action = Intent.ACTION_VIEW
+            type = "image/*"
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(Intent.createChooser(galleryIntent, "Camera"))
     }
 }

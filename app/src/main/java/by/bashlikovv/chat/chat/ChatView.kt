@@ -1,10 +1,7 @@
 package by.bashlikovv.chat.chat
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,11 +14,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.struct.Message
+import kotlinx.coroutines.DelicateCoroutinesApi
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
     Scaffold(topBar = { TopChatBar { onBackAction() } }, bottomBar = { BottomInputFiled() }) {
@@ -54,18 +54,25 @@ fun MessageView(message: Message, chatViewModel: ChatViewModel = viewModel()) {
             vertical = 2.5.dp
         ).fillMaxSize()
     ) {
-        Row(modifier = Modifier.clip(RoundedCornerShape(10.dp)).padding(5.dp).background(MaterialTheme.colors.primary)) {
+        Row(
+            modifier = Modifier.padding(5.dp).clip(RoundedCornerShape(15.dp)).background(MaterialTheme.colors.primary)
+            .fillMaxWidth(0.7f)
+        ) {
             Text(
                 text = message.value,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Light,
                 color = MaterialTheme.colors.primaryVariant,
+                maxLines = 15,
+                overflow = TextOverflow.Clip,
+                modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
             )
             Text(
                 text = message.time,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Thin,
-                color = MaterialTheme.colors.primaryVariant
+                color = MaterialTheme.colors.primaryVariant,
+                modifier = Modifier.padding(horizontal = 5.dp)
             )
         }
     }

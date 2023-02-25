@@ -9,6 +9,7 @@ import by.bashlikovv.chat.struct.User
 
 data class MessengerUiState(
     val chats: List<Chat> = emptyList(),
+    val me: User = User(),
     val visible: Boolean = false,
     val selectedItem: Chat = Chat(),
     val drawerState: DrawerState = DrawerState(DrawerValue.Closed),
