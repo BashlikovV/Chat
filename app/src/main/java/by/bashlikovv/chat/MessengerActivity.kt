@@ -16,6 +16,7 @@ import by.bashlikovv.chat.messenger.MessengerView
 import by.bashlikovv.chat.messenger.MessengerViewModel
 import by.bashlikovv.chat.model.MessengerTestData
 import by.bashlikovv.chat.model.MessengerUiState
+import by.bashlikovv.chat.struct.User
 import by.bashlikovv.chat.theme.MessengerTheme
 
 class MessengerActivity : ComponentActivity() {
@@ -34,6 +35,14 @@ class MessengerActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 messengerViewModel.applyMessengerUiState(MessengerUiState(MessengerTestData.testData))
+                val userName = intent.extras?.getString(LogInActivity.USER_NAME)
+                val email = intent.extras?.getString(LogInActivity.USER_EMAIL)
+                val password = intent.extras?.getString(LogInActivity.USER_PASSWORD)
+                messengerViewModel.applyMe(User(
+                    userName = userName ?: "unknown user",
+                    userEmail = email ?: "unknown email",
+                    userPassword = password ?: "unknown password"
+                ))
             }
 
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
