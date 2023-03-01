@@ -7,10 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ModalDrawer
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -18,10 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,18 +36,15 @@ fun MessengerView(
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
-    ModalDrawer(
-        gesturesEnabled = true,
-        drawerState = messengerUiState.drawerState,
-        drawerBackgroundColor = MaterialTheme.colors.primary,
-        drawerContentColor = MaterialTheme.colors.primary,
-        drawerContent = {
-            MessengerDrawerContent()
-        }
-    ) {
-        Scaffold(topBar = { TopAppBar() }) { paddingValues ->
-            MessengerContent(modifier = modifier.padding(paddingValues).fillMaxSize()) { onOpenChat(it) }
-        }
+    Scaffold(
+        topBar = { TopAppBar() },
+        drawerContent = { MessengerDrawerContent() },
+        scaffoldState = ScaffoldState(
+            drawerState = messengerUiState.drawerState,
+            snackbarHostState = SnackbarHostState()
+        )
+    ) { paddingValues ->
+        MessengerContent(modifier = modifier.padding(paddingValues).fillMaxSize()) { onOpenChat(it) }
     }
 }
 
@@ -126,7 +120,7 @@ fun MessengerItem(
                 }
         ) {
             Image(
-                painter = painterResource(chat.user.userImage),
+                bitmap = chat.user.userImage.userImageBitmap.asImageBitmap(),
                 contentDescription = "chat with ${chat.user.userName}",
                 contentScale = ContentScale.Crop,
                 colorFilter = ColorFilter.tint(color = messengerViewModel.getTintColor(chat)),

@@ -1,5 +1,7 @@
 package by.bashlikovv.chat.drawer
 
+import android.app.Activity
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,8 +29,10 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
+import by.bashlikovv.chat.LogInActivity
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.messenger.MessengerViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 private fun getDrawerContentConstraints(): ConstraintSet {
     return ConstraintSet {
@@ -131,7 +136,15 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
 
 @Composable
 fun BottomContent() {
-    BottomContentItem(text = "Settings", layoutId = "settingsBtn", leadingIcon = R.drawable.settings) {}
+    val context = LocalContext.current
+    val activity = (LocalContext.current as? Activity)
+
+    BottomContentItem(text = "Settings", layoutId = "settingsBtn", leadingIcon = R.drawable.settings) {
+        FirebaseAuth.getInstance().signOut()
+        val logInIntent = Intent(context, LogInActivity::class.java)
+        context.startActivity(logInIntent)
+        activity?.finish()
+    }
     BottomContentItem(text = "Contacts", layoutId = "contactsBtn", leadingIcon = R.drawable.person) {}
 }
 
