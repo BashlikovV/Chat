@@ -2,6 +2,8 @@ package by.bashlikovv.chat.model
 
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
+import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.drawable.toDrawable
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.struct.Chat
 import by.bashlikovv.chat.struct.Message
@@ -20,12 +22,16 @@ data class MessengerUiState(
 )
 
 object MessengerTestData {
-    private val me = User(userId = 0, userName = "appice", userImage = R.drawable.test_face_man)
+    private val userTestManBitmap = R.drawable.test_face_man.toDrawable().toBitmap(50, 50)
+    private val userTestWomanBitmap = R.drawable.test_face_man.toDrawable().toBitmap(50, 50)
+    private val me = User(userId = 0, userName = "appice", userImage = UserImage(userImageBitmap = userTestManBitmap))
     val testData = (0..30).map { chatIndex ->
         Chat(
             user = User(
                 userId = chatIndex.toLong(),
-                userImage = listOf(R.drawable.test_face_man, R.drawable.test_face_woman).random(),
+                userImage = UserImage(
+                    userImageBitmap = listOf(userTestWomanBitmap, userTestManBitmap).random()
+                ),
                 userName = "user$chatIndex"
             ),
             messages = (0..30).map {

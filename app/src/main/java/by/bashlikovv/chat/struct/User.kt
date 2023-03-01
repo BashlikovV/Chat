@@ -1,7 +1,7 @@
 package by.bashlikovv.chat.struct
 
 import android.os.Parcelable
-import androidx.annotation.DrawableRes
+import by.bashlikovv.chat.model.UserImage
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
@@ -10,5 +10,5 @@ data class User(
     val userName: String = "",
     val userEmail: String = "",
     val userPassword: String = "",
-    @DrawableRes val userImage: Int = 0
+    val userImage: UserImage = UserImage()
 ) : Parcelable

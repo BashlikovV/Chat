@@ -35,14 +35,7 @@ class MessengerActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 messengerViewModel.applyMessengerUiState(MessengerUiState(MessengerTestData.testData))
-                val userName = intent.extras?.getString(LogInActivity.USER_NAME)
-                val email = intent.extras?.getString(LogInActivity.USER_EMAIL)
-                val password = intent.extras?.getString(LogInActivity.USER_PASSWORD)
-                messengerViewModel.applyMe(User(
-                    userName = userName ?: "unknown user",
-                    userEmail = email ?: "unknown email",
-                    userPassword = password ?: "unknown password"
-                ))
+                messengerViewModel.applyMe(User(userName = messengerViewModel.getUserName()))
             }
 
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
