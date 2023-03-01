@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import by.bashlikovv.chat.model.MessengerUiState
 import by.bashlikovv.chat.struct.Chat
 import by.bashlikovv.chat.struct.User
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -197,5 +198,10 @@ class MessengerViewModel : ViewModel() {
      * */
     fun applyMe(me: User) {
         _messengerUiState.update { it.copy(me = me) }
+    }
+
+    fun getUserName(): String {
+        FirebaseAuth.getInstance().currentUser?.displayName
+        return FirebaseAuth.getInstance().currentUser?.displayName ?: "Unknown user"
     }
 }
