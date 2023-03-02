@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,12 +26,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.LogInActivity
 import by.bashlikovv.chat.R
-import by.bashlikovv.chat.theme.MessengerTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,86 +38,71 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel(), logInActivity: Compo
 
     Scaffold(
         topBar = {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = { logInViewModel.onButtonClk(false) },
-                    content = { Text("Do not have account") },
-                    modifier = Modifier.weight(0.5f),
-                    border = BorderStroke(
-                        1.dp,
-                        if (logInUiState.isHaveAccount)
-                            MaterialTheme.colors.primary
-                        else
-                            MaterialTheme.colors.secondary
-                    )
-                )
-                Button(
-                    onClick = { logInViewModel.onButtonClk(true) },
-                    content = { Text("Have account") },
-                    modifier = Modifier.weight(0.5f),
-                    border = BorderStroke(
-                        1.dp,
-                        if (logInUiState.isHaveAccount)
-                            MaterialTheme.colors.secondary
-                        else
-                            MaterialTheme.colors.primary
-                    )
+            TopAppContent()
+        },
+        containerColor = MaterialTheme.colors.primary,
+        contentColor = MaterialTheme.colors.secondary,
+        floatingActionButton = {
+            if (logInUiState.progressBarVisibility) {
+                LinearProgressIndicator(
+                    modifier = Modifier.height(15.dp).fillMaxWidth(),
+                    backgroundColor = MaterialTheme.colors.secondary
                 )
             }
         },
-        containerColor = MaterialTheme.colors.primary,
-        contentColor = MaterialTheme.colors.secondary
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
-            verticalArrangement = Arrangement.Center
-        ) {
-            AnimatedVisibility(visible = !logInUiState.isHaveAccount) {
-                Column {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                        if (logInUiState.userImageBitmap.userImageUrl == "") {
-                            DefaultImage(logInActivity = logInActivity)
-                        } else {
-                            UserImage(logInActivity = logInActivity)
+        floatingActionButtonPosition = FabPosition.Center,
+        content = { paddingValues ->
+            Column(
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                verticalArrangement = Arrangement.Center
+            ) {
+                AnimatedVisibility(visible = !logInUiState.isHaveAccount) {
+                    Column {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                            if (logInUiState.userImageBitmap.userImageUrl == "") {
+                                DefaultImage(logInActivity = logInActivity)
+                            } else {
+                                UserImage(logInActivity = logInActivity)
+                            }
                         }
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(15.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        InputField(value = logInUiState.userName, text = "User name") {
-                            logInViewModel.onUserNameChange(it)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(15.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            InputField(value = logInUiState.userName, text = "User name") {
+                                logInViewModel.onUserNameChange(it)
+                            }
                         }
                     }
                 }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 15.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                InputField(value = logInUiState.identifier, text = "Email") { logInViewModel.onIdentifierChange(it) }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 15.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    InputField(value = logInUiState.identifier, text = "Email") { logInViewModel.onIdentifierChange(it) }
 
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 15.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                InputField(value = logInUiState.password, text = "Password") { logInViewModel.onPasswordChange(it) }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 15.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    InputField(value = logInUiState.password, text = "Password") { logInViewModel.onPasswordChange(it) }
 
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 15.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Button(
-                    onClick = {
-                        logInViewModel.onCheckInput(context, logInUiState.isHaveAccount)
-                    },
-                    content = { Text("LogIn") }
-                )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 15.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(
+                        onClick = {
+                            logInViewModel.onCheckInput(context, logInUiState.isHaveAccount)
+                        },
+                        content = { Text("LogIn") }
+                    )
+                }
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -184,12 +167,34 @@ fun UserImage(logInViewModel: LogInViewModel = viewModel(), logInActivity: Compo
     )
 }
 
-@Preview
 @Composable
-fun LogInViewPreview() {
-    MessengerTheme {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-            LogInView(logInActivity = LogInActivity())
-        }
+fun TopAppContent(logInViewModel: LogInViewModel = viewModel()) {
+    val logInUiState by logInViewModel.logInUiState.collectAsState()
+
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = { logInViewModel.onButtonClk(false) },
+            content = { Text("Do not have account") },
+            modifier = Modifier.weight(0.5f),
+            border = BorderStroke(
+                1.dp,
+                if (logInUiState.isHaveAccount)
+                    MaterialTheme.colors.primary
+                else
+                    MaterialTheme.colors.secondary
+            )
+        )
+        Button(
+            onClick = { logInViewModel.onButtonClk(true) },
+            content = { Text("Have account") },
+            modifier = Modifier.weight(0.5f),
+            border = BorderStroke(
+                1.dp,
+                if (logInUiState.isHaveAccount)
+                    MaterialTheme.colors.secondary
+                else
+                    MaterialTheme.colors.primary
+            )
+        )
     }
 }
