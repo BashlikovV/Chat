@@ -75,6 +75,8 @@ private fun bottomItemsConstraint(): ConstraintSet {
     return ConstraintSet {
         val settingsBtn = createRefFor("settingsBtn")
         val contactsBtn = createRefFor("contactsBtn")
+        val signOutBtn = createRefFor("signOutBtn")
+        val spacer = createRefFor("spacer")
 
         constrain(settingsBtn) {
             top.linkTo(anchor = parent.top, margin = 5.dp)
@@ -84,6 +86,15 @@ private fun bottomItemsConstraint(): ConstraintSet {
             top.linkTo(anchor = settingsBtn.bottom, margin = 5.dp)
             start.linkTo(anchor = parent.start)
         }
+        constrain(spacer) {
+            top.linkTo(anchor = contactsBtn.bottom, margin = 5.dp)
+            start.linkTo(anchor = parent.start)
+        }
+        constrain(signOutBtn) {
+            bottom.linkTo(anchor = parent.bottom, margin = 5.dp)
+            start.linkTo(anchor = parent.start)
+            top.linkTo(anchor = spacer.bottom, margin = 5.dp)
+        }
     }
 }
 
@@ -91,8 +102,8 @@ private fun bottomItemsConstraint(): ConstraintSet {
 @Composable
 fun MessengerDrawerContent() {
     ModalDrawerSheet(drawerContainerColor = MaterialTheme.colors.primary) {
-        BoxWithConstraints(modifier = Modifier) {
-            ConstraintLayout(constraintSet = constraints()) {
+        BoxWithConstraints {
+            ConstraintLayout(constraintSet = constraints(), modifier = Modifier.fillMaxHeight()) {
                 ConstraintLayout(
                     constraintSet = getDrawerContentConstraints(),
                     modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.primary).layoutId("topElements")
@@ -139,13 +150,17 @@ fun BottomContent() {
     val context = LocalContext.current
     val activity = (LocalContext.current as? Activity)
 
-    BottomContentItem(text = "Settings", layoutId = "settingsBtn", leadingIcon = R.drawable.settings) {
+    BottomContentItem(text = "Settings", layoutId = "settingsBtn", leadingIcon = R.drawable.settings) {}
+    BottomContentItem(text = "Contacts", layoutId = "contactsBtn", leadingIcon = R.drawable.person) {}
+    Spacer(
+        modifier = Modifier.height(1.dp).fillMaxWidth().background(MaterialTheme.colors.secondary).layoutId("spacer")
+    )
+    BottomContentItem(text = "Sign out", layoutId = "signOutBtn", leadingIcon = R.drawable.exit) {
         FirebaseAuth.getInstance().signOut()
         val logInIntent = Intent(context, LogInActivity::class.java)
         context.startActivity(logInIntent)
         activity?.finish()
     }
-    BottomContentItem(text = "Contacts", layoutId = "contactsBtn", leadingIcon = R.drawable.person) {}
 }
 
 @Composable
