@@ -9,10 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,13 +22,15 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
-import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import by.bashlikovv.chat.LogInActivity
 import by.bashlikovv.chat.R
+import by.bashlikovv.chat.theme.MessengerTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,18 +77,11 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel(), logInActivity: Compo
             AnimatedVisibility(visible = !logInUiState.isHaveAccount) {
                 Column {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                        Image(
-                            bitmap = if (logInUiState.userImageBitmap.userImageUrl == "")
-                                R.drawable.add_photo.toDrawable().toBitmap(100, 100).asImageBitmap()
-                            else
-                                logInUiState.userImageBitmap.userImageBitmap.asImageBitmap(),
-                            contentDescription = "Your image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(100.dp).clip(RoundedCornerShape(50.dp)).clickable {
-                                logInViewModel.selectImage(logInActivity)
-                            },
-                            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary)
-                        )
+                        if (logInUiState.userImageBitmap.userImageUrl == "") {
+                            DefaultImage(logInActivity = logInActivity)
+                        } else {
+                            UserImage(logInActivity = logInActivity)
+                        }
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(15.dp),
@@ -163,4 +155,41 @@ fun InputField(
         })
 
     )
+}
+
+@Composable
+fun DefaultImage(logInViewModel: LogInViewModel = viewModel(), logInActivity: ComponentActivity) {
+    Image(
+        painter = painterResource(R.drawable.add_photo),
+        contentDescription = "Your image",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.size(100.dp).clip(RoundedCornerShape(50.dp)).clickable {
+            logInViewModel.selectImage(logInActivity)
+        },
+        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary)
+    )
+}
+
+@Composable
+fun UserImage(logInViewModel: LogInViewModel = viewModel(), logInActivity: ComponentActivity) {
+    val logInUiState by logInViewModel.logInUiState.collectAsState()
+
+    Image(
+        bitmap = logInUiState.userImageBitmap.userImageBitmap.asImageBitmap(),
+        contentDescription = "Your image",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.size(100.dp).clip(RoundedCornerShape(50.dp)).clickable {
+            logInViewModel.selectImage(logInActivity)
+        }
+    )
+}
+
+@Preview
+@Composable
+fun LogInViewPreview() {
+    MessengerTheme {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
+            LogInView(logInActivity = LogInActivity())
+        }
+    }
 }
