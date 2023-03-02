@@ -50,7 +50,7 @@ class ChatViewModel : ViewModel() {
     }
 
     private fun clearInput() {
-        _chatUiState.update { it.copy(textInputState = "") }
+        _chatUiState.update { it.copy(textInputState = "", isCanSend = false) }
     }
 
     suspend fun onActionSend() {
@@ -87,5 +87,9 @@ class ChatViewModel : ViewModel() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         context.startActivity(Intent.createChooser(galleryIntent, "Camera"))
+    }
+
+    fun onActionItemClicked(message: Message) {
+        _chatUiState.update { it.copy(selectedMessage = message) }
     }
 }

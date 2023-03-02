@@ -7,8 +7,6 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import by.bashlikovv.chat.chat.ChatView
 import by.bashlikovv.chat.chat.ChatViewModel
@@ -26,14 +24,9 @@ class ChatActivity : ComponentActivity() {
         }
 
         setContent {
-            val chatUiState by chatViewModel.chatUiState.collectAsState()
-
             MessengerTheme(darkTheme = darkTheme ?: true) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     ChatView {
-                        intent.apply {
-                            putExtra(MessengerActivity.CHAT, chatUiState.chat)
-                        }
                         onBackPressed()
                     }
                 }
