@@ -11,6 +11,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -26,6 +27,9 @@ class LogInActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            LaunchedEffect(Unit) {
+                logInViewModel.applyMessengerDatabase(openOrCreateDatabase(MessengerActivity.DATA_BASE, MODE_PRIVATE, null))
+            }
             val logInUiState by logInViewModel.logInUiState.collectAsState()
 
             MessengerTheme(darkTheme = true) {

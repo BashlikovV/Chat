@@ -1,5 +1,6 @@
 package by.bashlikovv.chat.messenger
 
+import android.database.sqlite.SQLiteDatabase
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
 import androidx.compose.material.MaterialTheme
@@ -23,11 +24,17 @@ class MessengerViewModel : ViewModel() {
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
     val messengerUiState = _messengerUiState.asStateFlow()
 
+    private lateinit var messengerDatabase: SQLiteDatabase
+
     private val selectedItem
         get() = _messengerUiState.value.selectedItem
 
     fun applyMessengerUiState(state: MessengerUiState) {
         _messengerUiState.update { state }
+    }
+
+    fun applyMessengerDatabase(database: SQLiteDatabase) {
+        messengerDatabase = database
     }
 
     /**

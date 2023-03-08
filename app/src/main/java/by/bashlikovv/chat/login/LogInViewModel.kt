@@ -2,6 +2,7 @@ package by.bashlikovv.chat.login
 
 import android.content.Context
 import android.content.Intent
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -23,6 +24,15 @@ class LogInViewModel : ViewModel() {
 
     private val _logInUiState = MutableStateFlow(LogInUiState())
     val logInUiState = _logInUiState.asStateFlow()
+
+    private lateinit var messengerDatabase: SQLiteDatabase
+
+    fun applyMessengerDatabase(database: SQLiteDatabase) {
+        messengerDatabase = database
+        messengerDatabase.execSQL(
+            "CREATE TABLE IF NOT EXISTS user (name VARCHAR(200), email VARCHAR(200), picFileName VARCHAR(100), picData VARBINARY)"
+        )
+    }
 
     fun onIdentifierChange(newValue: String) {
         _logInUiState.update { it.copy(identifier = newValue) }
