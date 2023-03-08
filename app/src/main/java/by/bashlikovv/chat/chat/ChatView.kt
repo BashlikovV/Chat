@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
@@ -35,7 +36,11 @@ fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
 fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
 
-    LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(1.dp)) {
+    LazyColumn(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(1.dp),
+        state = LazyListState(chatUiState.chat.messages.size)
+    ) {
         items(chatUiState.chat.messages) {
             MessageView(message = it) { message ->
                 chatViewModel.onActionItemClicked(message)
@@ -45,7 +50,11 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
 }
 
 @Composable
-fun MessageView(message: Message, chatViewModel: ChatViewModel = viewModel(), onItemClicked: (Message) -> Unit) {
+fun MessageView(
+    message: Message,
+    chatViewModel: ChatViewModel = viewModel(),
+    onItemClicked: (Message) -> Unit
+) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
 
     Row(
@@ -74,14 +83,14 @@ fun MessageView(message: Message, chatViewModel: ChatViewModel = viewModel(), on
                 color = MaterialTheme.colors.primaryVariant,
                 maxLines = 15,
                 overflow = TextOverflow.Clip,
-                modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp).weight(0.8f)
+                modifier = Modifier.weight(0.8f).padding(horizontal = 5.dp, vertical = 1.dp)
             )
             Text(
                 text = message.time,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Thin,
                 color = MaterialTheme.colors.primaryVariant,
-                modifier = Modifier.padding(horizontal = 0.5.dp).weight(0.2f)
+                modifier = Modifier.weight(0.1f)
             )
         }
     }
