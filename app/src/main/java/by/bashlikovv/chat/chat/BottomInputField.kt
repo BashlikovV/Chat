@@ -6,10 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
@@ -53,7 +50,7 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
             modifier = Modifier.padding(horizontal = 5.dp).size(35.dp)/*.fillMaxWidth(0.1f)*/
-                .clickable {  }.weight(0.1f)
+                .clickable {  }.weight(0.1f).fillMaxSize()
         )
         TextField(
             value = chatUiState.textInputState,
@@ -75,7 +72,7 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
             modifier = Modifier.padding(horizontal = 5.dp).size(35.dp)/*.fillMaxWidth(0.1f)*/
-                .clickable {  }.weight(0.1f)
+                .clickable {  }.weight(0.1f).fillMaxSize()
         )
         Image(
             painter = painterResource(if (chatUiState.isCanSend) R.drawable.send else  R.drawable.camera),
@@ -89,7 +86,7 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
                     } else {
                          chatViewModel.onActionGallery(cameraLauncher)
                     }
-                }.weight(0.1f)
+                }.weight(0.1f).fillMaxSize()
         )
     }
 }

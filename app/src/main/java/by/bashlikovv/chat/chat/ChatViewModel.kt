@@ -3,6 +3,7 @@ package by.bashlikovv.chat.chat
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore.Images.Media.getBitmap
+import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.lifecycle.ViewModel
 import by.bashlikovv.chat.model.ChatUiState
@@ -65,7 +66,7 @@ class ChatViewModel : ViewModel() {
                 value = _chatUiState.value.textInputState,
                 user = _chatUiState.value.usersData.last(),
                 time = Calendar.getInstance().time.toGMTString()
-                    .substringBefore(" G").substringAfter("3 ")
+                    .substringBefore(" G").substringAfter("2023 ")
                     .substringBeforeLast(":"),
                 isRead = true
             )
@@ -112,13 +113,19 @@ class ChatViewModel : ViewModel() {
     }
 
     fun applyImageUri(imageUri: Uri, context: Context) {
-        val bitmap = getBitmap(context.contentResolver, imageUri)
-        val message = Message(
-            isImage = true,
-            imageBitmap = bitmap
-        )
-        val messages = _chatUiState.value.chat.messages.toMutableList()
-        messages.add(message)
-        _chatUiState.update { it.copy(chat = it.chat.copy(messages = messages)) }
+        try {
+            val bitmap = getBitmap(context.contentResolver, imageUri)
+            val message = Message(
+                isImage = true,
+                imageBitmap = bitmap
+            )
+            val messages = _chatUiState.value.chat.messages.toMutableList()
+            messages.add(message)
+            _chatUiState.update { it.copy(chat = it.chat.copy(messages = messages)) }
+        } catch (e: Exception) {
+            Toast
+                .makeText(context, "Error. Please, try again.", Toast.LENGTH_LONG)
+                .show()
+        }
     }
 }
