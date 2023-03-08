@@ -87,7 +87,7 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
                     if (chatUiState.isCanSend) {
                         chatViewModel.onActionSend()
                     } else {
-                        chatViewModel.onActionGallery(context, cameraLauncher)
+                         chatViewModel.onActionGallery(cameraLauncher)
                     }
                 }.weight(0.1f)
         )
