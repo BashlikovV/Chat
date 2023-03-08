@@ -17,7 +17,6 @@
         <activity
                 android:name=".LogInActivity"
                 android:exported="true"
-                android:label="@string/title_activity_log_in"
                 android:theme="@style/Theme.Chat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
