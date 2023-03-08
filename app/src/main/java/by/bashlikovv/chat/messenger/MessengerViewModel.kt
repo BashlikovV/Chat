@@ -201,7 +201,6 @@ class MessengerViewModel : ViewModel() {
     }
 
     fun getUserName(): String {
-        FirebaseAuth.getInstance().currentUser?.displayName
         return FirebaseAuth.getInstance().currentUser?.displayName ?: "Unknown user"
     }
 }

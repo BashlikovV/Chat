@@ -1,8 +1,10 @@
 package by.bashlikovv.chat.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
@@ -13,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,15 +36,25 @@ fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
 fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
 
-    LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(1.dp)) {
+    LazyColumn(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(1.dp),
+        state = LazyListState(chatUiState.chat.messages.size)
+    ) {
         items(chatUiState.chat.messages) {
-            MessageView(message = it)
+            MessageView(message = it) { message ->
+                chatViewModel.onActionItemClicked(message)
+            }
         }
     }
 }
 
 @Composable
-fun MessageView(message: Message, chatViewModel: ChatViewModel = viewModel()) {
+fun MessageView(
+    message: Message,
+    chatViewModel: ChatViewModel = viewModel(),
+    onItemClicked: (Message) -> Unit
+) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
 
     Row(
@@ -55,8 +68,13 @@ fun MessageView(message: Message, chatViewModel: ChatViewModel = viewModel()) {
         ).fillMaxSize()
     ) {
         Row(
-            modifier = Modifier.padding(5.dp).clip(RoundedCornerShape(15.dp)).background(MaterialTheme.colors.primary)
-            .fillMaxWidth(0.7f)
+            modifier = Modifier.padding(5.dp).clip(RoundedCornerShape(15.dp))
+                .background(MaterialTheme.colors.primary)
+                .fillMaxWidth(0.8f).pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = { onItemClicked(message) }
+                    )
+                }
         ) {
             Text(
                 text = message.value,
@@ -65,14 +83,14 @@ fun MessageView(message: Message, chatViewModel: ChatViewModel = viewModel()) {
                 color = MaterialTheme.colors.primaryVariant,
                 maxLines = 15,
                 overflow = TextOverflow.Clip,
-                modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
+                modifier = Modifier.weight(0.8f).padding(horizontal = 5.dp, vertical = 1.dp)
             )
             Text(
                 text = message.time,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Thin,
                 color = MaterialTheme.colors.primaryVariant,
-                modifier = Modifier.padding(horizontal = 5.dp)
+                modifier = Modifier.weight(0.1f)
             )
         }
     }

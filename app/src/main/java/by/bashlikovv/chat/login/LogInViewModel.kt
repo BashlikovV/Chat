@@ -56,7 +56,6 @@ class LogInViewModel : ViewModel() {
                                 .makeText(context, task.exception?.message ?: "Authentication error.", Toast.LENGTH_LONG)
                                 .show()
                         }
-
                     }
             } else {
                 FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
@@ -74,7 +73,7 @@ class LogInViewModel : ViewModel() {
                         saveUserToDatabase(_logInUiState.value.userImageBitmap.userImageUrl)
                         //
                         Toast
-                            .makeText(context, "Success. New user: ${task.result.user?.email}", Toast.LENGTH_LONG)
+                            .makeText(context, "Success. New user: ${task.result.user?.displayName}", Toast.LENGTH_LONG)
                             .show()
                         _logInUiState.update {
                             it.copy(isPasswordCorrect = true, isIdentifierCorrect = true, isSuccess = true)
@@ -128,6 +127,10 @@ class LogInViewModel : ViewModel() {
         )
 
 //        ref.setValue(user)
+    }
+
+    fun setProgressBarVisibility(newValue: Boolean) {
+        _logInUiState.update { it.copy(progressBarVisibility = newValue) }
     }
 }
 

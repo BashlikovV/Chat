@@ -1,6 +1,7 @@
 package by.bashlikovv.chat.model
 
 import by.bashlikovv.chat.struct.Chat
+import by.bashlikovv.chat.struct.Message
 import by.bashlikovv.chat.struct.User
 
 data class ChatUiState(
@@ -8,5 +9,6 @@ data class ChatUiState(
     val textInputState: String = "",
     val inputHeight: Int = 0,
     val usersData: List<User> = emptyList(),
-    val isCanSend: Boolean = false
+    val isCanSend: Boolean = false,
+    val selectedMessage: Message = Message()
 )

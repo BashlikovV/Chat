@@ -8,8 +8,7 @@ import android.provider.MediaStore.Images.Media.getBitmap
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.collectAsState
@@ -33,15 +32,10 @@ class LogInActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
                     val user = FirebaseAuth.getInstance().currentUser
                     if (user != null) {
-                        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
-                            Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center) {
-                                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                            }
-                        }
+                        logInViewModel.setProgressBarVisibility(true)
                         logInViewModel.applySuccess()
-                    } else {
-                        LogInView(logInActivity = this)
                     }
+                    LogInView(logInActivity = this)
 
                     if (logInUiState.isSuccess) {
                         val messengerIntent = Intent(this, MessengerActivity::class.java)

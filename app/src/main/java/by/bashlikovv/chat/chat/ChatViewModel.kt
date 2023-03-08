@@ -2,7 +2,6 @@ package by.bashlikovv.chat.chat
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import by.bashlikovv.chat.model.ChatUiState
 import by.bashlikovv.chat.struct.Chat
@@ -50,21 +49,19 @@ class ChatViewModel : ViewModel() {
     }
 
     private fun clearInput() {
-        _chatUiState.update { it.copy(textInputState = "") }
+        _chatUiState.update { it.copy(textInputState = "", isCanSend = false) }
     }
 
     suspend fun onActionSend() {
-        Log.i("MYTAG", "image: ${_chatUiState.value.textInputState}")
-        val newValue = _chatUiState.value.chat.messages.toMutableList().apply {
-            add(
-                Message(
-                    value = _chatUiState.value.textInputState,
-                    user = _chatUiState.value.usersData.last(),
-                    time = "",
-                    isRead = true
-                )
+        val newValue = _chatUiState.value.chat.messages.toMutableList()
+        newValue.add(
+            Message(
+                value = _chatUiState.value.textInputState,
+                user = _chatUiState.value.usersData.last(),
+                time = "22:22",
+                isRead = true
             )
-        }
+        )
         _chatUiState.update {
             it.copy(
                 chat = _chatUiState.value.chat.copy(
@@ -87,5 +84,9 @@ class ChatViewModel : ViewModel() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         context.startActivity(Intent.createChooser(galleryIntent, "Camera"))
+    }
+
+    fun onActionItemClicked(message: Message) {
+        _chatUiState.update { it.copy(selectedMessage = message) }
     }
 }
