@@ -23,8 +23,9 @@ class MessengerActivity : ComponentActivity() {
     private lateinit var chatIntent: Intent
 
     companion object {
-        const val DARK_THEME = "Dark theme"
-        const val CHAT = "Chat"
+        const val DARK_THEME = "dark theme"
+        const val CHAT = "chat"
+        const val DATA_BASE = "my.db"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,6 +37,7 @@ class MessengerActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 messengerViewModel.applyMessengerUiState(MessengerUiState(MessengerTestData.testData))
                 messengerViewModel.applyMe(User(userName = messengerViewModel.getUserName()))
+                messengerViewModel.applyMessengerDatabase(openOrCreateDatabase(DATA_BASE, MODE_PRIVATE, null))
             }
 
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
