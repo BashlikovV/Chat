@@ -1,6 +1,8 @@
 package by.bashlikovv.chat.chat
 
-import androidx.compose.animation.animateContentSize
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,8 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 @DelicateCoroutinesApi
 @Composable
@@ -36,8 +36,15 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
     val context = LocalContext.current
 
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = {
+            chatViewModel.applyImageUri(context = context, imageUri = it ?: Uri.EMPTY)
+        }
+    )
+
     Row(
-        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.primary).animateContentSize(),
+        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.primary),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
@@ -45,19 +52,17 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
             contentDescription = "Emoji selection",
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp).fillMaxWidth(0.1f)
-                .clickable {  }
+            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp)/*.fillMaxWidth(0.1f)*/
+                .clickable {  }.weight(0.1f)
         )
         TextField(
             value = chatUiState.textInputState,
             onValueChange = { chatViewModel.onTextInputChange(it) },
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Send),
             keyboardActions = KeyboardActions(onSend = {
-                GlobalScope.launch {
-                    chatViewModel.onActionSend()
-                }
+                chatViewModel.onActionSend()
             }),
-            modifier = Modifier.fillMaxWidth(0.7f),
+            modifier = Modifier/*.fillMaxWidth(0.7f)*/.weight(0.7f),
             colors = TextFieldDefaults.textFieldColors(
                 backgroundColor = MaterialTheme.colors.primary,
                 textColor = MaterialTheme.colors.secondary
@@ -69,24 +74,22 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
             contentDescription = "Open file",
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp).fillMaxWidth(0.1f)
-                .clickable {  }
+            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp)/*.fillMaxWidth(0.1f)*/
+                .clickable {  }.weight(0.1f)
         )
         Image(
             painter = painterResource(if (chatUiState.isCanSend) R.drawable.send else  R.drawable.camera),
             contentDescription = "Open camera",
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp).fillMaxWidth(0.1f)
+            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp)
                 .clickable {
                     if (chatUiState.isCanSend) {
-                        GlobalScope.launch {
-                            chatViewModel.onActionSend()
-                        }
+                        chatViewModel.onActionSend()
                     } else {
-                        chatViewModel.onActionGallery(context)
+                         chatViewModel.onActionGallery(cameraLauncher)
                     }
-                }
+                }.weight(0.1f)
         )
     }
 }
