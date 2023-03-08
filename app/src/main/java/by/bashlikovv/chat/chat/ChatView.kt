@@ -1,23 +1,27 @@
 package by.bashlikovv.chat.chat
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,7 +42,6 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
 
     LazyColumn(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(1.dp),
         state = LazyListState(chatUiState.chat.messages.size)
     ) {
         items(chatUiState.chat.messages) {
@@ -49,6 +52,7 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
     }
 }
 
+@OptIn(ExperimentalTextApi::class)
 @Composable
 fun MessageView(
     message: Message,
@@ -57,41 +61,91 @@ fun MessageView(
 ) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
 
+    val textMeasurer = rememberTextMeasurer()
+    val measuredText = textMeasurer.measure(
+        AnnotatedString(chatViewModel.processText(message.value)),
+        style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.secondary),
+        maxLines = 25,
+        overflow = TextOverflow.Ellipsis
+    )
+    val timeText = textMeasurer.measure(
+        text = AnnotatedString(message.time),
+        style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
+    )
+
+    val boxWidth = LocalConfiguration.current.screenWidthDp * 2.15
+    val offset = 5f
+    val rectColor= MaterialTheme.colors.primary
+    val height = (if(measuredText.lineCount == 1) 28.8 else 24.5)
+
     Row(
         horizontalArrangement = if (message.user.userName == chatUiState.usersData.first().userName)
             Arrangement.Start
         else
             Arrangement.End,
-        modifier = Modifier.padding(
-            horizontal = 5.dp,
-            vertical = 2.5.dp
-        ).fillMaxSize()
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(
+                if (!message.isImage)
+                        ((measuredText.lineCount * 24 + offset * 2).dp)
+                else
+                        (message.imageBitmap.height / 8).dp)
+            .clickable {
+                onItemClicked(message)
+            }
+            .padding(start = 4.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
     ) {
         Row(
-            modifier = Modifier.padding(5.dp).clip(RoundedCornerShape(15.dp))
-                .background(MaterialTheme.colors.primary)
-                .fillMaxWidth(0.8f).pointerInput(Unit) {
-                    detectTapGestures(
-                        onLongPress = { onItemClicked(message) }
-                    )
-                }
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .width(boxWidth.dp)
+                .height(
+                    if (!message.isImage)
+                            (measuredText.lineCount * height).dp
+                    else
+                            (message.imageBitmap.height / 8).dp)
         ) {
-            Text(
-                text = message.value,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Light,
-                color = MaterialTheme.colors.primaryVariant,
-                maxLines = 15,
-                overflow = TextOverflow.Clip,
-                modifier = Modifier.weight(0.8f).padding(horizontal = 5.dp, vertical = 1.dp)
-            )
-            Text(
-                text = message.time,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Thin,
-                color = MaterialTheme.colors.primaryVariant,
-                modifier = Modifier.weight(0.1f)
-            )
+            Canvas(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (!message.isImage) {
+                    drawRoundRect(
+                        rectColor,
+                        size = Size(
+                            width = boxWidth.toFloat(),
+                            height = measuredText.size.height + offset * 2,
+                        ),
+                        cornerRadius = CornerRadius(30f, 30f),
+                        alpha = 0.9f
+                    )
+                    drawText(
+                        textLayoutResult = measuredText,
+                        topLeft = Offset(offset, offset)
+                    )
+                    drawText(
+                        textLayoutResult = timeText,
+                        topLeft = Offset(
+                            (boxWidth - 90).toFloat(),
+                            (measuredText.size.height - (12.sp).toPx())
+                        )
+                    )
+                } else {
+                    var rotation = 0f
+                    if (message.imageBitmap.width > message.imageBitmap.height) {
+                        rotation = 90f
+                    }
+                    rotate(degrees = rotation) {
+                        drawImage(
+                            image = message.imageBitmap.asImageBitmap(),
+                            dstSize = IntSize(
+                                (message.imageBitmap.width / 3),
+                                (message.imageBitmap.height / 3)
+                            )
+                        )
+                    }
+                }
+            }
         }
     }
 }
