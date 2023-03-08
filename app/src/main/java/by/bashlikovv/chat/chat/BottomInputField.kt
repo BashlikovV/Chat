@@ -61,7 +61,8 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
             colors = TextFieldDefaults.textFieldColors(
                 backgroundColor = MaterialTheme.colors.primary,
                 textColor = MaterialTheme.colors.secondary
-            )
+            ),
+            maxLines = 6
         )
         Image(
             painter = painterResource(R.drawable.folder_open),
