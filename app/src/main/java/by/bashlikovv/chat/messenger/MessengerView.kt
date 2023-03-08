@@ -31,7 +31,8 @@ import by.bashlikovv.chat.struct.Chat
 
 @Composable
 fun MessengerView(
-    modifier: Modifier = Modifier, messengerViewModel: MessengerViewModel = viewModel(),
+    modifier: Modifier = Modifier,
+    messengerViewModel: MessengerViewModel = viewModel(),
     onOpenChat: (Chat) -> Unit
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
@@ -50,7 +51,8 @@ fun MessengerView(
 
 @Composable
 fun MessengerContent(
-    modifier: Modifier = Modifier, messengerViewModel: MessengerViewModel = viewModel(),
+    modifier: Modifier = Modifier,
+    messengerViewModel: MessengerViewModel = viewModel(),
     onOpenChat: (Chat) -> Unit
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
@@ -100,7 +102,8 @@ private fun getMessengerItemConstraints(): ConstraintSet {
 
 @Composable
 fun MessengerItem(
-    chat: Chat, modifier: Modifier = Modifier, messengerViewModel: MessengerViewModel = viewModel(),
+    chat: Chat, modifier: Modifier = Modifier,
+    messengerViewModel: MessengerViewModel = viewModel(),
     onOpenChat: (Chat) -> Unit
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
@@ -156,7 +159,13 @@ fun MessengerItem(
 }
 
 @Composable
-fun MessengerItemText(text: String, fontWeight: FontWeight, fontSize: Int, textColor: Color, layoutId: String) {
+fun MessengerItemText(
+    text: String,
+    fontWeight: FontWeight,
+    fontSize: Int,
+    textColor: Color,
+    layoutId: String
+) {
     Text(
         text = text,
         fontWeight = fontWeight,
@@ -169,7 +178,12 @@ fun MessengerItemText(text: String, fontWeight: FontWeight, fontSize: Int, textC
 }
 
 @Composable
-fun MessagesCount(count: Int, color: Color, countColor: Color, modifier: Modifier) {
+fun MessagesCount(
+    count: Int,
+    color: Color,
+    countColor: Color,
+    modifier: Modifier
+) {
     if (count != 0) {
         Text(
             text = "$count",
