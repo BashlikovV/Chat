@@ -96,54 +96,50 @@ fun MessageView(
             .padding(start = 4.dp),
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
     ) {
-        Row(
+        Canvas(
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .width(boxWidth.dp)
                 .height(
                     if (!message.isImage)
-                            (measuredText.lineCount * height).dp
+                        (measuredText.lineCount * height).dp
                     else
-                            (message.imageBitmap.height / 8).dp)
+                        (message.imageBitmap.height / 8).dp)
         ) {
-            Canvas(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                if (!message.isImage) {
-                    drawRoundRect(
-                        rectColor,
-                        size = Size(
-                            width = boxWidth.toFloat(),
-                            height = measuredText.size.height + offset * 2,
-                        ),
-                        cornerRadius = CornerRadius(30f, 30f),
-                        alpha = 0.9f
+            if (!message.isImage) {
+                drawRoundRect(
+                    rectColor,
+                    size = Size(
+                        width = boxWidth.toFloat(),
+                        height = measuredText.size.height + offset * 2,
+                    ),
+                    cornerRadius = CornerRadius(30f, 30f),
+                    alpha = 0.9f
+                )
+                drawText(
+                    textLayoutResult = measuredText,
+                    topLeft = Offset(offset, offset)
+                )
+                drawText(
+                    textLayoutResult = timeText,
+                    topLeft = Offset(
+                        (boxWidth - 90).toFloat(),
+                        (measuredText.size.height - (12.sp).toPx())
                     )
-                    drawText(
-                        textLayoutResult = measuredText,
-                        topLeft = Offset(offset, offset)
-                    )
-                    drawText(
-                        textLayoutResult = timeText,
-                        topLeft = Offset(
-                            (boxWidth - 90).toFloat(),
-                            (measuredText.size.height - (12.sp).toPx())
+                )
+            } else {
+                var rotation = 0f
+                if (message.imageBitmap.width > message.imageBitmap.height) {
+                    rotation = 90f
+                }
+                rotate(degrees = rotation) {
+                    drawImage(
+                        image = message.imageBitmap.asImageBitmap(),
+                        dstSize = IntSize(
+                            (message.imageBitmap.width / 3),
+                            (message.imageBitmap.height / 3)
                         )
                     )
-                } else {
-                    var rotation = 0f
-                    if (message.imageBitmap.width > message.imageBitmap.height) {
-                        rotation = 90f
-                    }
-                    rotate(degrees = rotation) {
-                        drawImage(
-                            image = message.imageBitmap.asImageBitmap(),
-                            dstSize = IntSize(
-                                (message.imageBitmap.width / 3),
-                                (message.imageBitmap.height / 3)
-                            )
-                        )
-                    }
                 }
             }
         }
