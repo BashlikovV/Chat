@@ -50,7 +50,7 @@ class ChatViewModel : ViewModel() {
         _chatUiState.update {
             it.copy(
                 textInputState = newValue,
-                isCanSend = it.textInputState.isNotEmpty()
+                isCanSend = newValue.isNotEmpty()
             )
         }
     }

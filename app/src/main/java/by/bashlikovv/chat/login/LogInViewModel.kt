@@ -34,6 +34,10 @@ class LogInViewModel : ViewModel() {
         )
     }
 
+//    fun saveUserToDatabase(userName: String, email: String, picFileName: String, picData: Bitmap) {
+//        messengerDatabase
+//    }
+
     fun onIdentifierChange(newValue: String) {
         _logInUiState.update { it.copy(identifier = newValue) }
     }
