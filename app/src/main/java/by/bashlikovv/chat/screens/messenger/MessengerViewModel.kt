@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.messenger
+package by.bashlikovv.chat.screens.messenger
 
 import android.database.sqlite.SQLiteDatabase
 import androidx.compose.material.DrawerState

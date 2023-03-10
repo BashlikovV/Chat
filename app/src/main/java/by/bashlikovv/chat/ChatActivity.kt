@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import by.bashlikovv.chat.chat.ChatView
-import by.bashlikovv.chat.chat.ChatViewModel
+import by.bashlikovv.chat.screens.chat.ChatView
+import by.bashlikovv.chat.screens.chat.ChatViewModel
 import by.bashlikovv.chat.struct.Chat
 import by.bashlikovv.chat.theme.MessengerTheme
 

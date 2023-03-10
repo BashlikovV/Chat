@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.messenger
+package by.bashlikovv.chat.screens.messenger
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.drawer.MessengerDrawerContent
+import by.bashlikovv.chat.views.drawer.MessengerDrawerContent
 import by.bashlikovv.chat.struct.Chat
 
 @Composable
