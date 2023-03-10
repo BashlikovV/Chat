@@ -12,8 +12,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import by.bashlikovv.chat.messenger.MessengerView
-import by.bashlikovv.chat.messenger.MessengerViewModel
+import by.bashlikovv.chat.screens.messenger.MessengerView
+import by.bashlikovv.chat.screens.messenger.MessengerViewModel
 import by.bashlikovv.chat.model.MessengerTestData
 import by.bashlikovv.chat.model.MessengerUiState
 import by.bashlikovv.chat.struct.User
