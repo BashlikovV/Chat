@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.login
+package by.bashlikovv.chat.screens.login
 
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility

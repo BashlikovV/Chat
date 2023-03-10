@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.chat
+package by.bashlikovv.chat.screens.chat
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult

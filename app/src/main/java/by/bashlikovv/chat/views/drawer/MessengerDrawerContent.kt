@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.drawer
+package by.bashlikovv.chat.views.drawer
 
 import android.app.Activity
 import android.content.Intent
@@ -31,7 +31,7 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.LogInActivity
 import by.bashlikovv.chat.R
-import by.bashlikovv.chat.messenger.MessengerViewModel
+import by.bashlikovv.chat.screens.messenger.MessengerViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 private fun getDrawerContentConstraints(): ConstraintSet {

@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.chat
+package by.bashlikovv.chat.screens.chat
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable

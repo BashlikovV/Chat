@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.login
+package by.bashlikovv.chat.screens.login
 
 import android.content.Context
 import android.content.Intent
@@ -29,8 +29,14 @@ class LogInViewModel : ViewModel() {
 
     fun applyMessengerDatabase(database: SQLiteDatabase) {
         messengerDatabase = database
+        createTable()
+    }
+
+    private fun createTable() {
         messengerDatabase.execSQL(
-            "CREATE TABLE IF NOT EXISTS user (name VARCHAR(200), email VARCHAR(200), picFileName VARCHAR(100), picData VARBINARY)"
+            "CREATE TABLE IF NOT EXISTS current_user (" +
+                    "username VARCHAR(200), email VARCHAR(200), picFileName VARCHAR(100), picData BLOB" +
+                ")"
         )
     }
 

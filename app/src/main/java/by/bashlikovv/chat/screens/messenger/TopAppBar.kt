@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.messenger
+package by.bashlikovv.chat.screens.messenger
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.keyframes

@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.chat
+package by.bashlikovv.chat.screens.chat
 
 import android.content.Context
 import android.net.Uri
