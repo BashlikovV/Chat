@@ -16,8 +16,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
-import by.bashlikovv.chat.login.LogInView
-import by.bashlikovv.chat.login.LogInViewModel
+import by.bashlikovv.chat.screens.login.LogInView
+import by.bashlikovv.chat.screens.login.LogInViewModel
 import by.bashlikovv.chat.theme.MessengerTheme
 import com.google.firebase.auth.FirebaseAuth
 
