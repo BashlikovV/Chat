@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.model
+package by.bashlikovv.chat.screens.chat
 
 import by.bashlikovv.chat.struct.Chat
 import by.bashlikovv.chat.struct.Message

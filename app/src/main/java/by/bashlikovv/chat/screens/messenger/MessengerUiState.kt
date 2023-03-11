@@ -1,10 +1,11 @@
-package by.bashlikovv.chat.model
+package by.bashlikovv.chat.screens.messenger
 
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
 import by.bashlikovv.chat.R
+import by.bashlikovv.chat.screens.login.UserImage
 import by.bashlikovv.chat.struct.Chat
 import by.bashlikovv.chat.struct.Message
 import by.bashlikovv.chat.struct.User
@@ -37,7 +38,8 @@ object MessengerTestData {
             messages = (0..30).map {
                 Message(
                     value = "Message from user${chatIndex + 1}",
-                    user = listOf(me, User(
+                    user = listOf(
+                        me, User(
                         userId = chatIndex.toLong(),
                         userName = "user name $chatIndex"
                     )).random(),
