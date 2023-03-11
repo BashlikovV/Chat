@@ -2,47 +2,35 @@ package by.bashlikovv.chat.screens.login
 
 import android.content.Context
 import android.content.Intent
-import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.lifecycle.ViewModel
-import by.bashlikovv.chat.model.LogInUiState
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.UserProfileChangeRequest
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import androidx.lifecycle.viewModelScope
+import by.bashlikovv.chat.Repositories
+import by.bashlikovv.chat.model.AccountAlreadyExistsException
+import by.bashlikovv.chat.model.EmptyFieldException
+import by.bashlikovv.chat.model.PasswordMismatchException
+import by.bashlikovv.chat.model.StorageException
+import by.bashlikovv.chat.model.accounts.AccountsRepository
+import by.bashlikovv.chat.model.accounts.entities.SignUpData
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.*
 
-class LogInViewModel : ViewModel() {
+class LogInViewModel(
+    private val accountsRepository: AccountsRepository = Repositories.accountsRepository
+) : ViewModel() {
 
     private val _logInUiState = MutableStateFlow(LogInUiState())
     val logInUiState = _logInUiState.asStateFlow()
-
-    private lateinit var messengerDatabase: SQLiteDatabase
-
-    fun applyMessengerDatabase(database: SQLiteDatabase) {
-        messengerDatabase = database
-        createTable()
-    }
-
-    private fun createTable() {
-        messengerDatabase.execSQL(
-            "CREATE TABLE IF NOT EXISTS current_user (" +
-                    "username VARCHAR(200), email VARCHAR(200), picFileName VARCHAR(100), picData BLOB" +
-                ")"
-        )
-    }
-
-//    fun saveUserToDatabase(userName: String, email: String, picFileName: String, picData: Bitmap) {
-//        messengerDatabase
-//    }
 
     fun onIdentifierChange(newValue: String) {
         _logInUiState.update { it.copy(identifier = newValue) }
@@ -58,55 +46,6 @@ class LogInViewModel : ViewModel() {
 
     fun applySuccess() {
         _logInUiState.update { it.copy(isSuccess = true) }
-    }
-
-    fun onCheckInput(context: Context, haveAccount: Boolean) {
-        val email = _logInUiState.value.identifier
-        val password = _logInUiState.value.password
-        try {
-            if (haveAccount) {
-                FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            _logInUiState.update {
-                                it.copy(isPasswordCorrect = true, isIdentifierCorrect = true, isSuccess = true)
-                            }
-                        } else {
-                            Toast
-                                .makeText(context, task.exception?.message ?: "Authentication error.", Toast.LENGTH_LONG)
-                                .show()
-                        }
-                    }
-            } else {
-                FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener { task ->
-                        if (!task.isSuccessful) {
-                            _logInUiState.update { it.copy(isPasswordCorrect = false, isIdentifierCorrect = false) }
-                            return@addOnCompleteListener
-                        }
-                        val user = FirebaseAuth.getInstance().currentUser
-                        val profileUpdates = UserProfileChangeRequest.Builder()
-                        profileUpdates.setDisplayName(_logInUiState.value.userName)
-                        profileUpdates.setPhotoUri(_logInUiState.value.userImageBitmap.userImageUri)
-                        user!!.updateProfile(profileUpdates.build())
-                        //
-                        saveUserToDatabase(_logInUiState.value.userImageBitmap.userImageUrl)
-                        //
-                        Toast
-                            .makeText(context, "Success. New user: ${task.result.user?.displayName}", Toast.LENGTH_LONG)
-                            .show()
-                        _logInUiState.update {
-                            it.copy(isPasswordCorrect = true, isIdentifierCorrect = true, isSuccess = true)
-                        }
-                    }
-                    .addOnFailureListener { exception ->
-                        Toast.makeText(context, exception.message, Toast.LENGTH_LONG).show()
-                    }
-            }
-        } catch (e: Exception) {
-            Toast.makeText(context, "Please, fill this fields", Toast.LENGTH_SHORT).show()
-            _logInUiState.update { it.copy(isPasswordCorrect = false, isIdentifierCorrect = false) }
-        }
     }
 
     fun onButtonClk(newValue: Boolean) {
@@ -135,28 +74,80 @@ class LogInViewModel : ViewModel() {
         _logInUiState.update { it.copy(userImageBitmap = value) }
     }
 
-    private fun saveUserToDatabase(profileImageUrl: String) {
-        val uid = FirebaseAuth.getInstance().uid ?: ""
-        val ref = FirebaseDatabase.getInstance().getReference("/users/$uid")
-
-        val user = User(
-            email = _logInUiState.value.identifier,
-            userName = _logInUiState.value.userName,
-            imageUri = profileImageUrl,
-            ref = ref
-        )
-
-//        ref.setValue(user)
+    @OptIn(DelicateCoroutinesApi::class)
+    fun onCreateAccountButtonPressed(context: Context) {
+        try {
+            if (_logInUiState.value.isHaveAccount) {
+                GlobalScope.launch {
+                    accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
+                }
+            } else {
+                val signUpData = SignUpData(
+                    email = _logInUiState.value.identifier,
+                    username = _logInUiState.value.userName,
+                    password = _logInUiState.value.password,
+                )
+                signUp(signUpData, context)
+                GlobalScope.launch {
+                    accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
+                }
+            }
+        } catch (e: Exception) {
+            showToast(context, "Authentication error ${e.message}")
+        }
+        GlobalScope.launch {
+            if (accountsRepository.isSignedIn()) {
+                applySuccess()
+            }
+        }
     }
 
-    fun setProgressBarVisibility(newValue: Boolean) {
-        _logInUiState.update { it.copy(progressBarVisibility = newValue) }
+    private fun signUp(signUpData: SignUpData, context: Context) {
+        _logInUiState.update { it.copy(progressBarVisibility = true) }
+        viewModelScope.launch {
+            try {
+                accountsRepository.signUp(signUpData)
+                showSuccessSignUpMessage(context)
+            } catch (e: EmptyFieldException) {
+                processEmptyFieldException(e)
+            } catch (e: PasswordMismatchException) {
+                processPasswordMismatchException(context)
+            } catch (e: AccountAlreadyExistsException) {
+                processAccountAlreadyExistsException(context)
+            } catch (e: StorageException) {
+                processStorageException(context)
+            } finally {
+                hideProgress()
+            }
+        }
+        _logInUiState.update { it.copy(progressBarVisibility = false) }
+    }
+
+    private fun showToast(context: Context, text: String) {
+        Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+    }
+
+    private fun processStorageException(context: Context) {
+        showToast(context, "Storage process exception")
+    }
+
+    private fun hideProgress() {
+        _logInUiState.update { it.copy(progressBarVisibility = false) }
+    }
+
+    private fun processAccountAlreadyExistsException(context: Context) {
+        showToast(context, "Account already exists")
+    }
+
+    private fun processPasswordMismatchException(context: Context) {
+        showToast(context, "Error. Incorrect password")
+    }
+
+    private fun processEmptyFieldException(e: EmptyFieldException) {
+        TODO("Not yet implemented")
+    }
+
+    private fun showSuccessSignUpMessage(context: Context) {
+        showToast(context, "Success!")
     }
 }
-
-class User(
-    val email: String,
-    val imageUri: String,
-    val userName: String,
-    val ref: DatabaseReference
-)
