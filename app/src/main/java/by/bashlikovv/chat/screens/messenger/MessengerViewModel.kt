@@ -1,40 +1,42 @@
 package by.bashlikovv.chat.screens.messenger
 
-import android.database.sqlite.SQLiteDatabase
+import android.util.Log
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
-import by.bashlikovv.chat.model.MessengerUiState
+import by.bashlikovv.chat.Repositories
+import by.bashlikovv.chat.model.accounts.AccountsRepository
+import by.bashlikovv.chat.model.accounts.entities.Account
 import by.bashlikovv.chat.struct.Chat
+import by.bashlikovv.chat.struct.Message
 import by.bashlikovv.chat.struct.User
-import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * [MessengerViewModel] - class that contains data of [MessengerView]
  * */
 
-class MessengerViewModel : ViewModel() {
+class MessengerViewModel(
+    private val accountsRepository: AccountsRepository = Repositories.accountsRepository
+) : ViewModel() {
 
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
     val messengerUiState = _messengerUiState.asStateFlow()
-
-    private lateinit var messengerDatabase: SQLiteDatabase
 
     private val selectedItem
         get() = _messengerUiState.value.selectedItem
 
     fun applyMessengerUiState(state: MessengerUiState) {
         _messengerUiState.update { state }
-    }
-
-    fun applyMessengerDatabase(database: SQLiteDatabase) {
-        messengerDatabase = database
     }
 
     /**
@@ -207,7 +209,25 @@ class MessengerViewModel : ViewModel() {
         _messengerUiState.update { it.copy(me = me) }
     }
 
-    fun getUserName(): String {
-        return FirebaseAuth.getInstance().currentUser?.displayName ?: "Unknown user"
+    suspend fun getUser(): User {
+        Log.i("MYTAG", "Before getAccount()")
+        val data: Account? = accountsRepository.getAccount().first()
+        Log.i("MYTAG", data.toString())
+        return User(
+            userId = data?.id ?: 0,
+            userName = data?.username ?: "unknown user",
+            userEmail = data?.email ?: "unknown email"
+        )
+    }
+
+    suspend fun getBookmarks(): List<Message>? {
+        return accountsRepository.getBookmarks().first()
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    fun onSignOut() {
+        GlobalScope.launch {
+            accountsRepository.logout()
+        }
     }
 }
