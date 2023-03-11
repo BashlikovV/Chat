@@ -95,7 +95,7 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel(), logInActivity: Compo
                 ) {
                     Button(
                         onClick = {
-                            logInViewModel.onCheckInput(context, logInUiState.isHaveAccount)
+                            logInViewModel.onCreateAccountButtonPressed(context)
                         },
                         content = { Text("LogIn") }
                     )
@@ -134,7 +134,7 @@ fun InputField(
             }
         ),
         keyboardActions = KeyboardActions(onDone = {
-            logInViewModel.onCheckInput(context, logInUiState.isHaveAccount)
+            logInViewModel.onCreateAccountButtonPressed(context)
         })
 
     )
