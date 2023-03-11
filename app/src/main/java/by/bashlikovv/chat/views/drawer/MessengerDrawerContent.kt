@@ -146,7 +146,7 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
 }
 
 @Composable
-fun BottomContent() {
+fun BottomContent(messengerViewModel: MessengerViewModel = viewModel()) {
     val context = LocalContext.current
     val activity = (LocalContext.current as? Activity)
 
@@ -156,7 +156,7 @@ fun BottomContent() {
         modifier = Modifier.height(1.dp).fillMaxWidth().background(MaterialTheme.colors.secondary).layoutId("spacer")
     )
     BottomContentItem(text = "Sign out", layoutId = "signOutBtn", leadingIcon = R.drawable.exit) {
-        FirebaseAuth.getInstance().signOut()
+        messengerViewModel.onSignOut()
         val logInIntent = Intent(context, LogInActivity::class.java)
         context.startActivity(logInIntent)
         activity?.finish()
