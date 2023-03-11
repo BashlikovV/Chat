@@ -22,6 +22,7 @@ class ChatActivity : ComponentActivity() {
         if (data != null) {
             chatViewModel.applyChatData(data)
         }
+        Repositories.init(this)
 
         setContent {
             MessengerTheme(darkTheme = darkTheme ?: true) {
