@@ -8,37 +8,36 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import by.bashlikovv.chat.screens.messenger.MessengerUiState
 import by.bashlikovv.chat.screens.messenger.MessengerView
 import by.bashlikovv.chat.screens.messenger.MessengerViewModel
-import by.bashlikovv.chat.model.MessengerTestData
-import by.bashlikovv.chat.model.MessengerUiState
+import by.bashlikovv.chat.struct.Chat
+import by.bashlikovv.chat.struct.Message
 import by.bashlikovv.chat.struct.User
 import by.bashlikovv.chat.theme.MessengerTheme
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MessengerActivity : ComponentActivity() {
     private lateinit var chatIntent: Intent
+    private var data: List<Message>? = null
 
     companion object {
         const val DARK_THEME = "dark theme"
         const val CHAT = "chat"
-        const val DATA_BASE = "my.db"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Repositories.init(this)
+        val messengerViewModel: MessengerViewModel by viewModels()
+        updateViewData(messengerViewModel)
         setContent {
-            val messengerViewModel: MessengerViewModel by viewModels()
             val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
-
-            LaunchedEffect(Unit) {
-                messengerViewModel.applyMessengerUiState(MessengerUiState(MessengerTestData.testData))
-                messengerViewModel.applyMe(User(userName = messengerViewModel.getUserName()))
-                messengerViewModel.applyMessengerDatabase(openOrCreateDatabase(DATA_BASE, MODE_PRIVATE, null))
-            }
 
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.primary) {
@@ -53,5 +52,29 @@ class MessengerActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun updateViewData(messengerViewModel: MessengerViewModel) {
+        GlobalScope.launch {
+            messengerViewModel.applyMe(messengerViewModel.getUser())
+            data = messengerViewModel.getBookmarks()
+            if (data.isNullOrEmpty()) {
+                data =  listOf(Message(value = "You do not have bookmarks"))
+            }
+            val bookmarks = listOf(
+                Chat(
+                    user = User(userName = "Bookmarks"),
+                    messages = data!!
+                )
+            )
+            messengerViewModel.applyMessengerUiState(MessengerUiState(chats = bookmarks))
+        }
+    }
+
+    override fun onRestart() {
+        val messengerViewModel: MessengerViewModel by viewModels()
+        updateViewData(messengerViewModel)
+        super.onRestart()
     }
 }
