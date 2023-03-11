@@ -6,16 +6,23 @@ import android.provider.MediaStore.Images.Media.getBitmap
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.lifecycle.ViewModel
-import by.bashlikovv.chat.model.ChatUiState
+import by.bashlikovv.chat.Repositories
+import by.bashlikovv.chat.Repositories.accountsRepository
+import by.bashlikovv.chat.model.accounts.AccountsRepository
 import by.bashlikovv.chat.struct.Chat
 import by.bashlikovv.chat.struct.Message
 import by.bashlikovv.chat.struct.User
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.*
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(
+    accountsRepository: AccountsRepository = Repositories.accountsRepository
+) : ViewModel() {
 
     private val _chatUiState = MutableStateFlow(ChatUiState())
     val chatUiState = _chatUiState.asStateFlow()
@@ -59,6 +66,7 @@ class ChatViewModel : ViewModel() {
         _chatUiState.update { it.copy(textInputState = "", isCanSend = false) }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun onActionSend() {
         val newValue = _chatUiState.value.chat.messages.toMutableList()
         newValue.add(
@@ -78,6 +86,11 @@ class ChatViewModel : ViewModel() {
                     messages = newValue
                 )
             )
+        }
+        if (_chatUiState.value.chat.user.userName == "Bookmarks") {
+            GlobalScope.launch {
+                onSendBookmark(newValue.last())
+            }
         }
     }
 
@@ -122,10 +135,19 @@ class ChatViewModel : ViewModel() {
             val messages = _chatUiState.value.chat.messages.toMutableList()
             messages.add(message)
             _chatUiState.update { it.copy(chat = it.chat.copy(messages = messages)) }
+            if (_chatUiState.value.chat.user.userName == "Bookmarks") {
+                GlobalScope.launch {
+                    onSendBookmark(message)
+                }
+            }
         } catch (e: Exception) {
             Toast
                 .makeText(context, "Error. Please, try again.", Toast.LENGTH_LONG)
                 .show()
         }
+    }
+
+    suspend fun onSendBookmark(bookmark: Message) {
+        accountsRepository.addBookmark(bookmark = bookmark)
     }
 }

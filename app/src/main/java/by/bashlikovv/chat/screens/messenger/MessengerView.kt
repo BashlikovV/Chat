@@ -61,7 +61,9 @@ fun MessengerContent(
         modifier = modifier.background(MaterialTheme.colors.primary),
         verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
-        items(messengerUiState.chats) { chat -> MessengerItem(chat) { onOpenChat(it) } }
+        if (messengerUiState.chats.isNotEmpty()) {
+            items(messengerUiState.chats) { chat -> MessengerItem(chat) { onOpenChat(it) } }
+        }
     }
 }
 
@@ -102,12 +104,11 @@ private fun getMessengerItemConstraints(): ConstraintSet {
 
 @Composable
 fun MessengerItem(
-    chat: Chat, modifier: Modifier = Modifier,
+    chat: Chat,
+    modifier: Modifier = Modifier,
     messengerViewModel: MessengerViewModel = viewModel(),
     onOpenChat: (Chat) -> Unit
 ) {
-    val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
-
     BoxWithConstraints {
         ConstraintLayout(
             constraintSet = getMessengerItemConstraints(),
@@ -137,14 +138,14 @@ fun MessengerItem(
                 textColor = messengerViewModel.getTextColor(chat)
             )
             MessengerItemText(
-                text = chat.messages[messengerUiState.chats.indexOf(chat)].value,
+                text = chat.messages.last().value,
                 fontWeight = FontWeight.Light,
                 fontSize = 14,
                 layoutId = "message",
                 textColor = messengerViewModel.getTextColor(chat)
             )
             MessengerItemText(
-                text = chat.messages[messengerUiState.chats.indexOf(chat)].time,
+                text = chat.messages.last().time,
                 fontWeight = FontWeight.Thin,
                 fontSize = 13,
                 layoutId = "time",

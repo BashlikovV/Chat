@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.model
+package by.bashlikovv.chat.screens.login
 
 import android.graphics.Bitmap
 import android.net.Uri

@@ -1,5 +1,6 @@
 package by.bashlikovv.chat.screens.chat
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -73,26 +74,30 @@ fun MessageView(
         style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
     )
 
-    val boxWidth = LocalConfiguration.current.screenWidthDp * 2.15
+    val boxWidth by animateFloatAsState(
+        if (message == chatUiState.selectedMessage) {
+            (LocalConfiguration.current.screenWidthDp * 2.15).toFloat() + 10f
+        } else {
+            (LocalConfiguration.current.screenWidthDp * 2.15).toFloat()
+        }
+    )
     val offset = 5f
     val rectColor= MaterialTheme.colors.primary
     val height = (if(measuredText.lineCount == 1) 28.8 else 24.5)
 
     Row(
         horizontalArrangement = if (message.user.userName == chatUiState.usersData.first().userName)
-            Arrangement.Start
+            Arrangement.End
         else
-            Arrangement.End,
+            Arrangement.Start,
         modifier = Modifier
             .fillMaxWidth()
             .height(
                 if (!message.isImage)
-                        ((measuredText.lineCount * 24 + offset * 2).dp)
+                    ((measuredText.lineCount * 24 + offset * 2).dp)
                 else
-                        (message.imageBitmap.height / 8).dp)
-            .clickable {
-                onItemClicked(message)
-            }
+                    (message.imageBitmap.height / 8).dp)
+            .clickable { onItemClicked(message) }
             .padding(start = 4.dp),
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
     ) {
@@ -110,7 +115,7 @@ fun MessageView(
                 drawRoundRect(
                     rectColor,
                     size = Size(
-                        width = boxWidth.toFloat(),
+                        width = boxWidth,
                         height = measuredText.size.height + offset * 2,
                     ),
                     cornerRadius = CornerRadius(30f, 30f),
@@ -123,7 +128,7 @@ fun MessageView(
                 drawText(
                     textLayoutResult = timeText,
                     topLeft = Offset(
-                        (boxWidth - 90).toFloat(),
+                        (boxWidth - 90),
                         (measuredText.size.height - (12.sp).toPx())
                     )
                 )

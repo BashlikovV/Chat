@@ -19,26 +19,24 @@ import androidx.compose.ui.graphics.asImageBitmap
 import by.bashlikovv.chat.screens.login.LogInView
 import by.bashlikovv.chat.screens.login.LogInViewModel
 import by.bashlikovv.chat.theme.MessengerTheme
-import com.google.firebase.auth.FirebaseAuth
 
 class LogInActivity : ComponentActivity() {
     private val logInViewModel: LogInViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Repositories.init(this)
         setContent {
-            LaunchedEffect(Unit) {
-                logInViewModel.applyMessengerDatabase(openOrCreateDatabase(MessengerActivity.DATA_BASE, MODE_PRIVATE, null))
-            }
             val logInUiState by logInViewModel.logInUiState.collectAsState()
+
+            LaunchedEffect(Unit) {
+                if (Repositories.accountsRepository.isSignedIn()) {
+                    logInViewModel.applySuccess()
+                }
+            }
 
             MessengerTheme(darkTheme = true) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                    val user = FirebaseAuth.getInstance().currentUser
-                    if (user != null) {
-                        logInViewModel.setProgressBarVisibility(true)
-                        logInViewModel.applySuccess()
-                    }
                     LogInView(logInActivity = this)
 
                     if (logInUiState.isSuccess) {

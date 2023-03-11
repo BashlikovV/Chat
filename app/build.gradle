@@ -82,6 +82,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.google.firebase:firebase-database-ktx:20.1.0'
 
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+
     def room_version = "2.5.0"
 
     implementation("androidx.room:room-runtime:$room_version")
