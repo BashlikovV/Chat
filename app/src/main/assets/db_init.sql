@@ -1,5 +1,5 @@
 CREATE TABLE "current_user" (
-    "id"                PRIMARY KEY,
+    "id"                INTEGER PRIMARY KEY,
     "email"             TEXT UNIQUE NOT NULL,
     "username"          TEXT NOT NULL,
     "password"          TEXT NOT NULL,
