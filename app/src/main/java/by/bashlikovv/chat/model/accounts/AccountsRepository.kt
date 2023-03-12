@@ -23,4 +23,8 @@ interface AccountsRepository {
     suspend fun deleteBookmark(bookmark: Message)
 
     suspend fun updateAccountUsername(newUsername: String)
+
+    suspend fun isDarkTheme(): Boolean
+
+    suspend fun setDarkTheme()
 }
