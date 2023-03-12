@@ -2,6 +2,7 @@ package by.bashlikovv.chat.model.settings
 
 import android.content.Context
 import by.bashlikovv.chat.model.settings.MessengerSettings.Companion.NO_ACCOUNT_ID
+import by.bashlikovv.chat.model.settings.MessengerSettings.Companion.NO_ACCOUNT_THEME
 
 class SharedPreferencesMessengerSettings(
     applicationContext: Context
@@ -14,9 +15,20 @@ class SharedPreferencesMessengerSettings(
             .apply()
     }
 
+    override fun setCurrentAccountTheme(dark: Boolean) {
+        sharedPreferences.edit()
+            .putBoolean(PREF_CURRENT_ACCOUNT_THEME, dark)
+            .apply()
+    }
+
+    override fun getCurrentAccountTheme(): Boolean = sharedPreferences.getBoolean(
+        PREF_CURRENT_ACCOUNT_THEME, NO_ACCOUNT_THEME
+    )
+
     override fun getCurrentAccountId(): Long = sharedPreferences.getLong(PREF_CURRENT_ACCOUNT_ID, NO_ACCOUNT_ID)
 
     companion object {
         private const val PREF_CURRENT_ACCOUNT_ID = "currentAccountId"
+        private const val PREF_CURRENT_ACCOUNT_THEME = "currentAccountTheme"
     }
 }
