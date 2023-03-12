@@ -32,7 +32,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.LogInActivity
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.screens.messenger.MessengerViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 private fun getDrawerContentConstraints(): ConstraintSet {
     return ConstraintSet {
