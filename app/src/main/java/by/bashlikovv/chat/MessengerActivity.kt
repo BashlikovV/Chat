@@ -1,16 +1,23 @@
 package by.bashlikovv.chat
 
+import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import by.bashlikovv.chat.screens.login.UserImage
 import by.bashlikovv.chat.screens.messenger.MessengerUiState
 import by.bashlikovv.chat.screens.messenger.MessengerView
 import by.bashlikovv.chat.screens.messenger.MessengerViewModel
@@ -25,6 +32,7 @@ import kotlinx.coroutines.launch
 class MessengerActivity : ComponentActivity() {
     private lateinit var chatIntent: Intent
     private var data: List<Message>? = null
+    private lateinit var messengerViewModel: MessengerViewModel
 
     companion object {
         const val DARK_THEME = "dark theme"
@@ -34,15 +42,17 @@ class MessengerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Repositories.init(this)
-        val messengerViewModel: MessengerViewModel by viewModels()
-        updateViewData(messengerViewModel)
         setContent {
+            messengerViewModel = viewModel()
+            LaunchedEffect(Unit) {
+                updateViewData(messengerViewModel)
+            }
             val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.primary) {
                     MessengerView {
-                        chatIntent = Intent(this.applicationContext, ChatActivity::class.java)
+                        chatIntent = Intent(applicationContext, ChatActivity::class.java)
                         chatIntent.apply {
                             putExtra(DARK_THEME, messengerUiState.darkTheme)
                             putExtra(CHAT, it)
@@ -56,24 +66,43 @@ class MessengerActivity : ComponentActivity() {
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun updateViewData(messengerViewModel: MessengerViewModel) {
+        val messengerUiState = messengerViewModel.messengerUiState.value
+
         GlobalScope.launch {
             messengerViewModel.applyMe(messengerViewModel.getUser())
+            Log.i("MYTAG", messengerViewModel.messengerUiState.value.me.toString())
             data = messengerViewModel.getBookmarks()
             if (data.isNullOrEmpty()) {
                 data =  listOf(Message(value = "You do not have bookmarks"))
             }
             val bookmarks = listOf(
                 Chat(
-                    user = User(userName = "Bookmarks"),
+                    user = User(userName = "Bookmarks", userImage = UserImage(
+                        userImageBitmap = R.drawable.bookmark.getBitmapFromImage(applicationContext)
+                    )),
                     messages = data!!
                 )
             )
             messengerViewModel.applyMessengerUiState(MessengerUiState(chats = bookmarks))
+            if (messengerUiState.darkTheme != Repositories.accountsRepository.isDarkTheme()) {
+                messengerViewModel.onThemeChange()
+            }
         }
     }
 
+    private fun Int.getBitmapFromImage(context: Context): Bitmap {
+        val db = ContextCompat.getDrawable(context, this)
+        val bit = Bitmap.createBitmap(
+            db!!.intrinsicWidth, db.intrinsicHeight, Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bit)
+        db.setBounds(0, 0, canvas.width, canvas.height)
+        db.draw(canvas)
+
+        return bit
+    }
+
     override fun onRestart() {
-        val messengerViewModel: MessengerViewModel by viewModels()
         updateViewData(messengerViewModel)
         super.onRestart()
     }

@@ -28,6 +28,7 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.views.drawer.MessengerDrawerContent
 import by.bashlikovv.chat.struct.Chat
+import by.bashlikovv.chat.views.fab.MessengerFABContent
 
 @Composable
 fun MessengerView(
@@ -40,6 +41,7 @@ fun MessengerView(
     Scaffold(
         topBar = { TopAppBar() },
         drawerContent = { MessengerDrawerContent() },
+        floatingActionButton = { MessengerFABContent() },
         scaffoldState = ScaffoldState(
             drawerState = messengerUiState.drawerState,
             snackbarHostState = SnackbarHostState()

@@ -1,6 +1,7 @@
 package by.bashlikovv.chat.screens.messenger
 
-import android.util.Log
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
 import androidx.compose.material.MaterialTheme
@@ -25,6 +26,7 @@ import kotlinx.coroutines.launch
  * [MessengerViewModel] - class that contains data of [MessengerView]
  * */
 
+@OptIn(DelicateCoroutinesApi::class)
 class MessengerViewModel(
     private val accountsRepository: AccountsRepository = Repositories.accountsRepository
 ) : ViewModel() {
@@ -210,9 +212,7 @@ class MessengerViewModel(
     }
 
     suspend fun getUser(): User {
-        Log.i("MYTAG", "Before getAccount()")
         val data: Account? = accountsRepository.getAccount().first()
-        Log.i("MYTAG", data.toString())
         return User(
             userId = data?.id ?: 0,
             userName = data?.username ?: "unknown user",
@@ -229,5 +229,9 @@ class MessengerViewModel(
         GlobalScope.launch {
             accountsRepository.logout()
         }
+    }
+
+    fun onAddChatClicked(context: Context) {
+        Toast.makeText(context, _messengerUiState.value.me.toString(), Toast.LENGTH_LONG).show()
     }
 }
