@@ -56,6 +56,14 @@ class SQLiteAccountsRepository(
         return messengerSettings.getCurrentAccountId() != MessengerSettings.NO_ACCOUNT_ID
     }
 
+    override suspend fun isDarkTheme(): Boolean {
+        return messengerSettings.getCurrentAccountTheme()
+    }
+
+    override suspend fun setDarkTheme() {
+        messengerSettings.setCurrentAccountTheme(!messengerSettings.getCurrentAccountTheme())
+    }
+
     private suspend fun <T> wrapSQLiteException(dispatcher: CoroutineDispatcher, block: suspend CoroutineScope.() -> T): T {
         try {
             return withContext(dispatcher, block)
