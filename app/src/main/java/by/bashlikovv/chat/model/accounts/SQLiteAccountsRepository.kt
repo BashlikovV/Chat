@@ -12,6 +12,7 @@ import by.bashlikovv.chat.model.accounts.entities.SignUpData
 import by.bashlikovv.chat.model.settings.MessengerSettings
 import by.bashlikovv.chat.sqlite.MessengerSQLiteContract
 import by.bashlikovv.chat.struct.Message
+import by.bashlikovv.chat.utils.AsyncLoader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -19,28 +20,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.util.*
-
-class AsyncLoader<T>(
-    private val loader: suspend () -> T
-) {
-
-    private val mutex = Mutex()
-    private var value: T? = null
-
-    suspend fun get(): T {
-        mutex.withLock {
-            if (value == null) {
-                value = loader()
-            }
-        }
-        return value!!
-    }
-}
 
 class SQLiteAccountsRepository(
     private val db: SQLiteDatabase,
@@ -52,12 +34,12 @@ class SQLiteAccountsRepository(
         MutableStateFlow(AccountId(messengerSettings.getCurrentAccountId()))
     }
 
-    override suspend fun isSignedIn(): Boolean {
-        return messengerSettings.getCurrentAccountId() != MessengerSettings.NO_ACCOUNT_ID
+    private val currentAccountBookmarksFlow = AsyncLoader {
+        MutableStateFlow(getAllBookmarks())
     }
 
-    override suspend fun isDarkTheme(): Boolean {
-        return messengerSettings.getCurrentAccountTheme()
+    override suspend fun isSignedIn(): Boolean {
+        return messengerSettings.getCurrentAccountId() != MessengerSettings.NO_ACCOUNT_ID
     }
 
     override suspend fun setDarkTheme() {
@@ -103,10 +85,15 @@ class SQLiteAccountsRepository(
             .flowOn(ioDispatcher)
     }
 
+    override suspend fun isDarkTheme(): Boolean {
+        return messengerSettings.getCurrentAccountTheme()
+    }
+
     override suspend fun getBookmarks(): Flow<List<Message>?> {
-        return currentAccountIdFlow.get().map {
-            getAllBookmarks()
-        }.flowOn(ioDispatcher)
+        return currentAccountBookmarksFlow.get()
+            .map { _ ->
+                getAllBookmarks()
+            }.flowOn(ioDispatcher)
     }
 
     override suspend fun updateAccountUsername(newUsername: String) = wrapSQLiteException(ioDispatcher) {
