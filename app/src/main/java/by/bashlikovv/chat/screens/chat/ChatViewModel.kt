@@ -5,10 +5,11 @@ import android.net.Uri
 import android.provider.MediaStore.Images.Media.getBitmap
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.Repositories.accountsRepository
-import by.bashlikovv.chat.model.accounts.AccountsRepository
 import by.bashlikovv.chat.struct.Chat
 import by.bashlikovv.chat.struct.Message
 import by.bashlikovv.chat.struct.User
@@ -20,15 +21,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.*
 
-class ChatViewModel(
-    accountsRepository: AccountsRepository = Repositories.accountsRepository
-) : ViewModel() {
+class ChatViewModel : ViewModel() {
 
     private val _chatUiState = MutableStateFlow(ChatUiState())
     val chatUiState = _chatUiState.asStateFlow()
 
+    var messageCheapVisible by mutableStateOf(_chatUiState.value.chat.messages.map {
+        false
+    })
+        private set
+
     fun applyChatData(chat: Chat) {
         _chatUiState.update { it.copy(chat = chat) }
+        messageCheapVisible = chat.messages.map { false }
         getUniqueUsers(chat)
     }
 
@@ -92,6 +97,24 @@ class ChatViewModel(
                 onSendBookmark(newValue.last())
             }
         }
+        messageCheapVisible = messageCheapVisible.toMutableList().apply {
+            add(false)
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    fun onActionDelete(message: Message) {
+        val tmp = _chatUiState.value.chat.messages.toMutableList()
+        tmp.remove(message)
+        messageCheapVisible = messageCheapVisible.toMutableList().apply {
+            removeAt(getMessageIndex(message))
+        }
+        GlobalScope.launch {
+            onDeleteBookmark(message)
+        }
+        _chatUiState.update {
+            it.copy(chat = _chatUiState.value.chat.copy(messages = tmp))
+        }
     }
 
     fun onActionGallery(res: ManagedActivityResultLauncher<String, Uri?>) {
@@ -107,7 +130,7 @@ class ChatViewModel(
         var result = ""
 
         for (i in message.indices step 1) {
-            if (count == 26)  {
+            if (count == 30)  {
                 result += if (message[i] == ' ') {
                     "\n"
                 } else if (message[i].isLetter()) {
@@ -125,6 +148,7 @@ class ChatViewModel(
         return result
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun applyImageUri(imageUri: Uri, context: Context) {
         try {
             val bitmap = getBitmap(context.contentResolver, imageUri)
@@ -147,7 +171,23 @@ class ChatViewModel(
         }
     }
 
-    suspend fun onSendBookmark(bookmark: Message) {
+    private suspend fun onSendBookmark(bookmark: Message) {
         accountsRepository.addBookmark(bookmark = bookmark)
     }
+
+    fun onDMenuAction(value: Boolean) {
+        _chatUiState.update { it.copy(dMenuExpanded = value) }
+    }
+
+    private suspend fun onDeleteBookmark(bookmark: Message) {
+        accountsRepository.deleteBookmark(bookmark)
+    }
+
+    fun onCheapItemClicked(message: Message, value: Boolean) {
+        val tmp = messageCheapVisible.toMutableList()
+        tmp[getMessageIndex(message)] = value
+        messageCheapVisible = tmp
+    }
+
+    fun getMessageIndex(message: Message): Int = _chatUiState.value.chat.messages.indexOf(message)
 }
