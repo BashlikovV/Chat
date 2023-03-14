@@ -13,6 +13,7 @@ data class MessengerUiState(
     val drawerState: DrawerState = DrawerState(DrawerValue.Closed),
     val darkTheme: Boolean = true,
     val expanded: Boolean = false,
+    val newChat: Boolean = false,
     val searchInput: String = "",
     val searchedItems: List<Chat> = emptyList()
 )
