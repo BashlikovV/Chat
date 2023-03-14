@@ -10,5 +10,6 @@ data class ChatUiState(
     val inputHeight: Int = 0,
     val usersData: List<User> = emptyList(),
     val isCanSend: Boolean = false,
-    val selectedMessage: Message = Message()
+    val selectedMessage: Message = Message(),
+    val dMenuExpanded: Boolean = false
 )
