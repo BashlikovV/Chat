@@ -91,7 +91,7 @@ fun LeftItem(messengerViewModel: MessengerViewModel = viewModel()) {
                 .size(40.dp)
                 .clickable {
                     if (messengerUiState.expanded) {
-                        messengerViewModel.onSearchClick()
+                        messengerViewModel.onSearchClick(false)
                     } else {
                         messengerViewModel.onActionMenu()
                     }
@@ -179,7 +179,7 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
         ),
         keyboardActions = KeyboardActions(
             onSearch = {
-                messengerViewModel.onSearchCalled()
+                messengerViewModel.onSearchClick(false)
             }
         ),
         maxLines = 1,
@@ -205,7 +205,7 @@ fun ContentIcon(messengerViewModel: MessengerViewModel = viewModel()) {
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
             modifier = Modifier.size(50.dp).clip(RoundedCornerShape(25.dp)).clickable {
-                    messengerViewModel.onSearchClick()
+                    messengerViewModel.onSearchClick(false)
                 }
         )
     }

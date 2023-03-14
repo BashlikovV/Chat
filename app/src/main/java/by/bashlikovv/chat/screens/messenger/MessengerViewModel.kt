@@ -178,8 +178,8 @@ class MessengerViewModel(
     /**
      * [onSearchClick] - function that opens and closes input field used for search. [MessengerUiState.expanded]
      * */
-    fun onSearchClick() {
-        _messengerUiState.update { it.copy(expanded = !it.expanded) }
+    fun onSearchClick(newChat: Boolean) {
+        _messengerUiState.update { it.copy(expanded = !it.expanded, newChat = newChat) }
     }
 
     /**
@@ -196,31 +196,33 @@ class MessengerViewModel(
      * */
     private fun getSearchOutput(input: String): List<Chat> {
         val result = mutableListOf<Chat>()
-        _messengerUiState.value.chats.forEach {
-            if (input.length <= it.user.userName.length) {
-                val subStr = it.user.userName.subSequence(0, input.length).toString().lowercase()
-                if (subStr == input.lowercase()) {
-                    result.add(it)
+        if (_messengerUiState.value.newChat) {
+
+            //TEST DATA
+            val users = (0..30).map { User(userName = "testName") }
+            users.forEach {
+                if (input.length <= it.userName.length) {
+                    val subStr = it.userName.subSequence(0, input.length).toString().lowercase()
+                    if (subStr == input.lowercase() && subStr != "") {
+                        //TEST DATA
+                        result.add(Chat(
+                            user = it, messages = listOf(Message(value = "")), time = "")
+                        )
+                    }
+                }
+            }
+        } else {
+            _messengerUiState.value.chats.forEach {
+                if (input.length <= it.user.userName.length) {
+                    val subStr = it.user.userName.subSequence(0, input.length).toString().lowercase()
+                    if (subStr == input.lowercase()) {
+                        result.add(it)
+                    }
                 }
             }
         }
 
         return result
-    }
-
-    /**
-     * [onSearchInputChange] - function that search concurrence between search input and list of [Chat]
-     * */
-    fun onSearchCalled() {
-        var result = _messengerUiState.value.chats.map {
-            if (it.user.userName.contains(_messengerUiState.value.searchInput)) {
-                it
-            } else {
-                Chat(time = (-1).toString())
-            }
-        }
-        result = result.filter { it.time != (-1).toString() }
-        _messengerUiState.update { it.copy(searchedItems = result) }
     }
 
     /**
@@ -250,7 +252,15 @@ class MessengerViewModel(
         }
     }
 
-    fun onAddChatClicked(context: Context) {
-        Toast.makeText(context, _messengerUiState.value.me.toString(), Toast.LENGTH_LONG).show()
+    fun onAddChatClicked(value: Boolean) {
+        _messengerUiState.update { it.copy(newChat = value) }
+        onSearchClick(true)
+    }
+
+    fun onCreateNewChat(user: User) {
+        val tmp = _messengerUiState.value.chats.toMutableList().apply {
+            add(Chat(user, messages = listOf(Message(value = "You do not have messages now."))))
+        }
+        _messengerUiState.update { it.copy(chats = tmp) }
     }
 }
