@@ -91,7 +91,7 @@ fun LeftItem(messengerViewModel: MessengerViewModel = viewModel()) {
                 .size(40.dp)
                 .clickable {
                     if (messengerUiState.expanded) {
-                        messengerViewModel.onAnimateContentClick()
+                        messengerViewModel.onSearchClick()
                     } else {
                         messengerViewModel.onActionMenu()
                     }
@@ -192,11 +192,6 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
             focusedIndicatorColor = MaterialTheme.colors.secondary
         )
     )
-//    LazyColumn(modifier = Modifier.padding(top = 65.dp)) {
-//        items(messengerUiState.searchedItems) {
-//            MessengerItem(it)
-//        }
-//    }
 }
 
 @Composable
@@ -210,7 +205,7 @@ fun ContentIcon(messengerViewModel: MessengerViewModel = viewModel()) {
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
             modifier = Modifier.size(50.dp).clip(RoundedCornerShape(25.dp)).clickable {
-                    messengerViewModel.onAnimateContentClick()
+                    messengerViewModel.onSearchClick()
                 }
         )
     }
