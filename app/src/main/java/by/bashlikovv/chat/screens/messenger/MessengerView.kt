@@ -64,7 +64,11 @@ fun MessengerContent(
         verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
         if (messengerUiState.chats.isNotEmpty()) {
-            items(messengerUiState.chats) { chat -> MessengerItem(chat) { onOpenChat(it) } }
+            if (!messengerUiState.expanded) {
+                items(messengerUiState.chats) { chat -> MessengerItem(chat) { onOpenChat(it) } }
+            } else {
+                items(messengerUiState.searchedItems) { chat -> MessengerItem(chat) { onOpenChat(it) } }
+            }
         }
     }
 }

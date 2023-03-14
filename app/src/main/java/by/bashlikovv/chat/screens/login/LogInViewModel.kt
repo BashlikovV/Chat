@@ -8,7 +8,6 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.model.AccountAlreadyExistsException
 import by.bashlikovv.chat.model.EmptyFieldException
@@ -18,6 +17,7 @@ import by.bashlikovv.chat.model.accounts.AccountsRepository
 import by.bashlikovv.chat.model.accounts.entities.SignUpData
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -78,7 +78,7 @@ class LogInViewModel(
     fun onCreateAccountButtonPressed(context: Context) {
         try {
             if (_logInUiState.value.isHaveAccount) {
-                GlobalScope.launch {
+                GlobalScope.launch(Dispatchers.Main) {
                     accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
                 }
             } else {
@@ -87,38 +87,37 @@ class LogInViewModel(
                     username = _logInUiState.value.userName,
                     password = _logInUiState.value.password,
                 )
-                signUp(signUpData, context)
-                GlobalScope.launch {
+                GlobalScope.launch(Dispatchers.Main) {
+                    signUp(signUpData, context)
                     accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
                 }
             }
         } catch (e: Exception) {
             showToast(context, "Authentication error ${e.message}")
-        }
-        GlobalScope.launch {
-            if (accountsRepository.isSignedIn()) {
-                applySuccess()
+        } finally {
+            GlobalScope.launch(Dispatchers.Main) {
+                if (accountsRepository.isSignedIn()) {
+                    applySuccess()
+                }
             }
         }
     }
 
-    private fun signUp(signUpData: SignUpData, context: Context) {
+    private suspend fun signUp(signUpData: SignUpData, context: Context) {
         _logInUiState.update { it.copy(progressBarVisibility = true) }
-        viewModelScope.launch {
-            try {
-                accountsRepository.signUp(signUpData)
-                showSuccessSignUpMessage(context)
-            } catch (e: EmptyFieldException) {
-                processEmptyFieldException(e)
-            } catch (e: PasswordMismatchException) {
-                processPasswordMismatchException(context)
-            } catch (e: AccountAlreadyExistsException) {
-                processAccountAlreadyExistsException(context)
-            } catch (e: StorageException) {
-                processStorageException(context)
-            } finally {
-                hideProgress()
-            }
+        try {
+            accountsRepository.signUp(signUpData)
+            showSuccessSignUpMessage(context)
+        } catch (e: EmptyFieldException) {
+            processEmptyFieldException(e)
+        } catch (e: PasswordMismatchException) {
+            processPasswordMismatchException(context)
+        } catch (e: AccountAlreadyExistsException) {
+            processAccountAlreadyExistsException(context)
+        } catch (e: StorageException) {
+            processStorageException(context)
+        } finally {
+            hideProgress()
         }
         _logInUiState.update { it.copy(progressBarVisibility = false) }
     }

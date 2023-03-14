@@ -43,7 +43,7 @@ class MessengerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Repositories.init(this)
         setContent {
-            messengerViewModel = viewModel()
+            messengerViewModel = viewModel<MessengerViewModel>()
             LaunchedEffect(Unit) {
                 updateViewData(messengerViewModel)
             }
@@ -53,9 +53,18 @@ class MessengerActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.primary) {
                     MessengerView {
                         chatIntent = Intent(applicationContext, ChatActivity::class.java)
+                        if (messengerUiState.newChat) {
+                            messengerViewModel.onCreateNewChat(it.user)
+                        }
                         chatIntent.apply {
                             putExtra(DARK_THEME, messengerUiState.darkTheme)
-                            putExtra(CHAT, it)
+                            putExtra(
+                                CHAT,
+                                if (messengerUiState.newChat)
+                                    messengerViewModel.messengerUiState.value.chats.last()
+                                else
+                                    it
+                            )
                         }
                         startActivity(chatIntent)
                     }
