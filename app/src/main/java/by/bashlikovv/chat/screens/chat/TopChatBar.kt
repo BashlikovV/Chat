@@ -3,7 +3,10 @@ package by.bashlikovv.chat.screens.chat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +24,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
+import by.bashlikovv.chat.views.dropmenu.ChatMenu
 
 private fun getTopChatBarConstraints(): ConstraintSet {
     return ConstraintSet {
@@ -74,16 +78,22 @@ fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> U
                 modifier = Modifier.layoutId("chatName")
             )
             Image(
-                painter = painterResource(R.drawable.more_vert),
+                painter = painterResource(
+                    if (chatUiState.dMenuExpanded)
+                        R.drawable.more_horiz
+                    else
+                        R.drawable.more_vert
+                ),
                 contentDescription = "More",
                 contentScale = ContentScale.Crop,
                 colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
                 modifier = Modifier
                     .size(40.dp)
                     .clickable {
-
+                        chatViewModel.onDMenuAction(true)
                     }.layoutId("more")
             )
         }
+        ChatMenu()
     }
 }
