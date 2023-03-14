@@ -176,9 +176,9 @@ class MessengerViewModel(
     }
 
     /**
-     * [onAnimateContentClick] - function that opens and closes input field used for search. [MessengerUiState.expanded]
+     * [onSearchClick] - function that opens and closes input field used for search. [MessengerUiState.expanded]
      * */
-    fun onAnimateContentClick() {
+    fun onSearchClick() {
         _messengerUiState.update { it.copy(expanded = !it.expanded) }
     }
 
@@ -186,7 +186,26 @@ class MessengerViewModel(
      * [onSearchInputChange] - function that updates search input state in [MessengerUiState.searchInput]
      * */
     fun onSearchInputChange(newValue: String) {
-        _messengerUiState.update { it.copy(searchInput = newValue) }
+        _messengerUiState.update {
+            it.copy(searchInput = newValue, searchedItems = getSearchOutput(newValue))
+        }
+    }
+
+    /**
+     * [getSearchOutput] - function for getting searched elements
+     * */
+    private fun getSearchOutput(input: String): List<Chat> {
+        val result = mutableListOf<Chat>()
+        _messengerUiState.value.chats.forEach {
+            if (input.length <= it.user.userName.length) {
+                val subStr = it.user.userName.subSequence(0, input.length).toString().lowercase()
+                if (subStr == input.lowercase()) {
+                    result.add(it)
+                }
+            }
+        }
+
+        return result
     }
 
     /**
