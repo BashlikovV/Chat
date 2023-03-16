@@ -60,10 +60,11 @@ class MessengerActivity : ComponentActivity() {
                             putExtra(DARK_THEME, messengerUiState.darkTheme)
                             putExtra(
                                 CHAT,
-                                if (messengerUiState.newChat)
+                                if (messengerUiState.newChat) {
                                     messengerViewModel.messengerUiState.value.chats.last()
-                                else
+                                } else {
                                     it
+                                }
                             )
                         }
                         startActivity(chatIntent)
@@ -79,7 +80,6 @@ class MessengerActivity : ComponentActivity() {
 
         GlobalScope.launch {
             messengerViewModel.applyMe(messengerViewModel.getUser())
-            Log.i("MYTAG", messengerViewModel.messengerUiState.value.me.toString())
             data = messengerViewModel.getBookmarks()
             if (data.isNullOrEmpty()) {
                 data =  listOf(Message(value = "You do not have bookmarks"))

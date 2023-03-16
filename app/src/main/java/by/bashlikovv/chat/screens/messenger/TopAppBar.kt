@@ -189,7 +189,9 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
         colors = TextFieldDefaults.textFieldColors(
             backgroundColor = Color.Transparent,
             textColor = MaterialTheme.colors.secondary,
-            focusedIndicatorColor = MaterialTheme.colors.secondary
+            focusedIndicatorColor = MaterialTheme.colors.secondary,
+            unfocusedIndicatorColor = MaterialTheme.colors.secondary,
+            cursorColor = MaterialTheme.colors.secondary
         )
     )
 }
