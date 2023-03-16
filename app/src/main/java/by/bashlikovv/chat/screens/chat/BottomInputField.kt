@@ -62,7 +62,8 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
             modifier = Modifier/*.fillMaxWidth(0.7f)*/.weight(0.7f),
             colors = TextFieldDefaults.textFieldColors(
                 backgroundColor = MaterialTheme.colors.primary,
-                textColor = MaterialTheme.colors.secondary
+                textColor = MaterialTheme.colors.secondary,
+                cursorColor = MaterialTheme.colors.secondary
             ),
             maxLines = 6
         )
