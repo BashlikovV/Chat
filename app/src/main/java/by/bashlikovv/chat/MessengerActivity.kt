@@ -5,7 +5,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +15,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.screens.login.UserImage
 import by.bashlikovv.chat.screens.messenger.MessengerUiState
 import by.bashlikovv.chat.screens.messenger.MessengerView
@@ -25,6 +23,7 @@ import by.bashlikovv.chat.struct.Chat
 import by.bashlikovv.chat.struct.Message
 import by.bashlikovv.chat.struct.User
 import by.bashlikovv.chat.theme.MessengerTheme
+import by.bashlikovv.chat.utils.viewModelCreator
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -32,7 +31,9 @@ import kotlinx.coroutines.launch
 class MessengerActivity : ComponentActivity() {
     private lateinit var chatIntent: Intent
     private var data: List<Message>? = null
-    private lateinit var messengerViewModel: MessengerViewModel
+    private val messengerViewModel by viewModelCreator {
+        MessengerViewModel(Repositories.accountsRepository)
+    }
 
     companion object {
         const val DARK_THEME = "dark theme"
@@ -43,7 +44,6 @@ class MessengerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Repositories.init(this)
         setContent {
-            messengerViewModel = viewModel<MessengerViewModel>()
             LaunchedEffect(Unit) {
                 updateViewData(messengerViewModel)
             }

@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(DelicateCoroutinesApi::class)
 class MessengerViewModel(
-    private val accountsRepository: AccountsRepository = Repositories.accountsRepository
+    private val accountsRepository: AccountsRepository
 ) : ViewModel() {
 
     private val _messengerUiState = MutableStateFlow(MessengerUiState())

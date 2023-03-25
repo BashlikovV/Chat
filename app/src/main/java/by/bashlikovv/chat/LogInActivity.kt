@@ -19,9 +19,12 @@ import androidx.compose.ui.graphics.asImageBitmap
 import by.bashlikovv.chat.screens.login.LogInView
 import by.bashlikovv.chat.screens.login.LogInViewModel
 import by.bashlikovv.chat.theme.MessengerTheme
+import by.bashlikovv.chat.utils.viewModelCreator
 
 class LogInActivity : ComponentActivity() {
-    private val logInViewModel: LogInViewModel by viewModels()
+    private val logInViewModel: LogInViewModel by viewModelCreator {
+        LogInViewModel(Repositories.accountsRepository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

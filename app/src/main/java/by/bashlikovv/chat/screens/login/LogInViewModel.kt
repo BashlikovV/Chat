@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 class LogInViewModel(
-    private val accountsRepository: AccountsRepository = Repositories.accountsRepository
+    private val accountsRepository: AccountsRepository
 ) : ViewModel() {
 
     private val _logInUiState = MutableStateFlow(LogInUiState())
