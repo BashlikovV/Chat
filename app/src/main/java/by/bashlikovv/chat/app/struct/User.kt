@@ -10,5 +10,6 @@ data class User(
     val userName: String = "",
     val userEmail: String = "",
     val userPassword: String = "",
+    val userToken: String = "",
     val userImage: UserImage = UserImage()
 ) : Parcelable
