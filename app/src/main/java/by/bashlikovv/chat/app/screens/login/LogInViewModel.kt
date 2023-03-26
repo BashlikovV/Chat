@@ -14,14 +14,13 @@ import by.bashlikovv.chat.app.model.PasswordMismatchException
 import by.bashlikovv.chat.app.model.StorageException
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.SignUpData
+import by.bashlikovv.chat.sources.SourceProviderHolder
+import by.bashlikovv.chat.sources.accounts.OkHttpAccountsSource
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.util.*
 
 class LogInViewModel(
@@ -30,6 +29,8 @@ class LogInViewModel(
 
     private val _logInUiState = MutableStateFlow(LogInUiState())
     val logInUiState = _logInUiState.asStateFlow()
+
+    private val accountsSource = OkHttpAccountsSource(SourceProviderHolder().sourcesProvider)
 
     fun onIdentifierChange(newValue: String) {
         _logInUiState.update { it.copy(identifier = newValue) }
@@ -73,12 +74,23 @@ class LogInViewModel(
         _logInUiState.update { it.copy(userImageBitmap = value) }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun onCreateAccountButtonPressed(context: Context) {
+    fun onCreateAccountButtonPressed(context: Context, scope: CoroutineScope) {
+        var token = ""
+
         try {
             if (_logInUiState.value.isHaveAccount) {
-                GlobalScope.launch(Dispatchers.Main) {
-                    accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
+                scope.launch {
+                    try {
+                        token = accountsSource.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
+                    } catch (_: Exception) {
+                        showToast(context, "Network error")
+                    }
+                    _logInUiState.update { it.copy(token = token) }
+                    if (!_logInUiState.value.token.contains("500") && _logInUiState.value.token.isNotEmpty()) {
+                        accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
+                    } else {
+                        showToast(context, "Authentication error.")
+                    }
                 }
             } else {
                 val signUpData = SignUpData(
@@ -86,17 +98,30 @@ class LogInViewModel(
                     username = _logInUiState.value.userName,
                     password = _logInUiState.value.password,
                 )
-                GlobalScope.launch(Dispatchers.Main) {
+                scope.launch {
                     signUp(signUpData, context)
-                    accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
+                    try {
+                        token = accountsSource.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
+                    } catch (_: Exception) {
+                        showToast(context, "Network error")
+                    }
+                    _logInUiState.update { it.copy(token = token) }
+                    if (!_logInUiState.value.token.contains("500") && _logInUiState.value.token.isNotEmpty()) {
+                        accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
+                    } else {
+                        showToast(context, "Authentication error.")
+                    }
                 }
             }
         } catch (e: Exception) {
             showToast(context, "Authentication error ${e.message}")
         } finally {
-            GlobalScope.launch(Dispatchers.Main) {
-                if (accountsRepository.isSignedIn()) {
+            scope.launch {
+                if (accountsRepository.isSignedIn() && !_logInUiState.value.token.contains("500")) {
                     applySuccess()
+                    Toast.makeText(context, "token: ${_logInUiState.value.token}", Toast.LENGTH_LONG).show()
+                } else {
+                    showToast(context, "Authentication error.")
                 }
             }
         }
@@ -105,8 +130,24 @@ class LogInViewModel(
     private suspend fun signUp(signUpData: SignUpData, context: Context) {
         _logInUiState.update { it.copy(progressBarVisibility = true) }
         try {
-            accountsRepository.signUp(signUpData)
-            showSuccessSignUpMessage(context)
+            accountsSource.signUp(
+                email = signUpData.email,
+                password = signUpData.password,
+                username = signUpData.username
+            )
+            var token = ""
+            try {
+                token = accountsSource.signIn(email = signUpData.email, password = signUpData.password)
+            } catch (_: Exception) {
+                showToast(context, "Network error")
+            }
+            _logInUiState.update { it.copy(token = token) }
+            if (!_logInUiState.value.token.contains("500") && _logInUiState.value.token.isNotEmpty()) {
+                accountsRepository.signUp(signUpData, _logInUiState.value.token)
+                showSuccessSignUpMessage(context)
+            } else {
+                showToast(context, "Authentication error.")
+            }
         } catch (e: EmptyFieldException) {
             processEmptyFieldException(e)
         } catch (e: PasswordMismatchException) {
