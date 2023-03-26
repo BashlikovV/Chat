@@ -8,8 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -29,8 +27,8 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.app.LogInActivity
 import by.bashlikovv.chat.R
+import by.bashlikovv.chat.app.LogInActivity
 import by.bashlikovv.chat.app.screens.messenger.MessengerViewModel
 
 private fun getDrawerContentConstraints(): ConstraintSet {
@@ -97,10 +95,9 @@ private fun bottomItemsConstraint(): ConstraintSet {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessengerDrawerContent() {
-    ModalDrawerSheet(drawerContainerColor = MaterialTheme.colors.primary) {
+    Column(Modifier.background(MaterialTheme.colors.primary)) {
         BoxWithConstraints {
             ConstraintLayout(constraintSet = constraints(), modifier = Modifier.fillMaxHeight()) {
                 ConstraintLayout(
