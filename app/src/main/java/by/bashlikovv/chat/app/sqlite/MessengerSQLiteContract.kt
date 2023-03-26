@@ -9,6 +9,7 @@ object MessengerSQLiteContract {
         const val COLUMN_USERNAME = "username"
         const val COLUMN_PASSWORD = "password"
         const val COLUMN_LAST_SESSION_TIME = "last_session_time"
+        const val COLUMN_TOKEN = "token"
     }
 
     object BookmarksTable {
