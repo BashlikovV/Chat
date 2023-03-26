@@ -67,9 +67,9 @@ class SQLiteAccountsRepository(
         return@wrapSQLiteException
     }
 
-    override suspend fun signUp(signUpData: SignUpData) = wrapSQLiteException(ioDispatcher) {
+    override suspend fun signUp(signUpData: SignUpData, token: String) = wrapSQLiteException(ioDispatcher) {
         signUpData.validate()
-        createAccount(signUpData)
+        createAccount(signUpData, token)
     }
 
     override suspend fun logout() {
@@ -133,7 +133,7 @@ class SQLiteAccountsRepository(
         }
     }
 
-    private fun createAccount(signUpData: SignUpData) {
+    private fun createAccount(signUpData: SignUpData, token: String) {
         try {
             db.insertOrThrow(
                 MessengerSQLiteContract.CurrentUserTable.TABLE_NAME,
@@ -142,7 +142,8 @@ class SQLiteAccountsRepository(
                     MessengerSQLiteContract.CurrentUserTable.COLUMN_EMAIL to signUpData.email,
                     MessengerSQLiteContract.CurrentUserTable.COLUMN_PASSWORD to signUpData.password,
                     MessengerSQLiteContract.CurrentUserTable.COLUMN_USERNAME to signUpData.username,
-                    MessengerSQLiteContract.CurrentUserTable.COLUMN_LAST_SESSION_TIME to System.currentTimeMillis()
+                    MessengerSQLiteContract.CurrentUserTable.COLUMN_LAST_SESSION_TIME to System.currentTimeMillis(),
+                    MessengerSQLiteContract.CurrentUserTable.COLUMN_TOKEN to token
                 )
             )
         } catch (e: SQLiteConstraintException) {
@@ -191,7 +192,8 @@ class SQLiteAccountsRepository(
                 MessengerSQLiteContract.CurrentUserTable.COLUMN_ID,
                 MessengerSQLiteContract.CurrentUserTable.COLUMN_EMAIL,
                 MessengerSQLiteContract.CurrentUserTable.COLUMN_USERNAME,
-                MessengerSQLiteContract.CurrentUserTable.COLUMN_LAST_SESSION_TIME
+                MessengerSQLiteContract.CurrentUserTable.COLUMN_LAST_SESSION_TIME,
+                MessengerSQLiteContract.CurrentUserTable.COLUMN_TOKEN
             ),
             "${MessengerSQLiteContract.CurrentUserTable.COLUMN_ID} = ?",
             arrayOf(accountId.toString()),
@@ -212,6 +214,9 @@ class SQLiteAccountsRepository(
                 ),
                 createdAt = cursor.getLong(
                     cursor.getColumnIndexOrThrow(MessengerSQLiteContract.CurrentUserTable.COLUMN_LAST_SESSION_TIME)
+                ),
+                token = cursor.getString(
+                    cursor.getColumnIndexOrThrow(MessengerSQLiteContract.CurrentUserTable.COLUMN_TOKEN)
                 )
             )
         }
