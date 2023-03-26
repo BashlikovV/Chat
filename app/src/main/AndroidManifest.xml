@@ -17,7 +17,7 @@
             android:usesCleartextTraffic="true"
             android:networkSecurityConfig="@xml/network_security_config">
         <activity
-                android:name=".LogInActivity"
+                android:name=".app.LogInActivity"
                 android:exported="true"
                 android:theme="@style/Theme.Chat">
             <intent-filter>
@@ -27,12 +27,12 @@
             </intent-filter>
         </activity>
         <activity
-                android:name=".ChatActivity"
+                android:name=".app.ChatActivity"
                 android:exported="false"
                 android:label="@string/title_activity_chat"
                 android:theme="@style/Theme.Chat"/>
         <activity
-                android:name=".MessengerActivity"
+                android:name=".app.MessengerActivity"
                 android:exported="false"
                 android:theme="@style/Theme.Chat">
         </activity>
