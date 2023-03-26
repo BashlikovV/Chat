@@ -90,8 +90,7 @@ class MessengerActivity : ComponentActivity() {
                 Chat(
                     user = User(userName = "Bookmarks", userImage = UserImage(
                         userImageBitmap = R.drawable.bookmark.getBitmapFromImage(applicationContext)
-                    )
-                    ),
+                    )),
                     messages = data!!
                 )
             )
