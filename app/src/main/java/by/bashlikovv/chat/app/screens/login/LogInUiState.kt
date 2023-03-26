@@ -14,7 +14,8 @@ data class LogInUiState(
     val isPasswordCorrect: Boolean = true,
     val isSuccess: Boolean = false,
     val isHaveAccount: Boolean = false,
-    val progressBarVisibility: Boolean = false
+    val progressBarVisibility: Boolean = false,
+    val token: String = ""
 )
 
 @Parcelize
