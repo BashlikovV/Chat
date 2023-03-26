@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
@@ -35,6 +36,7 @@ import by.bashlikovv.chat.R
 fun LogInView(logInViewModel: LogInViewModel = viewModel(), logInActivity: ComponentActivity) {
     val logInUiState by logInViewModel.logInUiState.collectAsState()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -95,7 +97,7 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel(), logInActivity: Compo
                 ) {
                     Button(
                         onClick = {
-                            logInViewModel.onCreateAccountButtonPressed(context)
+                            logInViewModel.onCreateAccountButtonPressed(context, scope)
                         },
                         content = { Text("LogIn") }
                     )
@@ -114,6 +116,7 @@ fun InputField(
 ) {
     val logInUiState by logInViewModel.logInUiState.collectAsState()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     TextField(
         value = value,
@@ -134,7 +137,7 @@ fun InputField(
             }
         ),
         keyboardActions = KeyboardActions(onDone = {
-            logInViewModel.onCreateAccountButtonPressed(context)
+            logInViewModel.onCreateAccountButtonPressed(context, scope)
         })
 
     )
