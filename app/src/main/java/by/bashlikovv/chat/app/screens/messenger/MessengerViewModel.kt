@@ -11,6 +11,8 @@ import by.bashlikovv.chat.app.model.accounts.entities.Account
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.User
+import by.bashlikovv.chat.sources.SourceProviderHolder
+import by.bashlikovv.chat.sources.base.OkHttpUsersSource
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +32,8 @@ class MessengerViewModel(
 
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
     val messengerUiState = _messengerUiState.asStateFlow()
+
+    private val usersSource = OkHttpUsersSource(SourceProviderHolder().sourcesProvider)
 
     private val selectedItem
         get() = _messengerUiState.value.selectedItem
@@ -110,7 +114,7 @@ class MessengerViewModel(
     }
 
     /**
-     * [onActionOpenChat] - function for open chat. TODO(Not implemented)
+     * [onActionOpenChat] - function for open chat.
      * */
     fun onActionOpenChat(chat: Chat) {
         onActionCloseItems()
@@ -183,38 +187,60 @@ class MessengerViewModel(
      * [onSearchInputChange] - function that updates search input state in [MessengerUiState.searchInput]
      * */
     fun onSearchInputChange(newValue: String) {
-        _messengerUiState.update {
-            it.copy(searchInput = newValue, searchedItems = getSearchOutput(newValue))
+        GlobalScope.launch {
+            _messengerUiState.update {
+                it.copy(searchInput = newValue, searchedItems = getSearchOutput(newValue))
+            }
         }
     }
 
     /**
      * [getSearchOutput] - function for getting searched elements
      * */
-    private fun getSearchOutput(input: String): List<Chat> {
-        val result = mutableListOf<Chat>()
+    private suspend fun getSearchOutput(input: String): List<Chat> {
+        var result = mutableListOf<Chat>()
         if (_messengerUiState.value.newChat) {
-
-            //TEST DATA
-            val users = (0..30).map { User(userName = "testName") }
-            users.forEach {
-                if (input.length <= it.userName.length) {
-                    val subStr = it.userName.subSequence(0, input.length).toString().lowercase()
-                    if (subStr == input.lowercase() && subStr != "") {
-                        //TEST DATA
-                        result.add(
-                            Chat(
-                            user = it, messages = listOf(Message(value = "")), time = "")
-                        )
+            var users = listOf<by.bashlikovv.chat.sources.base.entities.User>()
+            try {
+                users = usersSource.getAllUsers()
+            } catch (e: Exception) {
+                result.add(Chat(User(userName = "Network error."), messages = listOf(Message(value = ""))))
+                return result
+            }
+            if (input.isEmpty()) {
+                users.forEach {
+                    result.add(
+                        Chat(
+                            user = User(userName = it.username), messages = listOf(Message(value = "")), time = "")
+                    )
+                }
+            } else {
+                users.forEach {
+                    if (input.length <= it.username.length) {
+                        val subStr = it.username.subSequence(0, input.length).toString().lowercase()
+                        if (subStr == input.lowercase() && subStr != "") {
+                            //TEST DATA
+                            result.add(
+                                Chat(
+                                    user = User(userName = it.username),
+                                    messages = listOf(Message(value = "")),
+                                    time = ""
+                                )
+                            )
+                        }
                     }
                 }
             }
         } else {
-            _messengerUiState.value.chats.forEach {
-                if (input.length <= it.user.userName.length) {
-                    val subStr = it.user.userName.subSequence(0, input.length).toString().lowercase()
-                    if (subStr == input.lowercase()) {
-                        result.add(it)
+            if (input.isEmpty()) {
+                result = _messengerUiState.value.chats.toMutableList()
+            } else {
+                _messengerUiState.value.chats.forEach {
+                    if (input.length <= it.user.userName.length) {
+                        val subStr = it.user.userName.subSequence(0, input.length).toString().lowercase()
+                        if (subStr == input.lowercase()) {
+                            result.add(it)
+                        }
                     }
                 }
             }
@@ -235,7 +261,8 @@ class MessengerViewModel(
         return User(
             userId = data?.id ?: 0,
             userName = data?.username ?: "unknown user",
-            userEmail = data?.email ?: "unknown email"
+            userEmail = data?.email ?: "unknown email",
+            userToken = data?.token ?: "token error"
         )
     }
 
