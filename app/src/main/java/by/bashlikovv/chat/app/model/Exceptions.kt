@@ -1,6 +1,9 @@
 package by.bashlikovv.chat.app.model
 
-open class AppException : RuntimeException()
+open class AppException : RuntimeException {
+    constructor() : super()
+    constructor(cause: Throwable) : super(cause)
+}
 
 class EmptyFieldException(
     val field: Field
@@ -13,3 +16,7 @@ class AccountAlreadyExistsException : AppException()
 class AuthException : AppException()
 
 class StorageException: AppException()
+
+class ParseBackendResponseException(
+    cause: Throwable
+) : AppException(cause = cause)
