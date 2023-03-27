@@ -1,7 +1,5 @@
 package by.bashlikovv.chat.sources.accounts
 
-import by.bashlikovv.chat.sources.accounts.entities.GetUsersResponseBody
-import by.bashlikovv.chat.sources.base.entities.User
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import okhttp3.Request
