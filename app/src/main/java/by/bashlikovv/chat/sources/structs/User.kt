@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.sources.base.entities
+package by.bashlikovv.chat.sources.structs
 
 data class User(
     val id: Int = 0,
