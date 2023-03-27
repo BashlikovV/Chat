@@ -1,6 +1,6 @@
-package by.bashlikovv.chat.sources.accounts.entities
+package by.bashlikovv.chat.sources.users.entities
 
-import by.bashlikovv.chat.sources.base.entities.User
+import by.bashlikovv.chat.sources.structs.User
 
 data class GetUsersRequestBody(val token: String)
 
