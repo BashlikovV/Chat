@@ -12,9 +12,6 @@ import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-/**
- * Base class for all OkHttp sources.
- */
 open class BaseOkHttpSource(
     private val config: OkHttpConfig
 ) {

@@ -8,9 +8,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -26,17 +28,32 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.app.views.drawer.MessengerDrawerContent
 import by.bashlikovv.chat.app.struct.Chat
+import by.bashlikovv.chat.app.views.drawer.MessengerDrawerContent
 import by.bashlikovv.chat.app.views.fab.MessengerFABContent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MessengerView(
     modifier: Modifier = Modifier,
     messengerViewModel: MessengerViewModel = viewModel(),
+    updateViewData: suspend (MessengerViewModel) -> Unit,
     onOpenChat: (Chat) -> Unit
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+
+    val scope = rememberCoroutineScope()
+    var refreshing by remember { mutableStateOf(false) }
+    fun refresh () = scope.launch(Dispatchers.IO) {
+        refreshing = true
+        delay(500)
+        updateViewData(messengerViewModel)
+        refreshing = false
+    }
+    val state = rememberPullRefreshState(refreshing, ::refresh)
 
     Scaffold(
         topBar = { TopAppBar() },
@@ -45,9 +62,20 @@ fun MessengerView(
         scaffoldState = ScaffoldState(
             drawerState = messengerUiState.drawerState,
             snackbarHostState = SnackbarHostState()
-        )
+        ),
+        modifier = modifier
     ) { paddingValues ->
-        MessengerContent(modifier = modifier.padding(paddingValues).fillMaxSize()) { onOpenChat(it) }
+        Box(modifier = Modifier.fillMaxSize()) {
+            MessengerContent(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+                    .pullRefresh(state, true)
+            ) { onOpenChat(it) }
+            PullRefreshIndicator(
+                refreshing, state, Modifier.align(Alignment.TopCenter), contentColor = MaterialTheme.colors.secondary
+            )
+        }
     }
 }
 

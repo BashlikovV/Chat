@@ -4,9 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -15,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.app.screens.login.UserImage
@@ -25,15 +28,15 @@ import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.theme.MessengerTheme
+import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.viewModelCreator
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import by.bashlikovv.chat.sources.structs.Room
 import kotlinx.coroutines.launch
 
 class MessengerActivity : ComponentActivity() {
     private lateinit var chatIntent: Intent
     private var data: List<Message>? = null
-    private val messengerViewModel by viewModelCreator {
+    private val messengerViewModel: MessengerViewModel by viewModelCreator {
         MessengerViewModel(Repositories.accountsRepository)
     }
 
@@ -42,6 +45,7 @@ class MessengerActivity : ComponentActivity() {
         const val CHAT = "chat"
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Repositories.init(this)
@@ -49,25 +53,24 @@ class MessengerActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 updateViewData(messengerViewModel)
             }
-            val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
+            val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.primary) {
-                    MessengerView {
+
+                    MessengerView(updateViewData = ::updateViewData) {
                         chatIntent = Intent(applicationContext, ChatActivity::class.java)
                         if (messengerUiState.newChat) {
-                            messengerViewModel.onCreateNewChat(it.user)
+                            messengerViewModel.onCreateNewChat(User(userToken = it.user.userToken))
                         }
                         chatIntent.apply {
                             putExtra(DARK_THEME, messengerUiState.darkTheme)
-                            putExtra(
-                                CHAT,
-                                if (messengerUiState.newChat) {
-                                    messengerViewModel.messengerUiState.value.chats.last()
-                                } else {
-                                    it
-                                }
-                            )
+                            val chat = if (messengerUiState.newChat) {
+                                messengerUiState.chats.last()
+                            } else {
+                                it
+                            }
+                            putExtra(CHAT, chat)
                         }
                         startActivity(chatIntent)
                     }
@@ -76,28 +79,51 @@ class MessengerActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun updateViewData(messengerViewModel: MessengerViewModel) {
         val messengerUiState = messengerViewModel.messengerUiState.value
 
-        GlobalScope.launch {
+        messengerViewModel.viewModelScope.launch {
             messengerViewModel.applyMe(messengerViewModel.getUser())
-            data = messengerViewModel.getBookmarks()
-            if (data.isNullOrEmpty()) {
-                data =  listOf(Message(value = "You do not have bookmarks"))
-            }
-            val bookmarks = listOf(
-                Chat(
-                    user = User(userName = "Bookmarks", userImage = UserImage(
-                        userImageBitmap = R.drawable.bookmark.getBitmapFromImage(applicationContext)
-                    )),
-                    messages = data!!
-                )
-            )
-            messengerViewModel.applyMessengerUiState(MessengerUiState(chats = bookmarks))
+            val chats = getBookmarks() + getRooms()
+            messengerViewModel.applyMessengerUiState(MessengerUiState(chats = chats))
             if (messengerUiState.darkTheme != Repositories.accountsRepository.isDarkTheme()) {
                 messengerViewModel.onThemeChange()
             }
+        }
+    }
+
+    private suspend fun getBookmarks(): List<Chat> {
+        data = messengerViewModel.getBookmarks()
+        if (data.isNullOrEmpty()) {
+            data =  listOf(Message(value = "You do not have bookmarks"))
+        }
+        return listOf(
+            Chat(
+                user = User(userName = "Bookmarks", userImage = UserImage(
+                    userImageBitmap = R.drawable.bookmark.getBitmapFromImage(applicationContext)
+                )),
+                messages = data!!
+            )
+        )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun getRooms(): List<Chat> {
+        val rooms: List<Room>
+        try {
+            rooms = messengerViewModel.getRooms()
+        } catch (_: Exception) {
+            return listOf(Chat(messages = listOf(Message(value = "Network error.")), time = ""))
+        }
+        return  rooms.map {
+            Chat(
+                user = User(
+                    userName = it.user2.username,
+                    userToken = SecurityUtilsImpl().bytesToString(it.user2.token)
+                ),
+                messages = listOf(Message(value = "", time = ""))
+            )
         }
     }
 
@@ -113,6 +139,7 @@ class MessengerActivity : ComponentActivity() {
         return bit
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onRestart() {
         updateViewData(messengerViewModel)
         super.onRestart()

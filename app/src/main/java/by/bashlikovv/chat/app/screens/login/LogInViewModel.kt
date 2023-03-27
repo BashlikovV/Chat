@@ -30,7 +30,10 @@ class LogInViewModel(
     private val _logInUiState = MutableStateFlow(LogInUiState())
     val logInUiState = _logInUiState.asStateFlow()
 
-    private val accountsSource = OkHttpAccountsSource(SourceProviderHolder().sourcesProvider)
+    private val sourceProvider = SourceProviderHolder().sourcesProvider
+
+    private val accountsSource = OkHttpAccountsSource(sourceProvider)
+
 
     fun onIdentifierChange(newValue: String) {
         _logInUiState.update { it.copy(identifier = newValue) }
@@ -84,6 +87,14 @@ class LogInViewModel(
                         token = accountsSource.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
                     } catch (_: Exception) {
                         showToast(context, "Network error")
+                    }
+                    if (!accountsRepository.isSignedIn()) {
+                        val signUpData = SignUpData(
+                            email = _logInUiState.value.identifier,
+                            username = accountsSource.getUsername(token),
+                            password = _logInUiState.value.password,
+                        )
+                        signUp(signUpData, context)
                     }
                     _logInUiState.update { it.copy(token = token) }
                     if (!_logInUiState.value.token.contains("500") && _logInUiState.value.token.isNotEmpty()) {

@@ -1,9 +1,9 @@
 package by.bashlikovv.chat.sources.accounts
 
-import by.bashlikovv.chat.sources.accounts.entities.GetUsersResponseBody
-import by.bashlikovv.chat.sources.base.entities.User
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
+import by.bashlikovv.chat.sources.users.entities.GetUsernameRequestBody
+import by.bashlikovv.chat.sources.users.entities.GetUsernameResponseBody
 import okhttp3.Request
 import server.entities.SignInRequestBody
 import server.entities.SignInResponseBody
@@ -32,5 +32,15 @@ class OkHttpAccountsSource(
             .endpoint("/sign-up")
             .build()
         client.newCall(request).suspendEnqueue()
+    }
+
+    suspend fun getUsername(token: String): String {
+        val getUsernameRequestBody = GetUsernameRequestBody(token)
+        val request = Request.Builder()
+            .post(getUsernameRequestBody.toJsonRequestBody())
+            .endpoint("/get-username")
+            .build()
+        val response = client.newCall(request).suspendEnqueue()
+        return response.parseJsonResponse<GetUsernameResponseBody>().username
     }
 }

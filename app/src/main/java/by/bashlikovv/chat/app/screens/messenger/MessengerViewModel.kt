@@ -1,20 +1,24 @@
 package by.bashlikovv.chat.app.screens.messenger
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.Account
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.User
+import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.SourceProviderHolder
-import by.bashlikovv.chat.sources.base.OkHttpUsersSource
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
+import by.bashlikovv.chat.sources.structs.Room
+import by.bashlikovv.chat.sources.users.OkHttpUsersSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -25,7 +29,6 @@ import kotlinx.coroutines.launch
  * [MessengerViewModel] - class that contains data of [MessengerView]
  * */
 
-@OptIn(DelicateCoroutinesApi::class)
 class MessengerViewModel(
     private val accountsRepository: AccountsRepository
 ) : ViewModel() {
@@ -33,7 +36,10 @@ class MessengerViewModel(
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
     val messengerUiState = _messengerUiState.asStateFlow()
 
-    private val usersSource = OkHttpUsersSource(SourceProviderHolder().sourcesProvider)
+    private val sourceProvider = SourceProviderHolder().sourcesProvider
+
+    private val usersSource = OkHttpUsersSource(sourceProvider)
+    private val roomsSource = OkHttpRoomsSource(sourceProvider)
 
     private val selectedItem
         get() = _messengerUiState.value.selectedItem
@@ -73,6 +79,12 @@ class MessengerViewModel(
         onActionCloseItems()
         _messengerUiState.update { currentState ->
             currentState.copy(chats = currentState.chats.toMutableList().apply { remove(chat) })
+        }
+        viewModelScope.launch {
+            roomsSource.deleteRoom(
+                user1 = getUser().userToken,
+                user2 = chat.user.userToken
+            )
         }
     }
 
@@ -133,10 +145,10 @@ class MessengerViewModel(
      * */
     @Composable
     fun getTextColor(chat: Chat): Color {
-        return if (chat.user.userId == selectedItem.user.userId) {
-            Color.White
+        return if (chat == selectedItem) {
+            MaterialTheme.colors.primary
         } else {
-            MaterialTheme.colors.primaryVariant
+            MaterialTheme.colors.secondary
         }
     }
 
@@ -145,10 +157,10 @@ class MessengerViewModel(
      * */
     @Composable
     fun getTintColor(chat: Chat): Color {
-        return if (chat.user.userId == selectedItem.user.userId) {
-            MaterialTheme.colors.background
-        } else {
+        return if (chat == selectedItem) {
             MaterialTheme.colors.primary
+        } else {
+            MaterialTheme.colors.background
         }
     }
 
@@ -157,7 +169,7 @@ class MessengerViewModel(
      * */
     @Composable
     fun getCountColor(chat: Chat): Color {
-        return if (chat.user.userId == selectedItem.user.userId) {
+        return if (chat == selectedItem) {
             MaterialTheme.colors.primary
         } else {
             MaterialTheme.colors.secondary
@@ -169,10 +181,10 @@ class MessengerViewModel(
      * */
     @Composable
     fun getChatBackground(chat: Chat): Color {
-        return if (chat.user.userId == selectedItem.user.userId) {
-            MaterialTheme.colors.primary
-        } else {
+        return if (chat == selectedItem) {
             MaterialTheme.colors.background
+        } else {
+            MaterialTheme.colors.primary
         }
     }
 
@@ -186,10 +198,14 @@ class MessengerViewModel(
     /**
      * [onSearchInputChange] - function that updates search input state in [MessengerUiState.searchInput]
      * */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onSearchInputChange(newValue: String) {
-        GlobalScope.launch {
+        _messengerUiState.update {
+            it.copy(searchInput = newValue)
+        }
+        viewModelScope.launch {
             _messengerUiState.update {
-                it.copy(searchInput = newValue, searchedItems = getSearchOutput(newValue))
+                it.copy(searchedItems = getSearchOutput(newValue))
             }
         }
     }
@@ -197,10 +213,11 @@ class MessengerViewModel(
     /**
      * [getSearchOutput] - function for getting searched elements
      * */
+    @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun getSearchOutput(input: String): List<Chat> {
         var result = mutableListOf<Chat>()
         if (_messengerUiState.value.newChat) {
-            var users = listOf<by.bashlikovv.chat.sources.base.entities.User>()
+            val users: List<by.bashlikovv.chat.sources.structs.User>
             try {
                 users = usersSource.getAllUsers()
             } catch (e: Exception) {
@@ -211,7 +228,10 @@ class MessengerViewModel(
                 users.forEach {
                     result.add(
                         Chat(
-                            user = User(userName = it.username), messages = listOf(Message(value = "")), time = "")
+                            user = User(
+                                userName = it.username, userToken = SecurityUtilsImpl().bytesToString(it.token)
+                            ),
+                            messages = listOf(Message(value = "")), time = "")
                     )
                 }
             } else {
@@ -219,10 +239,12 @@ class MessengerViewModel(
                     if (input.length <= it.username.length) {
                         val subStr = it.username.subSequence(0, input.length).toString().lowercase()
                         if (subStr == input.lowercase() && subStr != "") {
-                            //TEST DATA
                             result.add(
                                 Chat(
-                                    user = User(userName = it.username),
+                                    user = User(
+                                        userName = it.username,
+                                        userToken = SecurityUtilsImpl().bytesToString(it.token)
+                                    ),
                                     messages = listOf(Message(value = "")),
                                     time = ""
                                 )
@@ -270,9 +292,8 @@ class MessengerViewModel(
         return accountsRepository.getBookmarks().first()
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun onSignOut() {
-        GlobalScope.launch {
+        viewModelScope.launch {
             accountsRepository.logout()
         }
     }
@@ -283,9 +304,24 @@ class MessengerViewModel(
     }
 
     fun onCreateNewChat(user: User) {
-        val tmp = _messengerUiState.value.chats.toMutableList().apply {
-            add(Chat(user, messages = listOf(Message(value = "You do not have messages now."))))
-        }
+        val tmp = _messengerUiState.value.chats.toMutableList()
+        tmp.add(Chat(user, messages = listOf(Message(value = "You do not have messages now."))))
         _messengerUiState.update { it.copy(chats = tmp) }
+        viewModelScope.launch {
+            addRoom(
+                getUser().userToken,
+                _messengerUiState.value.chats.last().user.userToken
+            )
+        }
+    }
+
+    private suspend fun addRoom(user1: String, user2: String): String {
+        return roomsSource.addRoom(user1, user2)
+    }
+
+    suspend fun getRooms(): List<Room> {
+        return roomsSource.getRooms(
+            getUser().userToken
+        )
     }
 }

@@ -118,7 +118,11 @@ fun MessageView(
                 ClipDelete(
                     modifier = Modifier
                         .constrainAs(clip) {
-                            end.linkTo(anchor = canvas.start, margin = 5.dp)
+                            if (message.user.userName == chatUiState.usersData.first().userName) {
+                                end.linkTo(anchor = canvas.start, margin = 5.dp)
+                            } else {
+                                start.linkTo(anchor = canvas.end, margin = 5.dp)
+                            }
                         }
                         .fillMaxWidth(0.1f)
                         .height((measuredText.lineCount * height).dp)

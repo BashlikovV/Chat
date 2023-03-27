@@ -9,12 +9,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories.accountsRepository
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.User
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import by.bashlikovv.chat.sources.SourceProviderHolder
+import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -30,6 +31,10 @@ class ChatViewModel : ViewModel() {
         false
     })
         private set
+
+    private val sourceProvider = SourceProviderHolder().sourcesProvider
+
+    private val roomsSource = OkHttpRoomsSource(sourceProvider)
 
     fun applyChatData(chat: Chat) {
         _chatUiState.update { it.copy(chat = chat) }
@@ -71,7 +76,6 @@ class ChatViewModel : ViewModel() {
         _chatUiState.update { it.copy(textInputState = "", isCanSend = false) }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun onActionSend() {
         val newValue = _chatUiState.value.chat.messages.toMutableList()
         newValue.add(
@@ -93,7 +97,7 @@ class ChatViewModel : ViewModel() {
             )
         }
         if (_chatUiState.value.chat.user.userName == "Bookmarks") {
-            GlobalScope.launch {
+            viewModelScope.launch {
                 onSendBookmark(newValue.last())
             }
         }
@@ -102,14 +106,13 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun onActionDelete(message: Message) {
         val tmp = _chatUiState.value.chat.messages.toMutableList()
         tmp.remove(message)
         messageCheapVisible = messageCheapVisible.toMutableList().apply {
             removeAt(getMessageIndex(message))
         }
-        GlobalScope.launch {
+        viewModelScope.launch {
             onDeleteBookmark(message)
         }
         _chatUiState.update {
@@ -148,7 +151,6 @@ class ChatViewModel : ViewModel() {
         return result
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun applyImageUri(imageUri: Uri, context: Context) {
         try {
             val bitmap = getBitmap(context.contentResolver, imageUri)
@@ -160,7 +162,7 @@ class ChatViewModel : ViewModel() {
             messages.add(message)
             _chatUiState.update { it.copy(chat = it.chat.copy(messages = messages)) }
             if (_chatUiState.value.chat.user.userName == "Bookmarks") {
-                GlobalScope.launch {
+                viewModelScope.launch {
                     onSendBookmark(message)
                 }
             }
@@ -190,4 +192,12 @@ class ChatViewModel : ViewModel() {
     }
 
     fun getMessageIndex(message: Message): Int = _chatUiState.value.chat.messages.indexOf(message)
+
+    fun onActionDeleteChat() {
+        val user1 = _chatUiState.value.usersData.first().userToken
+        val user2 = _chatUiState.value.usersData.last().userToken
+        viewModelScope.launch {
+            roomsSource.deleteRoom(user1, user2)
+        }
+    }
 }
