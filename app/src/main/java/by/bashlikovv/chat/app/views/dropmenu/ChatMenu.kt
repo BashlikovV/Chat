@@ -59,7 +59,7 @@ fun ChatMenu(chatViewModel: ChatViewModel = viewModel()) {
                 contentScale = ContentScale.Crop,
                 colorFilter = ColorFilter.tint(MaterialTheme.colors.secondary)
             ) },
-            onClick = {  },
+            onClick = { chatViewModel.onActionDeleteChat() },
             colors = androidx.compose.material3.MenuDefaults.itemColors(
                 textColor = MaterialTheme.colors.secondary
             )
