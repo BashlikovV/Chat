@@ -58,7 +58,6 @@ class MessengerActivity : ComponentActivity() {
             val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.primary) {
-
                     MessengerView(updateViewData = ::updateViewData) {
                         chatIntent = Intent(applicationContext, ChatActivity::class.java)
                         if (messengerUiState.newChat) {

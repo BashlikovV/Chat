@@ -55,13 +55,15 @@ fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
 fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
 
-    LazyColumn(
-        modifier = modifier,
-        state = LazyListState(chatUiState.chat.messages.size)
-    ) {
-        items(chatUiState.chat.messages) {
-            MessageView(message = it) { message ->
-                chatViewModel.onActionItemClicked(message)
+    Box(modifier) {
+        LazyColumn(
+            modifier = modifier,
+            state = LazyListState(chatUiState.chat.messages.size)
+        ) {
+            items(chatUiState.chat.messages) {
+                MessageView(message = it) { message ->
+                    chatViewModel.onActionItemClicked(message)
+                }
             }
         }
     }
@@ -115,7 +117,7 @@ fun MessageView(
     val height = (if(measuredText.lineCount == 1) 28.8 else 24.5)
 
     Row(
-        horizontalArrangement = if (message.user.userToken == chatUiState.usersData.first().userToken)
+        horizontalArrangement = if (message.from != chatUiState.chat.user.userToken)
             Arrangement.End
         else
             Arrangement.Start,
@@ -136,7 +138,7 @@ fun MessageView(
                 ClipDelete(
                     modifier = Modifier
                         .constrainAs(clip) {
-                            if (message.user.userName == chatUiState.usersData.first().userName) {
+                            if (message.from != chatUiState.chat.user.userToken) {
                                 end.linkTo(anchor = canvas.start, margin = 5.dp)
                             } else {
                                 start.linkTo(anchor = canvas.end, margin = 5.dp)
@@ -165,7 +167,11 @@ fun MessageView(
                         else
                             (message.imageBitmap.height / 10).dp)
                     .constrainAs(canvas) {
-                        end.linkTo(anchor = parent.end)
+                        if (message.from != chatUiState.chat.user.userToken) {
+                            end.linkTo(anchor = parent.end)
+                        } else {
+                            start.linkTo(anchor = parent.start)
+                        }
                     }
             ) {
                 if (!message.isImage) {

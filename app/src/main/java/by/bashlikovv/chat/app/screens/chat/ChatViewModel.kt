@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore.Images.Media.getBitmap
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.annotation.RequiresApi
@@ -78,6 +77,7 @@ class ChatViewModel(
                 val messages = messagesSource.getRoomMessages(
                     _chatUiState.value.chat.token
                 )
+                var size = messages.size
                 val  newValue = _chatUiState.value.chat.messages + messages.map {
                     Message(
                         value = it.value,
@@ -91,9 +91,13 @@ class ChatViewModel(
                         from = it.from
                     )
                 }
-                Log.i("MYTAG", _chatUiState.value.chat.messages.map { it.value }.toString())
                 chatData = _chatUiState.value.chat.copy(messages = _chatUiState.value.chat.messages + newValue)
                 applyChatData(chatData)
+
+                size = _chatUiState.value.chat.messages.size - size
+                for (i in 0 until size) {
+                    messageCheapVisible.toMutableList().add(false)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -105,8 +109,10 @@ class ChatViewModel(
         var token = ""
         _chatUiState.value.chat.messages.forEach {
             if (it.from != _chatUiState.value.chat.messages.last().from) {
-                secondUser = it.user
-                token = it.from
+                if (it.from.isNotEmpty()) {
+                    secondUser = it.user
+                    token = it.from
+                }
             }
         }
         val firstUser = _chatUiState.value.chat.messages.last().user.copy(
@@ -156,25 +162,26 @@ class ChatViewModel(
             viewModelScope.launch {
                 onSendBookmark(newValue.last())
             }
+        } else {
+            viewModelScope.launch {
+                val room = roomsSource.getRoom(
+                    SecurityUtilsImpl().bytesToString(me.token),
+                    _chatUiState.value.chat.user.userToken
+                )
+                messagesSource.sendMessage(
+                    by.bashlikovv.chat.sources.structs.Message(
+                        room = room,
+                        value = _chatUiState.value.chat.messages.last().value,
+                        owner = me,
+                        image = "",
+                        file = "".toByteArray()
+                    ),
+                    SecurityUtilsImpl().bytesToString(me.token)
+                )
+            }
         }
         messageCheapVisible = messageCheapVisible.toMutableList().apply {
             add(false)
-        }
-        viewModelScope.launch {
-            val room = roomsSource.getRoom(
-                SecurityUtilsImpl().bytesToString(me.token),
-                _chatUiState.value.chat.user.userToken
-            )
-            messagesSource.sendMessage(
-                by.bashlikovv.chat.sources.structs.Message(
-                    room = room,
-                    value = _chatUiState.value.chat.messages.last().value,
-                    owner = me,
-                    image = "",
-                    file = "".toByteArray()
-                ),
-                SecurityUtilsImpl().bytesToString(me.token)
-            )
         }
     }
 
