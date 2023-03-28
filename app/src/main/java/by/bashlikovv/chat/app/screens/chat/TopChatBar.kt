@@ -1,5 +1,7 @@
 package by.bashlikovv.chat.app.screens.chat
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,6 +52,7 @@ private fun getTopChatBarConstraints(): ConstraintSet {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> Unit) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
