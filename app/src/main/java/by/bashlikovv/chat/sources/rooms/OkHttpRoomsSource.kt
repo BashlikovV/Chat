@@ -39,4 +39,14 @@ class OkHttpRoomsSource(
         val response = client.newCall(request).suspendEnqueue()
         return response.parseJsonResponse<DeleteRoomResponseBody>().result
     }
+
+    suspend fun getRoom(user1: String, user2: String): Room {
+        val getRoomRequestBody = GetRoomRequestBody(user1, user2)
+        val request = Request.Builder()
+            .post(getRoomRequestBody.toJsonRequestBody())
+            .endpoint("/get-room")
+            .build()
+        val response = client.newCall(request).suspendEnqueue()
+        return response.parseJsonResponse<GetRoomResponseBody>().room
+    }
 }
