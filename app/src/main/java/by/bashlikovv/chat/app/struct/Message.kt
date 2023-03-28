@@ -11,5 +11,6 @@ data class Message(
     val imageBitmap: Bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888),
     val user: User = User(),
     val time: String = "",
-    val isRead: Boolean = false
+    val isRead: Boolean = false,
+    val from: String = ""
 ) : Parcelable

@@ -2,27 +2,39 @@ package by.bashlikovv.chat.app.screens.chat
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore.Images.Media.getBitmap
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories.accountsRepository
+import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.User
+import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.SourceProviderHolder
+import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.*
 
-class ChatViewModel : ViewModel() {
+@RequiresApi(Build.VERSION_CODES.O)
+class ChatViewModel(
+    accountsRepository: AccountsRepository
+) : ViewModel() {
 
     private val _chatUiState = MutableStateFlow(ChatUiState())
     val chatUiState = _chatUiState.asStateFlow()
@@ -35,32 +47,75 @@ class ChatViewModel : ViewModel() {
     private val sourceProvider = SourceProviderHolder().sourcesProvider
 
     private val roomsSource = OkHttpRoomsSource(sourceProvider)
+    private val messagesSource = OkHttpMessagesSource(sourceProvider)
+
+    private var me = by.bashlikovv.chat.sources.structs.User()
 
     fun applyChatData(chat: Chat) {
         _chatUiState.update { it.copy(chat = chat) }
         messageCheapVisible = chat.messages.map { false }
-        getUniqueUsers(chat)
+        getUniqueUsers()
     }
 
-    private fun getUniqueUsers(chat: Chat) {
-        val firstUser = _chatUiState.value.chat.messages.first().user
-        var secondUser = User()
-        _chatUiState.value.chat.messages.forEach {
-            if (it.user != firstUser) {
-                secondUser = it.user
-            }
-        }
-        _chatUiState.update { it.copy(usersData = listOf(firstUser, secondUser)) }
+    fun applyMe(token: String) {
+        me = me.copy(token = SecurityUtilsImpl().stringToBytes(token))
+    }
 
-        //Test
-        val testData = _chatUiState.value.chat.messages.map {
-            if (it.user.userName == firstUser.userName) {
-                it
-            } else {
-                it.copy(value = "my extended long long message message ${it.value.last()}")
+    init {
+        viewModelScope.launch {
+            me = me.copy(
+                token = SecurityUtilsImpl().stringToBytes(accountsRepository.getAccount().first()?.token ?: "")
+            )
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getMessagesFromDb() {
+        var chatData: Chat
+        GlobalScope.launch {
+            try {
+                val messages = messagesSource.getRoomMessages(
+                    _chatUiState.value.chat.token
+                )
+                val  newValue = _chatUiState.value.chat.messages + messages.map {
+                    Message(
+                        value = it.value,
+                        time = it.time,
+                        user = User(
+                            userName = it.owner.username,
+                            userToken = SecurityUtilsImpl().bytesToString(it.owner.token),
+                            userEmail = it.owner.email
+                        ),
+                        isRead = false,
+                        from = it.from
+                    )
+                }
+                Log.i("MYTAG", _chatUiState.value.chat.messages.map { it.value }.toString())
+                chatData = _chatUiState.value.chat.copy(messages = _chatUiState.value.chat.messages + newValue)
+                applyChatData(chatData)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
-        _chatUiState.update { it.copy(chat = chat.copy(messages = testData)) }
+    }
+
+    private fun getUniqueUsers() {
+        var secondUser = User()
+        var token = ""
+        _chatUiState.value.chat.messages.forEach {
+            if (it.from != _chatUiState.value.chat.messages.last().from) {
+                secondUser = it.user
+                token = it.from
+            }
+        }
+        val firstUser = _chatUiState.value.chat.messages.last().user.copy(
+            userToken = _chatUiState.value.chat.messages.last().from
+        )
+        secondUser = secondUser.copy(
+            userToken = token
+        )
+        _chatUiState.update { it.copy(usersData = listOf(firstUser.copy(), secondUser)) }
     }
 
     fun onTextInputChange(newValue: String) {
@@ -76,6 +131,7 @@ class ChatViewModel : ViewModel() {
         _chatUiState.update { it.copy(textInputState = "", isCanSend = false) }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onActionSend() {
         val newValue = _chatUiState.value.chat.messages.toMutableList()
         newValue.add(
@@ -103,6 +159,22 @@ class ChatViewModel : ViewModel() {
         }
         messageCheapVisible = messageCheapVisible.toMutableList().apply {
             add(false)
+        }
+        viewModelScope.launch {
+            val room = roomsSource.getRoom(
+                SecurityUtilsImpl().bytesToString(me.token),
+                _chatUiState.value.chat.user.userToken
+            )
+            messagesSource.sendMessage(
+                by.bashlikovv.chat.sources.structs.Message(
+                    room = room,
+                    value = _chatUiState.value.chat.messages.last().value,
+                    owner = me,
+                    image = "",
+                    file = "".toByteArray()
+                ),
+                SecurityUtilsImpl().bytesToString(me.token)
+            )
         }
     }
 

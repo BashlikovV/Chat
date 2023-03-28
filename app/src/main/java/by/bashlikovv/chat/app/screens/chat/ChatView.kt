@@ -1,5 +1,7 @@
 package by.bashlikovv.chat.app.screens.chat
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -39,6 +41,7 @@ import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.utils.dpToFloat
 import kotlinx.coroutines.DelicateCoroutinesApi
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
@@ -47,6 +50,7 @@ fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
@@ -63,6 +67,7 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalTextApi::class)
 @Composable
 fun MessageView(
@@ -88,8 +93,21 @@ fun MessageView(
         maxLines = 25,
         overflow = TextOverflow.Ellipsis
     )
+    val sb = StringBuilder()
+    var count = 0
+    for (i in message.time.indices) {
+        if (message.time[i] == ':') {
+            sb.append(message.time[i - 2]).append(message.time[i - 2])
+            count++
+            if (count == 2) {
+                break
+            }
+            sb.append(message.time[i])
+        }
+
+    }
     val timeText = textMeasurer.measure(
-        text = AnnotatedString(message.time),
+        text = AnnotatedString(sb.toString()),
         style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
     )
 
@@ -97,7 +115,7 @@ fun MessageView(
     val height = (if(measuredText.lineCount == 1) 28.8 else 24.5)
 
     Row(
-        horizontalArrangement = if (message.user.userName == chatUiState.usersData.first().userName)
+        horizontalArrangement = if (message.user.userToken == chatUiState.usersData.first().userToken)
             Arrangement.End
         else
             Arrangement.Start,
