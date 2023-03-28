@@ -43,6 +43,7 @@ class MessengerActivity : ComponentActivity() {
     companion object {
         const val DARK_THEME = "dark theme"
         const val CHAT = "chat"
+        const val TOKEN = "token"
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -66,11 +67,14 @@ class MessengerActivity : ComponentActivity() {
                         chatIntent.apply {
                             putExtra(DARK_THEME, messengerUiState.darkTheme)
                             val chat = if (messengerUiState.newChat) {
-                                messengerUiState.chats.last()
+                                messengerViewModel.messengerUiState.value.chats.last()
                             } else {
                                 it
                             }
                             putExtra(CHAT, chat)
+                            messengerViewModel.viewModelScope.launch {
+                                putExtra(TOKEN, messengerViewModel.messengerUiState.value.me.userToken)
+                            }
                         }
                         startActivity(chatIntent)
                     }
@@ -117,12 +121,18 @@ class MessengerActivity : ComponentActivity() {
             return listOf(Chat(messages = listOf(Message(value = "Network error.")), time = ""))
         }
         return  rooms.map {
+            val user = if (it.user2.username == messengerViewModel.getUser().userName) {
+                it.user1
+            } else {
+                it.user2
+            }
             Chat(
                 user = User(
-                    userName = it.user2.username,
-                    userToken = SecurityUtilsImpl().bytesToString(it.user2.token)
+                    userName = user.username,
+                    userToken = SecurityUtilsImpl().bytesToString(user.token)
                 ),
-                messages = listOf(Message(value = "", time = ""))
+                messages = listOf(Message(value = "", time = "")),
+                token = SecurityUtilsImpl().bytesToString(it.token)
             )
         }
     }
