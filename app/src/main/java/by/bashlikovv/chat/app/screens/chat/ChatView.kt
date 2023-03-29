@@ -38,6 +38,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.app.struct.Message
+import by.bashlikovv.chat.app.utils.buildTime
 import by.bashlikovv.chat.app.utils.dpToFloat
 import kotlinx.coroutines.DelicateCoroutinesApi
 
@@ -55,15 +56,13 @@ fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
 fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
 
-    Box(modifier) {
-        LazyColumn(
-            modifier = modifier,
-            state = LazyListState(chatUiState.chat.messages.size)
-        ) {
-            items(chatUiState.chat.messages) {
-                MessageView(message = it) { message ->
-                    chatViewModel.onActionItemClicked(message)
-                }
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        state = LazyListState(chatUiState.chat.messages.size)
+    ) {
+        items(chatUiState.chat.messages) {
+            MessageView(message = it) { message ->
+                chatViewModel.onActionItemClicked(message)
             }
         }
     }
@@ -95,21 +94,9 @@ fun MessageView(
         maxLines = 25,
         overflow = TextOverflow.Ellipsis
     )
-    val sb = StringBuilder()
-    var count = 0
-    for (i in message.time.indices) {
-        if (message.time[i] == ':') {
-            sb.append(message.time[i - 2]).append(message.time[i - 2])
-            count++
-            if (count == 2) {
-                break
-            }
-            sb.append(message.time[i])
-        }
 
-    }
     val timeText = textMeasurer.measure(
-        text = AnnotatedString(sb.toString()),
+        text = AnnotatedString(buildTime(message.time)),
         style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
     )
 

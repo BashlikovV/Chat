@@ -29,6 +29,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.app.struct.Chat
+import by.bashlikovv.chat.app.utils.buildTime
 import by.bashlikovv.chat.app.views.drawer.MessengerDrawerContent
 import by.bashlikovv.chat.app.views.fab.MessengerFABContent
 import kotlinx.coroutines.Dispatchers
@@ -172,14 +173,18 @@ fun MessengerItem(
                 textColor = messengerViewModel.getTextColor(chat)
             )
             MessengerItemText(
-                text = chat.messages.last().value,
+                text = if (chat.messages.last().value.isNotEmpty()) {
+                    "${chat.messages.last().user.userName}: ${chat.messages.last().value}"
+                } else {
+                       ""
+                },
                 fontWeight = FontWeight.Light,
                 fontSize = 14,
                 layoutId = "message",
                 textColor = messengerViewModel.getTextColor(chat)
             )
             MessengerItemText(
-                text = chat.messages.last().time,
+                text = buildTime(chat.messages.last().time),
                 fontWeight = FontWeight.Thin,
                 fontSize = 13,
                 layoutId = "time",

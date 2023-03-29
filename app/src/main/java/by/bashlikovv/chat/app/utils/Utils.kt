@@ -25,3 +25,19 @@ class AsyncLoader<T>(
         return value!!
     }
 }
+
+fun buildTime(date: String): String {
+    return try {
+        val sb = StringBuilder()
+        val i = date.indexOfFirst { it == ':' }
+        sb
+            .append(date[i - 2])
+            .append(date[i - 1])
+            .append(date[i])
+            .append(date[i + 1])
+            .append(date[i + 2])
+        sb.toString()
+    } catch (e: Exception) {
+        ""
+    }
+}

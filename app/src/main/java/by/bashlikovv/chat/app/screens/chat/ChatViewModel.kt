@@ -144,9 +144,7 @@ class ChatViewModel(
             Message(
                 value = _chatUiState.value.textInputState,
                 user = _chatUiState.value.usersData.last(),
-                time = Calendar.getInstance().time.toGMTString()
-                    .substringBefore(" G").substringAfter("2023 ")
-                    .substringBeforeLast(":"),
+                time = Calendar.getInstance().time.toString(),
                 isRead = true
             )
         )
