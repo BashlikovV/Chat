@@ -336,16 +336,21 @@ class MessengerViewModel(
             val it = messagesSource.getRoomMessages(
                 SecurityUtilsImpl().bytesToString(room.token)
             ).last()
+            val user = if (room.user2.username == getUser().userName) {
+                room.user1
+            } else {
+                room.user2
+            }
             result.add(
                 Message(
                     value = it.value,
                     user = User(
-                        userName = it.owner.username,
-                        userToken = SecurityUtilsImpl().bytesToString(it.owner.token),
-                        userEmail = it.owner.email
+                        userName = user.username,
+                        userToken = SecurityUtilsImpl().bytesToString(user.token),
+                        userEmail = user.email
                     ),
                     time = it.time,
-                    from = SecurityUtilsImpl().bytesToString(it.owner.token)
+                    from = SecurityUtilsImpl().bytesToString(user.token)
                 )
             )
         } catch (e: Exception) {

@@ -97,7 +97,7 @@ class LogInViewModel(
                         signUp(signUpData, context)
                     }
                     _logInUiState.update { it.copy(token = token) }
-                    if (!_logInUiState.value.token.contains("500") && _logInUiState.value.token.isNotEmpty()) {
+                    if (!_logInUiState.value.token.contains("500") && !_logInUiState.value.token.contains("ERROR")) {
                         accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
                     } else {
                         showToast(context, "Authentication error.")
@@ -115,7 +115,7 @@ class LogInViewModel(
                         showToast(context, "Network error")
                     }
                     _logInUiState.update { it.copy(token = token) }
-                    if (!_logInUiState.value.token.contains("500") && _logInUiState.value.token.isNotEmpty()) {
+                    if (!_logInUiState.value.token.contains("500") && !_logInUiState.value.token.contains("ERROR")) {
                         accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
                     } else {
                         showToast(context, "Authentication error.")
@@ -149,7 +149,7 @@ class LogInViewModel(
                 showToast(context, "Network error")
             }
             _logInUiState.update { it.copy(token = token) }
-            if (!_logInUiState.value.token.contains("500") && _logInUiState.value.token.isNotEmpty()) {
+            if (!_logInUiState.value.token.contains("500") && !_logInUiState.value.token.contains("ERROR")) {
                 accountsRepository.signUp(signUpData, _logInUiState.value.token)
                 showSuccessSignUpMessage(context)
             } else {
