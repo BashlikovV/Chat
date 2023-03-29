@@ -1,6 +1,7 @@
 package by.bashlikovv.chat.app.screens.messenger
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
@@ -16,6 +17,7 @@ import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.SourceProviderHolder
+import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import by.bashlikovv.chat.sources.structs.Room
 import by.bashlikovv.chat.sources.users.OkHttpUsersSource
@@ -40,6 +42,7 @@ class MessengerViewModel(
 
     private val usersSource = OkHttpUsersSource(sourceProvider)
     private val roomsSource = OkHttpRoomsSource(sourceProvider)
+    private val messagesSource = OkHttpMessagesSource(sourceProvider)
 
     private val selectedItem
         get() = _messengerUiState.value.selectedItem
@@ -323,5 +326,39 @@ class MessengerViewModel(
         return roomsSource.getRooms(
             getUser().userToken
         )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getMessagesByRoom(room: Room): List<Message> {
+        val result: MutableList<Message> = mutableListOf()
+
+        try {
+            val it = messagesSource.getRoomMessages(
+                SecurityUtilsImpl().bytesToString(room.token)
+            ).last()
+            result.add(
+                Message(
+                    value = it.value,
+                    user = User(
+                        userName = it.owner.username,
+                        userToken = SecurityUtilsImpl().bytesToString(it.owner.token),
+                        userEmail = it.owner.email
+                    ),
+                    time = it.time,
+                    from = SecurityUtilsImpl().bytesToString(it.owner.token)
+                )
+            )
+        } catch (e: Exception) {
+            result.add(Message(value = "You do not have messages now.", time = ""))
+            Log.i("MYTAG", "catch: ${e.message}")
+        } finally {
+            if (result.isEmpty()) {
+                Log.i("MYTAG", "Empty")
+                result.add(Message(value = "You do not have messages now.", time = ""))
+            }
+        }
+
+        Log.i("MYTAG", result.toString())
+        return result
     }
 }
