@@ -32,6 +32,7 @@ import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.viewModelCreator
 import by.bashlikovv.chat.sources.structs.Room
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class MessengerActivity : ComponentActivity() {
     private lateinit var chatIntent: Intent
@@ -65,10 +66,13 @@ class MessengerActivity : ComponentActivity() {
                         }
                         chatIntent.apply {
                             putExtra(DARK_THEME, messengerUiState.darkTheme)
-                            val chat = if (messengerUiState.newChat) {
+                            var chat = if (messengerUiState.newChat) {
                                 messengerViewModel.messengerUiState.value.chats.last()
                             } else {
                                 it
+                            }
+                            if (chat.user.userName != "Bookmarks") {
+                                chat = chat.copy(messages = listOf(Message()))
                             }
                             putExtra(CHAT, chat)
                             messengerViewModel.viewModelScope.launch {
@@ -86,14 +90,27 @@ class MessengerActivity : ComponentActivity() {
     private fun updateViewData(messengerViewModel: MessengerViewModel) {
         val messengerUiState = messengerViewModel.messengerUiState.value
 
-        messengerViewModel.viewModelScope.launch {
+        runBlocking {
             messengerViewModel.applyMe(messengerViewModel.getUser())
-            val chats = getBookmarks() + getRooms()
+            val chats = getBookmarks()
             messengerViewModel.applyMessengerUiState(MessengerUiState(chats = chats))
             if (messengerUiState.darkTheme != Repositories.accountsRepository.isDarkTheme()) {
                 messengerViewModel.onThemeChange()
             }
+            loadChatsFromServer(messengerViewModel)
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun loadChatsFromServer(messengerViewModel: MessengerViewModel) {
+        val messengerUiState = messengerViewModel.messengerUiState.value
+
+        var rooms = getRooms()
+        while (rooms.isEmpty()) {
+           rooms = getRooms()
+        }
+
+        messengerViewModel.applyMessengerUiState(MessengerUiState(chats = messengerUiState.chats + rooms))
     }
 
     private suspend fun getBookmarks(): List<Chat> {
@@ -125,12 +142,13 @@ class MessengerActivity : ComponentActivity() {
             } else {
                 it.user2
             }
+            val messages = messengerViewModel.getMessagesByRoom(room = it)
             Chat(
                 user = User(
                     userName = user.username,
                     userToken = SecurityUtilsImpl().bytesToString(user.token)
                 ),
-                messages = listOf(Message(value = "", time = "")),
+                messages = messages,
                 token = SecurityUtilsImpl().bytesToString(it.token)
             )
         }
