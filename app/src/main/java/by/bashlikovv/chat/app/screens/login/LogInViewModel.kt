@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.app.model.AccountAlreadyExistsException
 import by.bashlikovv.chat.app.model.EmptyFieldException
 import by.bashlikovv.chat.app.model.PasswordMismatchException
@@ -77,12 +78,11 @@ class LogInViewModel(
         _logInUiState.update { it.copy(userImageBitmap = value) }
     }
 
-    fun onCreateAccountButtonPressed(context: Context, scope: CoroutineScope) {
-        var token = ""
-
-        try {
-            if (_logInUiState.value.isHaveAccount) {
-                scope.launch {
+    fun onCreateAccountButtonPressed(context: Context) {
+        viewModelScope.launch {
+            var token = ""
+            try {
+                if (_logInUiState.value.isHaveAccount) {
                     try {
                         token = accountsSource.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
                     } catch (_: Exception) {
@@ -102,14 +102,12 @@ class LogInViewModel(
                     } else {
                         showToast(context, "Authentication error.")
                     }
-                }
-            } else {
-                val signUpData = SignUpData(
-                    email = _logInUiState.value.identifier,
-                    username = _logInUiState.value.userName,
-                    password = _logInUiState.value.password,
-                )
-                scope.launch {
+                } else {
+                    val signUpData = SignUpData(
+                        email = _logInUiState.value.identifier,
+                        username = _logInUiState.value.userName,
+                        password = _logInUiState.value.password,
+                    )
                     signUp(signUpData, context)
                     try {
                         token = accountsSource.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
@@ -123,11 +121,9 @@ class LogInViewModel(
                         showToast(context, "Authentication error.")
                     }
                 }
-            }
-        } catch (e: Exception) {
-            showToast(context, "Authentication error ${e.message}")
-        } finally {
-            scope.launch {
+            } catch (e: Exception) {
+                showToast(context, "Authentication error ${e.message}")
+            } finally {
                 if (accountsRepository.isSignedIn() && !_logInUiState.value.token.contains("500")) {
                     applySuccess()
                     Toast.makeText(context, "token: ${_logInUiState.value.token}", Toast.LENGTH_LONG).show()
