@@ -8,6 +8,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.internal.readBomAsCharset
 import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -63,7 +64,10 @@ open class BaseOkHttpSource(
 
     inline fun <reified T> Response.parseJsonResponse(): T {
         try {
-            return gson.fromJson(this.body!!.string(), T::class.java)
+            val str = this.body!!.source().use {
+                it.readString(charset = it.readBomAsCharset(Charsets.UTF_8))
+            }
+            return gson.fromJson(str, T::class.java)
         } catch (e: Exception) {
             throw ParseBackendResponseException(e)
         }
