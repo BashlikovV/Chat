@@ -19,8 +19,12 @@ class OkHttpAccountsSource(
             .post(signInRequestBody.toJsonRequestBody())
             .endpoint("/sign-in")
             .build()
-        val response = client.newCall(request).suspendEnqueue()
-        return response.parseJsonResponse<SignInResponseBody>().token
+        return try {
+            val response = client.newCall(request).suspendEnqueue()
+            response.parseJsonResponse<SignInResponseBody>().token
+        } catch (e: Exception) {
+            "500 ERROR"
+        }
     }
 
     suspend fun signUp(email: String, password: String, username: String) {
@@ -31,7 +35,10 @@ class OkHttpAccountsSource(
             .post(signUpRequestBody.toJsonRequestBody())
             .endpoint("/sign-up")
             .build()
-        client.newCall(request).suspendEnqueue()
+        try {
+            client.newCall(request).suspendEnqueue()
+        } catch (_: Exception) {
+        }
     }
 
     suspend fun getUsername(token: String): String {
@@ -40,7 +47,11 @@ class OkHttpAccountsSource(
             .post(getUsernameRequestBody.toJsonRequestBody())
             .endpoint("/get-username")
             .build()
-        val response = client.newCall(request).suspendEnqueue()
-        return response.parseJsonResponse<GetUsernameResponseBody>().username
+        return try {
+            val response = client.newCall(request).suspendEnqueue()
+            response.parseJsonResponse<GetUsernameResponseBody>().username
+        } catch (e: Exception) {
+            "500 ERROR"
+        }
     }
 }
