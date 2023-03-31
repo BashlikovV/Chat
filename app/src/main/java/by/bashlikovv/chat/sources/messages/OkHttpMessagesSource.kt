@@ -33,7 +33,7 @@ class OkHttpMessagesSource(
         val addMessagesRequestBody = AddMessageRequestBody(
             image = message.image,
             file = message.file.toString(),
-            value = message.value,
+            value = message.value.decodeToString(),
             time = message.time,
             owner = securityUtilsImpl.bytesToString(message.room.user1.token),
             receiver = securityUtilsImpl.bytesToString(message.room.user2.token),
