@@ -105,10 +105,7 @@ class MessengerActivity : ComponentActivity() {
     private suspend fun loadChatsFromServer(messengerViewModel: MessengerViewModel) {
         val messengerUiState = messengerViewModel.messengerUiState.value
 
-        var rooms = getRooms()
-        while (rooms.isEmpty()) {
-           rooms = getRooms()
-        }
+        val rooms = getRooms()
 
         messengerViewModel.applyMessengerUiState(MessengerUiState(chats = messengerUiState.chats + rooms))
     }

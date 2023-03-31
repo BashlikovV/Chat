@@ -80,7 +80,7 @@ class ChatViewModel(
                 var size = messages.size
                 val  newValue = _chatUiState.value.chat.messages + messages.map {
                     Message(
-                        value = it.value,
+                        value = it.value.decodeToString(),
                         time = it.time,
                         user = User(
                             userName = it.owner.username,
@@ -169,7 +169,7 @@ class ChatViewModel(
                 messagesSource.sendMessage(
                     by.bashlikovv.chat.sources.structs.Message(
                         room = room,
-                        value = _chatUiState.value.chat.messages.last().value,
+                        value = _chatUiState.value.chat.messages.last().value.encodeToByteArray(),
                         owner = me,
                         image = "",
                         file = "".toByteArray()
