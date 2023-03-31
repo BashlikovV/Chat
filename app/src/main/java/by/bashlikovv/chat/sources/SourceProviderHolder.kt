@@ -2,9 +2,9 @@ package by.bashlikovv.chat.sources
 
 import by.bashlikovv.chat.Const
 import by.bashlikovv.chat.sources.base.OkHttpConfig
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
-import okhttp3.OkHttpClient.*
+import okhttp3.OkHttpClient.Builder
 
 class SourceProviderHolder {
 
@@ -12,7 +12,7 @@ class SourceProviderHolder {
         OkHttpConfig(
             baseUrl = Const.BASE_URL,
             client = createOkHttpClient(),
-            gson = Gson()
+            gson = GsonBuilder().setLenient().create()
         )
     }
 
