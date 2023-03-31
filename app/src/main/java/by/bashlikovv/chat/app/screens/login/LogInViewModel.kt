@@ -79,51 +79,43 @@ class LogInViewModel(
     }
 
     fun onCreateAccountButtonPressed(context: Context) {
-        viewModelScope.launch {
-            var token = ""
-            try {
-                if (_logInUiState.value.isHaveAccount) {
-                    try {
-                        token = accountsSource.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
-                    } catch (_: Exception) {
-                        showToast(context, "Network error")
-                    }
-                    if (!accountsRepository.isSignedIn()) {
-                        val signUpData = SignUpData(
-                            email = _logInUiState.value.identifier,
-                            username = accountsSource.getUsername(token),
-                            password = _logInUiState.value.password,
-                        )
-                        signUp(signUpData, context)
-                    }
-                    _logInUiState.update { it.copy(token = token) }
-                    if (!_logInUiState.value.token.contains("500") && !_logInUiState.value.token.contains("ERROR")) {
-                        accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
-                    } else {
-                        showToast(context, "Authentication error.")
-                    }
-                } else {
-                    val signUpData = SignUpData(
-                        email = _logInUiState.value.identifier,
-                        username = _logInUiState.value.userName,
-                        password = _logInUiState.value.password,
-                    )
-                    signUp(signUpData, context)
-                    try {
-                        token = accountsSource.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
-                    } catch (_: Exception) {
+        var token: String
+        try {
+            if (_logInUiState.value.isHaveAccount) {
+                runBlocking {
+                    token = accountsSource.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
+                    if (token.contains("500")) {
                         showToast(context, "Network error")
                     }
                     _logInUiState.update { it.copy(token = token) }
-                    if (!_logInUiState.value.token.contains("500") && !_logInUiState.value.token.contains("ERROR")) {
+                    if (!_logInUiState.value.token.contains("500")) {
+                        if (!accountsRepository.isSignedIn()) {
+                            val signUpData = SignUpData(
+                                email = _logInUiState.value.identifier,
+                                username = accountsSource.getUsername(token),
+                                password = _logInUiState.value.password,
+                            )
+                            signUp(signUpData, context)
+                        }
                         accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
                     } else {
                         showToast(context, "Authentication error.")
                     }
                 }
-            } catch (e: Exception) {
-                showToast(context, "Authentication error ${e.message}")
-            } finally {
+            } else {
+                val signUpData = SignUpData(
+                    email = _logInUiState.value.identifier,
+                    username = _logInUiState.value.userName,
+                    password = _logInUiState.value.password,
+                )
+                runBlocking {
+                    signUp(signUpData, context)
+                }
+            }
+        } catch (e: Exception) {
+            showToast(context, "Authentication error ${e.message}")
+        } finally {
+            runBlocking {
                 if (accountsRepository.isSignedIn() && !_logInUiState.value.token.contains("500")) {
                     applySuccess()
                     Toast.makeText(context, "token: ${_logInUiState.value.token}", Toast.LENGTH_LONG).show()
@@ -142,14 +134,9 @@ class LogInViewModel(
                 password = signUpData.password,
                 username = signUpData.username
             )
-            var token = ""
-            try {
-                token = accountsSource.signIn(email = signUpData.email, password = signUpData.password)
-            } catch (_: Exception) {
-                showToast(context, "Network error")
-            }
+            val token: String = accountsSource.signIn(email = signUpData.email, password = signUpData.password)
             _logInUiState.update { it.copy(token = token) }
-            if (!_logInUiState.value.token.contains("500") && !_logInUiState.value.token.contains("ERROR")) {
+            if (!_logInUiState.value.token.contains("500")) {
                 accountsRepository.signUp(signUpData, _logInUiState.value.token)
                 showSuccessSignUpMessage(context)
             } else {
