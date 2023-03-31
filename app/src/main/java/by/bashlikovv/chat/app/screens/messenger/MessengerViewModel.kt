@@ -343,7 +343,7 @@ class MessengerViewModel(
             }
             result.add(
                 Message(
-                    value = it.value,
+                    value = it.value.decodeToString(),
                     user = User(
                         userName = user.username,
                         userToken = SecurityUtilsImpl().bytesToString(user.token),
