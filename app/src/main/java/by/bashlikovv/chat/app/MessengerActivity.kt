@@ -130,8 +130,8 @@ class MessengerActivity : ComponentActivity() {
         val rooms: List<Room>
         try {
             rooms = messengerViewModel.getRooms()
-        } catch (_: Exception) {
-            return listOf(Chat(messages = listOf(Message(value = "Network error.")), time = ""))
+        } catch (e: Exception) {
+            return listOf(Chat(messages = listOf(Message(value = "${e.message}")), time = ""))
         }
         return  rooms.map {
             val user = if (it.user2.username == messengerViewModel.getUser().userName) {

@@ -5,6 +5,7 @@ import by.bashlikovv.chat.sources.base.OkHttpConfig
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.OkHttpClient.Builder
+import java.time.Duration
 
 class SourceProviderHolder {
 
@@ -17,6 +18,6 @@ class SourceProviderHolder {
     }
 
     private fun createOkHttpClient(): OkHttpClient {
-        return Builder().build()
+        return Builder().connectTimeout(Duration.ofMillis(1000)).build()
     }
 }
