@@ -172,7 +172,7 @@ class ChatViewModel(
                         value = _chatUiState.value.chat.messages.last().value.encodeToByteArray(),
                         owner = me,
                         image = "",
-                        file = "".toByteArray()
+                        file = "".encodeToByteArray()
                     ),
                     SecurityUtilsImpl().bytesToString(me.token)
                 )
@@ -189,8 +189,31 @@ class ChatViewModel(
         messageCheapVisible = messageCheapVisible.toMutableList().apply {
             removeAt(getMessageIndex(message))
         }
-        viewModelScope.launch {
-            onDeleteBookmark(message)
+        if (message.user.userName == "Bookmark") {
+            viewModelScope.launch {
+                onDeleteBookmark(message)
+            }
+        } else {
+            viewModelScope.launch {
+                val room = roomsSource.getRoom(
+                    _chatUiState.value.usersData.first().userToken,
+                    _chatUiState.value.usersData.last().userToken
+                )
+                val owner = if (message.from == SecurityUtilsImpl().bytesToString(room.user1.token)) {
+                    room.user1
+                } else {
+                    room.user2
+                }
+                messagesSource.deleteMessage(by.bashlikovv.chat.sources.structs.Message(
+                    room = room,
+                    image = "",
+                    value = message.value.encodeToByteArray(),
+                    file = "".encodeToByteArray(),
+                    owner = owner,
+                    time = message.time,
+                    from = SecurityUtilsImpl().bytesToString(owner.token)
+                ))
+            }
         }
         _chatUiState.update {
             it.copy(chat = _chatUiState.value.chat.copy(messages = tmp))
