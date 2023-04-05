@@ -5,17 +5,15 @@ import androidx.annotation.RequiresApi
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
-import by.bashlikovv.chat.sources.messages.entities.AddMessageRequestBody
-import by.bashlikovv.chat.sources.messages.entities.AddMessageResponseBody
-import by.bashlikovv.chat.sources.messages.entities.RoomMessagesRequestBody
-import by.bashlikovv.chat.sources.messages.entities.RoomMessagesResponseBody
+import by.bashlikovv.chat.sources.messages.entities.*
+import by.bashlikovv.chat.sources.structs.Message
 import okhttp3.Request
 
 class OkHttpMessagesSource(
     config: OkHttpConfig
 ) : BaseOkHttpSource(config) {
 
-    suspend fun getRoomMessages(room: String): List<by.bashlikovv.chat.sources.structs.Message> {
+    suspend fun getRoomMessages(room: String): List<Message> {
         val getRoomMessagesRequestBody = RoomMessagesRequestBody(
             room = room
         )
@@ -28,11 +26,11 @@ class OkHttpMessagesSource(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun sendMessage(message: by.bashlikovv.chat.sources.structs.Message, me: String): String {
+    suspend fun sendMessage(message: Message, me: String): String {
         val securityUtilsImpl = SecurityUtilsImpl()
         val addMessagesRequestBody = AddMessageRequestBody(
             image = message.image,
-            file = message.file.toString(),
+            file = message.file,
             value = message.value.decodeToString(),
             time = message.time,
             owner = securityUtilsImpl.bytesToString(message.room.user1.token),
@@ -45,5 +43,17 @@ class OkHttpMessagesSource(
             .build()
         val response = client.newCall(request).suspendEnqueue()
         return response.parseJsonResponse<AddMessageResponseBody>().result
+    }
+
+    suspend fun deleteMessage(message: Message): String {
+        val deleteMessageRequestBody = DeleteMessageRequestBody(
+            message = message
+        )
+        val request = Request.Builder()
+            .post(deleteMessageRequestBody.toJsonRequestBody())
+            .endpoint("/delete-message")
+            .build()
+        val response = client.newCall(request).suspendEnqueue()
+        return response.message
     }
 }
