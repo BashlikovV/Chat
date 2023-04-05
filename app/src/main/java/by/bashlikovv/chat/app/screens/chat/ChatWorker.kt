@@ -5,7 +5,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 
 class ChatWorker(
-    ctx: Context, params: WorkerParameters
+    ctx: Context,
+    params: WorkerParameters
 ) : CoroutineWorker(ctx, params) {
 
     override suspend fun doWork(): Result {
