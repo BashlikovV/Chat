@@ -13,6 +13,7 @@ import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.Account
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
+import by.bashlikovv.chat.app.struct.Pagination
 import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.SourceProviderHolder
@@ -340,7 +341,8 @@ class MessengerViewModel(
 
         try {
             val it = messagesSource.getRoomMessages(
-                SecurityUtilsImpl().bytesToString(room.token)
+                room = SecurityUtilsImpl().bytesToString(room.token),
+                pagination = Pagination().getRange()
             ).last()
             val user = if (room.user2.username == getUser().userName) {
                 room.user1
