@@ -1,5 +1,7 @@
 package by.bashlikovv.chat.app.screens.messenger
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
@@ -17,7 +19,6 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -34,8 +35,6 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.app.struct.Chat
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 private fun getNavBarContentConstraints(): ConstraintSet {
     return ConstraintSet {
@@ -55,6 +54,7 @@ private fun getNavBarContentConstraints(): ConstraintSet {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TopAppBar(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
@@ -103,6 +103,7 @@ fun LeftItem(messengerViewModel: MessengerViewModel = viewModel()) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun RightItems(messengerViewModel: MessengerViewModel = viewModel()) {
@@ -141,7 +142,7 @@ fun RightItems(messengerViewModel: MessengerViewModel = viewModel()) {
                     image = R.drawable.pin,
                     contentDescription = "Pin chat with ${messengerUiState.selectedItem.user.userName}",
                     chat = messengerUiState.selectedItem
-                ) { messengerViewModel.onActionPin() }
+                ) { messengerViewModel.onActionPin(it) }
                 RightItem(
                     image = R.drawable.mark_chat_read,
                     contentDescription = "mark chat with ${messengerUiState.selectedItem.user.userName} as read",
@@ -170,6 +171,7 @@ fun RightItem(image: Int, contentDescription: String, chat: Chat, actionListener
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()

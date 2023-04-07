@@ -10,13 +10,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -41,6 +45,9 @@ import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.utils.buildTime
 import by.bashlikovv.chat.app.utils.dpToFloat
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(DelicateCoroutinesApi::class)
@@ -51,20 +58,57 @@ fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        state = LazyListState(chatUiState.chat.messages.size)
-    ) {
-        items(chatUiState.chat.messages) {
-            MessageView(message = it) { message ->
-                chatViewModel.onActionItemClicked(message)
+    LaunchedEffect(Unit) {
+        chatViewModel.startWork()
+    }
+    DisposableEffect(Unit) {
+        DisposableEffectScope().onDispose {
+            chatViewModel.cancelWork()
+        }
+    }
+    val scope = rememberCoroutineScope()
+    var refreshing by remember { mutableStateOf(false) }
+    fun refresh() = scope.launch(Dispatchers.IO) {
+        refreshing = true
+        chatViewModel.onActionRefresh()
+        delay(500)
+        refreshing = false
+    }
+    val state = rememberPullRefreshState(refreshing, ::refresh)
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .pullRefresh(state, true),
+            state = LazyListState(chatUiState.chat.messages.size)
+        ) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Pull up to load messages",
+                        style = TextStyle(fontSize = 19.sp, color = MaterialTheme.colors.secondary)
+                    )
+                }
+            }
+            items(chatUiState.chat.messages) {
+                MessageView(message = it) { message ->
+                    chatViewModel.onActionItemClicked(message)
+                }
             }
         }
+        PullRefreshIndicator(
+            refreshing, state, Modifier.align(Alignment.TopCenter), contentColor = MaterialTheme.colors.secondary
+        )
     }
 }
 
@@ -116,7 +160,7 @@ fun MessageView(
                 else
                     (message.imageBitmap.height / 8).dp)
             .padding(start = 4.dp),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
         ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
             val (clip, canvas) = createRefs()

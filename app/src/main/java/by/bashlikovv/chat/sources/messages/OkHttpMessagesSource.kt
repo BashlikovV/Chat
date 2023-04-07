@@ -13,9 +13,10 @@ class OkHttpMessagesSource(
     config: OkHttpConfig
 ) : BaseOkHttpSource(config) {
 
-    suspend fun getRoomMessages(room: String): List<Message> {
+    suspend fun getRoomMessages(room: String, pagination: IntRange): List<Message> {
         val getRoomMessagesRequestBody = RoomMessagesRequestBody(
-            room = room
+            room = room,
+            pagination = pagination
         )
         val request = Request.Builder()
             .post(getRoomMessagesRequestBody.toJsonRequestBody())

@@ -17,6 +17,10 @@ android {
         versionCode 1
         versionName "1.0"
 
+        aaptOptions {
+            additionalParameters =["--warn-manifest-validation"]
+        }
+
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -24,6 +28,11 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
         }
     }
     compileOptions {
