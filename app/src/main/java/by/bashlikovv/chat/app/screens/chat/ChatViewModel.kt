@@ -17,9 +17,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories.accountsRepository
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
-import by.bashlikovv.chat.app.struct.Chat
-import by.bashlikovv.chat.app.struct.Message
-import by.bashlikovv.chat.app.struct.User
+import by.bashlikovv.chat.app.struct.*
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
@@ -42,22 +40,18 @@ class ChatViewModel(
     private val _chatUiState = MutableStateFlow(ChatUiState())
     val chatUiState = _chatUiState.asStateFlow()
 
-    var messageCheapVisible by mutableStateOf(_chatUiState.value.chat.messages.map {
-        false
-    })
+    var messageCheapVisible by mutableStateOf(_chatUiState.value.chat.messages.map { false })
         private set
 
     private val sourceProvider = SourceProviderHolder().sourcesProvider
-
     private val roomsSource = OkHttpRoomsSource(sourceProvider)
     private val messagesSource = OkHttpMessagesSource(sourceProvider)
 
     private var me = by.bashlikovv.chat.sources.structs.User()
 
-    private val thread = thread(
-        start = false,
-        isDaemon = true
-    ) {
+    private val pagination = Pagination()
+
+    private val thread = thread(start = false, isDaemon = true) {
         Handler(Looper.getMainLooper()).postDelayed({
             SessionTimer().start()
         }, 2000)
@@ -69,7 +63,6 @@ class ChatViewModel(
     ) : CountDownTimer(millsInFuture, countDownInterval) {
         override fun onTick(millisUntilFinished: Long) {
             viewModelScope.launch {
-//                getMessagesFromDb()
                 periodicUpdateWork()
             }
         }
@@ -85,9 +78,13 @@ class ChatViewModel(
         GlobalScope.launch {
             try {
                 val messages = messagesSource.getRoomMessages(
-                    _chatUiState.value.chat.token
+                    _chatUiState.value.chat.token,
+                    Pagination(0, pagination.getRange().last).getRange()
                 )
                 val  newValue = messages.castListOfMessages()
+                if (_chatUiState.value.chat.messages.map { it.value }.containsAll(newValue.map { it.value })) {
+                    return@launch
+                }
                 chatData = _chatUiState.value.chat.copy(messages = newValue)
                 val size = chatData.messages.size - _chatUiState.value.chat.messages.size
                 val tmpList = messageCheapVisible.toMutableList()
@@ -129,7 +126,8 @@ class ChatViewModel(
         GlobalScope.launch {
             try {
                 val messages = messagesSource.getRoomMessages(
-                    _chatUiState.value.chat.token
+                    _chatUiState.value.chat.token,
+                    Pagination(0, pagination.getRange().last).getRange()
                 )
                 var size = messages.size
                 val  newValue = messages.castListOfMessages()
@@ -365,5 +363,34 @@ class ChatViewModel(
 
     fun cancelWork() {
         thread.interrupt()
+    }
+
+    suspend fun onActionRefresh() {
+        pagination.addTop(PAGE_HEIGHT)
+        processRefresh()
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private suspend fun processRefresh() {
+        var chatData: Chat
+        GlobalScope.launch {
+            try {
+                val messages = messagesSource.getRoomMessages(
+                    _chatUiState.value.chat.token,
+                    pagination = pagination.getRange()
+                )
+                val  newValue = messages.castListOfMessages() + _chatUiState.value.chat.messages
+                chatData = _chatUiState.value.chat.copy(messages = newValue)
+                val size = chatData.messages.size - _chatUiState.value.chat.messages.size
+                val tmpList = messageCheapVisible.toMutableList()
+                for (i in 0 until size) {
+                    tmpList.add(false)
+                }
+                messageCheapVisible = tmpList
+                _chatUiState.update { it.copy(chat = chatData) }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }
