@@ -3,6 +3,9 @@ package by.bashlikovv.chat.app.screens.chat
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore.Images.Media.getBitmap
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
@@ -29,6 +32,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.*
+import kotlin.concurrent.thread
 
 @RequiresApi(Build.VERSION_CODES.O)
 class ChatViewModel(
@@ -49,6 +53,56 @@ class ChatViewModel(
     private val messagesSource = OkHttpMessagesSource(sourceProvider)
 
     private var me = by.bashlikovv.chat.sources.structs.User()
+
+    private val thread = thread(
+        start = false,
+        isDaemon = true
+    ) {
+        Handler(Looper.getMainLooper()).postDelayed({
+            SessionTimer().start()
+        }, 2000)
+    }
+
+    inner class SessionTimer(
+        millsInFuture: Long = Long.MAX_VALUE,
+        countDownInterval: Long = 2000
+    ) : CountDownTimer(millsInFuture, countDownInterval) {
+        override fun onTick(millisUntilFinished: Long) {
+            viewModelScope.launch {
+//                getMessagesFromDb()
+                periodicUpdateWork()
+            }
+        }
+
+        override fun onFinish() {
+            thread.interrupt()
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun periodicUpdateWork() {
+        var chatData: Chat
+        GlobalScope.launch {
+            try {
+                val messages = messagesSource.getRoomMessages(
+                    _chatUiState.value.chat.token
+                )
+                val  newValue = messages.castListOfMessages()
+                chatData = _chatUiState.value.chat.copy(messages = newValue)
+                val size = chatData.messages.size - _chatUiState.value.chat.messages.size
+                val tmpList = messageCheapVisible.toMutableList()
+                for (i in 0 until size) {
+                    tmpList.add(false)
+                }
+                messageCheapVisible = tmpList
+                if (_chatUiState.value.chat.messages.map { it.value } != chatData.messages.map { it.value }) {
+                    _chatUiState.update { it.copy(chat = chatData) }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     fun applyChatData(chat: Chat) {
         _chatUiState.update { it.copy(chat = chat) }
@@ -78,20 +132,8 @@ class ChatViewModel(
                     _chatUiState.value.chat.token
                 )
                 var size = messages.size
-                val  newValue = _chatUiState.value.chat.messages + messages.map {
-                    Message(
-                        value = it.value.decodeToString(),
-                        time = it.time,
-                        user = User(
-                            userName = it.owner.username,
-                            userToken = SecurityUtilsImpl().bytesToString(it.owner.token),
-                            userEmail = it.owner.email
-                        ),
-                        isRead = false,
-                        from = it.from
-                    )
-                }
-                chatData = _chatUiState.value.chat.copy(messages = _chatUiState.value.chat.messages + newValue)
+                val  newValue = messages.castListOfMessages()
+                chatData = _chatUiState.value.chat.copy(messages = newValue)
                 applyChatData(chatData)
 
                 size = _chatUiState.value.chat.messages.size - size
@@ -101,6 +143,22 @@ class ChatViewModel(
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        }
+    }
+
+    private fun List<by.bashlikovv.chat.sources.structs.Message>.castListOfMessages(): List<Message> {
+        return this.map {
+            Message(
+                value = it.value.decodeToString(),
+                time = it.time,
+                user = User(
+                    userName = it.owner.username,
+                    userToken = SecurityUtilsImpl().bytesToString(it.owner.token),
+                    userEmail = it.owner.email
+                ),
+                isRead = false,
+                from = it.from
+            )
         }
     }
 
@@ -299,5 +357,13 @@ class ChatViewModel(
         viewModelScope.launch {
             roomsSource.deleteRoom(user1, user2)
         }
+    }
+
+    fun startWork() {
+        thread.start()
+    }
+
+    fun cancelWork() {
+        thread.interrupt()
     }
 }

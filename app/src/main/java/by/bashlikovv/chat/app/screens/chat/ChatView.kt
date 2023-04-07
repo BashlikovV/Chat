@@ -14,9 +14,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -55,6 +53,15 @@ fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
 @Composable
 fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        chatViewModel.startWork()
+    }
+    DisposableEffect(Unit) {
+        DisposableEffectScope().onDispose {
+            chatViewModel.cancelWork()
+        }
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),

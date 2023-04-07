@@ -1,7 +1,6 @@
 package by.bashlikovv.chat.app.screens.messenger
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
@@ -21,6 +20,8 @@ import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import by.bashlikovv.chat.sources.structs.Room
 import by.bashlikovv.chat.sources.users.OkHttpUsersSource
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -92,10 +93,14 @@ class MessengerViewModel(
     }
 
     /**
-     * [onActionPin] - function that pinned chat in list of [Chat]. TODO(Not implemented)
+     * [onActionPin] - function that pinned chat in list of [Chat]
      * */
-    fun onActionPin() {
+    fun onActionPin(chat: Chat) {
         onActionCloseItems()
+        val newState = _messengerUiState.value.chats.toMutableList()
+        newState.remove(chat)
+        newState.add(0, chat)
+        _messengerUiState.update { it.copy(chats = newState) }
     }
 
     /**
@@ -201,12 +206,13 @@ class MessengerViewModel(
     /**
      * [onSearchInputChange] - function that updates search input state in [MessengerUiState.searchInput]
      * */
+    @OptIn(DelicateCoroutinesApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     fun onSearchInputChange(newValue: String) {
         _messengerUiState.update {
             it.copy(searchInput = newValue)
         }
-        viewModelScope.launch {
+        GlobalScope.launch {
             _messengerUiState.update {
                 it.copy(searchedItems = getSearchOutput(newValue))
             }
@@ -355,15 +361,12 @@ class MessengerViewModel(
             )
         } catch (e: Exception) {
             result.add(Message(value = "You do not have messages now.", time = ""))
-            Log.i("MYTAG", "catch: ${e.message}")
         } finally {
             if (result.isEmpty()) {
-                Log.i("MYTAG", "Empty")
                 result.add(Message(value = "You do not have messages now.", time = ""))
             }
         }
 
-        Log.i("MYTAG", result.toString())
         return result
     }
 }
