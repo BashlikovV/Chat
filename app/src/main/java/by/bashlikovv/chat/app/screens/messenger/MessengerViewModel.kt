@@ -342,7 +342,7 @@ class MessengerViewModel(
         try {
             val it = messagesSource.getRoomMessages(
                 room = SecurityUtilsImpl().bytesToString(room.token),
-                pagination = Pagination().getRange()
+                pagination = Pagination(0, 1).getRange()
             ).last()
             val user = if (room.user2.username == getUser().userName) {
                 room.user1
