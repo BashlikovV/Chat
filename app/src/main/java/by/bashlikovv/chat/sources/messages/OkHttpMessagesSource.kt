@@ -1,13 +1,20 @@
 package by.bashlikovv.chat.sources.messages
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.annotation.RequiresApi
+import by.bashlikovv.chat.Const
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.messages.entities.*
 import by.bashlikovv.chat.sources.structs.Message
 import okhttp3.Request
+import java.io.DataInputStream
+import java.net.InetSocketAddress
+import java.net.Socket
+import java.nio.ByteBuffer
 
 class OkHttpMessagesSource(
     config: OkHttpConfig
@@ -56,5 +63,43 @@ class OkHttpMessagesSource(
             .build()
         val response = client.newCall(request).suspendEnqueue()
         return response.message
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun getImage(uri: String): Bitmap {
+        var image: Bitmap? = null
+        val socket = Socket()
+        var input = DataInputStream(null)
+        try {
+            socket.connect(Const.BASE_URL)
+
+            val request = "GET /get-image?$uri\r\nContent-Type:image/jpg \r\n\r\n"
+
+            socket.getOutputStream().write(request.encodeToByteArray())
+            socket.getOutputStream().flush()
+            input = DataInputStream(socket.getInputStream())
+
+            val sizeAr = ByteArray(4, init = { 0 })
+            input.read(sizeAr)
+            val size = ByteBuffer.wrap(sizeAr).asIntBuffer().get()
+
+            val imageAr = input.readAllBytes()
+
+            image = BitmapFactory.decodeByteArray(imageAr, 0, size)
+        } catch (_: Exception) {
+        } finally {
+            input.run { close() }
+            socket.getInputStream().close()
+            socket.getOutputStream().close()
+            socket.close()
+        }
+
+        return image ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+    }
+
+    private fun Socket.connect(baseUrl: String) {
+        val ip = baseUrl.substringAfter("://").substringBefore(":")
+        val port = baseUrl.substringAfter("$ip:").toInt()
+        this.connect(InetSocketAddress(ip, port))
     }
 }
