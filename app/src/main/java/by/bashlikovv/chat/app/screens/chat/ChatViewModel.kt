@@ -52,9 +52,9 @@ class ChatViewModel(
     private val pagination = Pagination()
 
     private val thread = thread(start = false, isDaemon = true) {
-        Handler(Looper.getMainLooper()).postDelayed({
+        Handler(Looper.getMainLooper()).post {
             SessionTimer().start()
-        }, 2000)
+        }
     }
 
     inner class SessionTimer(
@@ -82,7 +82,7 @@ class ChatViewModel(
                     Pagination(0, pagination.getRange().last).getRange()
                 )
                 val  newValue = messages.castListOfMessages()
-                if (_chatUiState.value.chat.messages.map { it.value }.containsAll(newValue.map { it.value })) {
+                if (_chatUiState.value.chat.messages.map { it.value } == newValue.map { it.value }) {
                     return@launch
                 }
                 chatData = _chatUiState.value.chat.copy(messages = newValue)
