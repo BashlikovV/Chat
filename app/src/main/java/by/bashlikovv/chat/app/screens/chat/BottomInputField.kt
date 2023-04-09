@@ -1,8 +1,10 @@
 package by.bashlikovv.chat.app.screens.chat
 
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 import kotlinx.coroutines.DelicateCoroutinesApi
 
+@RequiresApi(Build.VERSION_CODES.O)
 @DelicateCoroutinesApi
 @Composable
 fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {

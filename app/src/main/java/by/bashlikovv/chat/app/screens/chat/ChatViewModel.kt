@@ -1,6 +1,7 @@
 package by.bashlikovv.chat.app.screens.chat
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.CountDownTimer
@@ -51,12 +52,14 @@ class ChatViewModel(
 
     private val pagination = Pagination()
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val thread = thread(start = false, isDaemon = true) {
-        Handler(Looper.getMainLooper()).postDelayed({
+        Handler(Looper.getMainLooper()).post {
             SessionTimer().start()
-        }, 2000)
+        }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     inner class SessionTimer(
         millsInFuture: Long = Long.MAX_VALUE,
         countDownInterval: Long = 2000
@@ -73,16 +76,17 @@ class ChatViewModel(
     }
 
     @OptIn(DelicateCoroutinesApi::class)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun periodicUpdateWork() {
         var chatData: Chat
         GlobalScope.launch {
             try {
                 val messages = messagesSource.getRoomMessages(
                     _chatUiState.value.chat.token,
-                    Pagination(0, pagination.getRange().last).getRange()
+                    Pagination(0, Int.MAX_VALUE).getRange()
                 )
                 val  newValue = messages.castListOfMessages()
-                if (_chatUiState.value.chat.messages.map { it.value }.containsAll(newValue.map { it.value })) {
+                if (_chatUiState.value.chat.messages.map { it.value } == newValue.map { it.value }) {
                     return@launch
                 }
                 chatData = _chatUiState.value.chat.copy(messages = newValue)
@@ -120,7 +124,7 @@ class ChatViewModel(
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     suspend fun getMessagesFromDb() {
         var chatData: Chat
         GlobalScope.launch {
@@ -144,8 +148,14 @@ class ChatViewModel(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun List<by.bashlikovv.chat.sources.structs.Message>.castListOfMessages(): List<Message> {
         return this.map {
+            var image: Bitmap? = null
+            if (it.image.contains("/home")) {
+                image = messagesSource.getImage(it.image)
+            }
+
             Message(
                 value = it.value.decodeToString(),
                 time = it.time,
@@ -155,7 +165,9 @@ class ChatViewModel(
                     userEmail = it.owner.email
                 ),
                 isRead = false,
-                from = it.from
+                from = it.from,
+                isImage = image != null,
+                imageBitmap = image ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
             )
         }
     }
@@ -357,19 +369,23 @@ class ChatViewModel(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun startWork() {
         thread.start()
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun cancelWork() {
         thread.interrupt()
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     suspend fun onActionRefresh() {
         pagination.addTop(PAGE_HEIGHT)
         processRefresh()
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(DelicateCoroutinesApi::class)
     private suspend fun processRefresh() {
         var chatData: Chat

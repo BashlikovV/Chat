@@ -229,7 +229,7 @@ class MessengerViewModel(
         if (_messengerUiState.value.newChat) {
             val users: List<by.bashlikovv.chat.sources.structs.User>
             try {
-                users = usersSource.getAllUsers()
+                users = usersSource.getAllUsers(_messengerUiState.value.me.userToken)
             } catch (e: Exception) {
                 result.add(Chat(User(userName = "Network error."), messages = listOf(Message(value = ""))))
                 return result

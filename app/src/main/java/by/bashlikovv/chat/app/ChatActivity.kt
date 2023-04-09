@@ -19,7 +19,7 @@ import by.bashlikovv.chat.app.utils.viewModelCreator
 
 class ChatActivity : ComponentActivity() {
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val chatViewModel: ChatViewModel by viewModelCreator {
