@@ -83,7 +83,7 @@ class ChatViewModel(
             try {
                 val messages = messagesSource.getRoomMessages(
                     _chatUiState.value.chat.token,
-                    Pagination(0, Int.MAX_VALUE).getRange()
+                    Pagination(0, pagination.getRange().last).getRange()
                 )
                 val  newValue = messages.castListOfMessages()
                 if (_chatUiState.value.chat.messages.map { it.value } == newValue.map { it.value }) {
@@ -131,7 +131,7 @@ class ChatViewModel(
             try {
                 val messages = messagesSource.getRoomMessages(
                     _chatUiState.value.chat.token,
-                    Pagination(0, pagination.getRange().last).getRange()
+                    Pagination().getRange()
                 )
                 var size = messages.size
                 val  newValue = messages.castListOfMessages()
@@ -319,20 +319,34 @@ class ChatViewModel(
         return result
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun applyImageUri(imageUri: Uri, context: Context) {
         try {
             val bitmap = getBitmap(context.contentResolver, imageUri)
             val message = Message(
                 isImage = true,
-                imageBitmap = bitmap
+                imageBitmap = bitmap,
+                value = "",
+                time = Calendar.getInstance().time.toString(),
+                from = SecurityUtilsImpl().bytesToString(me.token)
             )
             val messages = _chatUiState.value.chat.messages.toMutableList()
             messages.add(message)
             _chatUiState.update { it.copy(chat = it.chat.copy(messages = messages)) }
+            messageCheapVisible = messageCheapVisible.toMutableList().apply {
+                add(false)
+            }
             if (_chatUiState.value.chat.user.userName == "Bookmarks") {
                 viewModelScope.launch {
                     onSendBookmark(message)
                 }
+            }
+            GlobalScope.launch {
+                messagesSource.sendImage(
+                    bitmap,
+                    _chatUiState.value.chat.token,
+                    SecurityUtilsImpl().bytesToString(me.token)
+                )
             }
         } catch (e: Exception) {
             Toast
