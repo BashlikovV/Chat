@@ -230,13 +230,20 @@ fun MessageView(
                     bitmap = message.imageBitmap.asImageBitmap(),
                     contentDescription = "image",
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth(0.8f)
                         .clickable {
                             onItemClicked(message)
                             chatViewModel.onCheapItemClicked(
                                 message,
                                 !chatViewModel.messageCheapVisible[chatViewModel.getMessageIndex(message)]
                             )
+                        }
+                        .constrainAs(canvas) {
+                            if (message.from != chatUiState.chat.user.userToken) {
+                                end.linkTo(anchor = parent.end)
+                            } else {
+                                start.linkTo(anchor = parent.start)
+                            }
                         }
                 )
             }
