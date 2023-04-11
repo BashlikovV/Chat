@@ -27,7 +27,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -35,7 +34,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -181,31 +179,31 @@ fun MessageView(
                     chatViewModel.onActionDelete(message)
                 }
             }
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .width(boxWidth.dp)
-                    .clickable {
-                        onItemClicked(message)
-                        chatViewModel.onCheapItemClicked(
-                            message,
-                            !chatViewModel.messageCheapVisible[chatViewModel.getMessageIndex(message)]
-                        )
-                    }
-                    .height(
-                        if (!message.isImage)
-                            (measuredText.lineCount * height).dp
-                        else
-                            (message.imageBitmap.height / 10).dp)
-                    .constrainAs(canvas) {
-                        if (message.from != chatUiState.chat.user.userToken) {
-                            end.linkTo(anchor = parent.end)
-                        } else {
-                            start.linkTo(anchor = parent.start)
+            if (!message.isImage) {
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .width(boxWidth.dp)
+                        .clickable {
+                            onItemClicked(message)
+                            chatViewModel.onCheapItemClicked(
+                                message,
+                                !chatViewModel.messageCheapVisible[chatViewModel.getMessageIndex(message)]
+                            )
                         }
-                    }
-            ) {
-                if (!message.isImage) {
+                        .height(
+                            if (!message.isImage)
+                                (measuredText.lineCount * height).dp
+                            else
+                                (message.imageBitmap.height / 10).dp)
+                        .constrainAs(canvas) {
+                            if (message.from != chatUiState.chat.user.userToken) {
+                                end.linkTo(anchor = parent.end)
+                            } else {
+                                start.linkTo(anchor = parent.start)
+                            }
+                        }
+                ) {
                     drawRoundRect(
                         rectColor,
                         size = Size(
@@ -226,21 +224,28 @@ fun MessageView(
                             (measuredText.size.height - (12.sp).toPx())
                         )
                     )
-                } else {
-                    var rotation = 0f
-                    if (message.imageBitmap.width > message.imageBitmap.height) {
-                        rotation = 90f
-                    }
-                    rotate(degrees = rotation) {
-                        drawImage(
-                            image = message.imageBitmap.asImageBitmap(),
-                            dstSize = IntSize(
-                                (message.imageBitmap.width / 3),
-                                (message.imageBitmap.height / 3)
-                            )
-                        )
-                    }
                 }
+            } else {
+                Image(
+                    bitmap = message.imageBitmap.asImageBitmap(),
+                    contentDescription = "image",
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .clickable {
+                            onItemClicked(message)
+                            chatViewModel.onCheapItemClicked(
+                                message,
+                                !chatViewModel.messageCheapVisible[chatViewModel.getMessageIndex(message)]
+                            )
+                        }
+                        .constrainAs(canvas) {
+                            if (message.from != chatUiState.chat.user.userToken) {
+                                end.linkTo(anchor = parent.end)
+                            } else {
+                                start.linkTo(anchor = parent.start)
+                            }
+                        }
+                )
             }
         }
     }
