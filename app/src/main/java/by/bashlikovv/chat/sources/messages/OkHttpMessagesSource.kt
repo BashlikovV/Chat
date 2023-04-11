@@ -10,7 +10,9 @@ import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.messages.entities.*
 import by.bashlikovv.chat.sources.structs.Message
+import okhttp3.MultipartBody
 import okhttp3.Request
+import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -69,7 +71,7 @@ class OkHttpMessagesSource(
     fun getImage(uri: String): Bitmap {
         var image: Bitmap? = null
         val socket = Socket()
-        var input = DataInputStream(null)
+        val input: DataInputStream
         try {
             socket.connect(Const.BASE_URL)
 
@@ -83,14 +85,12 @@ class OkHttpMessagesSource(
             input.read(sizeAr)
             val size = ByteBuffer.wrap(sizeAr).asIntBuffer().get()
 
-            val imageAr = input.readAllBytes()
+            val imageAr = ByteArray(size)
+            input.readFully(imageAr)
 
             image = BitmapFactory.decodeByteArray(imageAr, 0, size)
         } catch (_: Exception) {
         } finally {
-            input.run { close() }
-            socket.getInputStream().close()
-            socket.getOutputStream().close()
             socket.close()
         }
 
@@ -101,5 +101,24 @@ class OkHttpMessagesSource(
         val ip = baseUrl.substringAfter("://").substringBefore(":")
         val port = baseUrl.substringAfter("$ip:").toInt()
         this.connect(InetSocketAddress(ip, port))
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun sendImage(image: Bitmap, room: String, owner: String) {
+        val stream = ByteArrayOutputStream()
+        image.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+        val addImageRequestBody = AddImageRequestBody(
+            image = stream.toByteArray(),
+            room = SecurityUtilsImpl().stringToBytes(room),
+            owner = SecurityUtilsImpl().stringToBytes(owner)
+        )
+        val body = MultipartBody.Builder()
+            .addPart(addImageRequestBody.toJsonRequestBody())
+            .build()
+        val request = Request.Builder()
+            .post(body)
+            .endpoint("/add-image")
+            .build()
+        client.newCall(request).suspendEnqueue()
     }
 }
