@@ -18,9 +18,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories.accountsRepository
+import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.struct.*
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
+import by.bashlikovv.chat.app.utils.StatusNotification
 import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
@@ -101,6 +103,11 @@ class ChatViewModel(
                 for (i in 0 until size) {
                     tmpList.add(false)
                 }
+                StatusNotification.makeStatusNotification(
+                    message = "You have new messages from ${_chatUiState.value.chat.user.userName}",
+                    context = applicationContext,
+                    lastMessage = chatData.messages.last().value
+                )
                 messageCheapVisible = tmpList
                 if (_chatUiState.value.chat.messages.map { it.value } != chatData.messages.map { it.value }) {
                     _chatUiState.update { it.copy(chat = chatData) }
