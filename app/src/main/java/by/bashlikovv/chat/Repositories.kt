@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 
 object Repositories {
 
-    private lateinit var applicationContext: Context
+    lateinit var applicationContext: Context
 
     private val database: SQLiteDatabase by lazy<SQLiteDatabase> {
         MessengerSQLiteHelper(applicationContext).writableDatabase
