@@ -7,11 +7,12 @@ const val PAGE_HEIGHT = 30
 
 @Parcelize
 class Pagination(
-    private val bottom: Int = 0,
+    private var bottom: Int = 0,
     private var top: Int = 30
 ) : Parcelable {
 
     fun addTop(offset: Int) {
+        bottom += offset
         top += offset
     }
 

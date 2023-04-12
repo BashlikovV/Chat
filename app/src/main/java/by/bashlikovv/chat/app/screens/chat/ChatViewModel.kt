@@ -82,10 +82,11 @@ class ChatViewModel(
             try {
                 val messages = messagesSource.getRoomMessages(
                     _chatUiState.value.chat.token,
-                    Pagination(0, pagination.getRange().last).getRange()
+                    Pagination().getRange()
                 )
                 val  newValue = messages.castListOfMessages()
-                if (_chatUiState.value.chat.messages.map { it.value } == newValue.map { it.value }) {
+                val tmp = _chatUiState.value.chat.messages.takeLast(newValue.size)
+                if (tmp.map { it.value } == newValue.map { it.value }) {
                     return@launch
                 }
                 chatData = _chatUiState.value.chat.copy(messages = newValue)
@@ -131,15 +132,16 @@ class ChatViewModel(
                     _chatUiState.value.chat.token,
                     Pagination().getRange()
                 )
-                var size = messages.size
                 val  newValue = messages.castListOfMessages()
                 chatData = _chatUiState.value.chat.copy(messages = newValue)
                 applyChatData(chatData)
 
-                size = _chatUiState.value.chat.messages.size - size
+                val size = _chatUiState.value.chat.messages.size - messages.size
+                val tmp = messageCheapVisible.toMutableList()
                 for (i in 0 until size) {
-                    messageCheapVisible.toMutableList().add(false)
+                    tmp.add(false)
                 }
+                messageCheapVisible = tmp
             } catch (e: Exception) {
                 e.printStackTrace()
             }
