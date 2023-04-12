@@ -62,12 +62,14 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
     val chatUiState by chatViewModel.chatUiState.collectAsState()
     val lazyListState by chatViewModel.lazyListState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        chatViewModel.startWork()
-    }
-    DisposableEffect(Unit) {
-        DisposableEffectScope().onDispose {
-            chatViewModel.cancelWork()
+    if (chatUiState.chat.user.userName != "Bookmarks") {
+        LaunchedEffect(Unit) {
+            chatViewModel.startWork()
+        }
+        DisposableEffect(Unit) {
+            DisposableEffectScope().onDispose {
+                chatViewModel.cancelWork()
+            }
         }
     }
     val scope = rememberCoroutineScope()
