@@ -245,6 +245,7 @@ fun MessageView(
                                 start.linkTo(anchor = parent.start)
                             }
                         }
+                        .padding(5.dp)
                 )
             }
         }
