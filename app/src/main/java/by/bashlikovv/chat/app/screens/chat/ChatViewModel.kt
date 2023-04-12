@@ -271,9 +271,9 @@ class ChatViewModel(
                 }
                 messagesSource.deleteMessage(by.bashlikovv.chat.sources.structs.Message(
                     room = room,
-                    image = message.value,
+                    image = if (message.isImage) message.value else "no image",
                     value = message.value.encodeToByteArray(),
-                    file = "".encodeToByteArray(),
+                    file = "no file".encodeToByteArray(),
                     owner = owner,
                     time = message.time,
                     from = SecurityUtilsImpl().bytesToString(owner.token)
