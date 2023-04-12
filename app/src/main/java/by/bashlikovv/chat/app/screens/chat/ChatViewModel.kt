@@ -11,6 +11,7 @@ import android.provider.MediaStore.Images.Media.getBitmap
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -40,6 +41,11 @@ class ChatViewModel(
 
     private val _chatUiState = MutableStateFlow(ChatUiState())
     val chatUiState = _chatUiState.asStateFlow()
+
+    private val _lazyListState = MutableStateFlow(
+        LazyListState(_chatUiState.value.chat.messages.size)
+    )
+    val lazyListState = _lazyListState.asStateFlow()
 
     var messageCheapVisible by mutableStateOf(_chatUiState.value.chat.messages.map { false })
         private set
@@ -82,10 +88,11 @@ class ChatViewModel(
             try {
                 val messages = messagesSource.getRoomMessages(
                     _chatUiState.value.chat.token,
-                    Pagination(0, pagination.getRange().last).getRange()
+                    Pagination().getRange()
                 )
                 val  newValue = messages.castListOfMessages()
-                if (_chatUiState.value.chat.messages.map { it.value } == newValue.map { it.value }) {
+                val tmp = _chatUiState.value.chat.messages.takeLast(newValue.size)
+                if (tmp.map { it.value } == newValue.map { it.value }) {
                     return@launch
                 }
                 chatData = _chatUiState.value.chat.copy(messages = newValue)
@@ -131,15 +138,17 @@ class ChatViewModel(
                     _chatUiState.value.chat.token,
                     Pagination().getRange()
                 )
-                var size = messages.size
                 val  newValue = messages.castListOfMessages()
                 chatData = _chatUiState.value.chat.copy(messages = newValue)
                 applyChatData(chatData)
 
-                size = _chatUiState.value.chat.messages.size - size
+                val size = _chatUiState.value.chat.messages.size - messages.size
+                val tmp = messageCheapVisible.toMutableList()
                 for (i in 0 until size) {
-                    messageCheapVisible.toMutableList().add(false)
+                    tmp.add(false)
                 }
+                messageCheapVisible = tmp
+                _lazyListState.update { LazyListState(messageCheapVisible.size) }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -246,6 +255,7 @@ class ChatViewModel(
         messageCheapVisible = messageCheapVisible.toMutableList().apply {
             add(false)
         }
+        _lazyListState.update { LazyListState(messageCheapVisible.size) }
     }
 
     fun onActionDelete(message: Message) {
@@ -271,9 +281,9 @@ class ChatViewModel(
                 }
                 messagesSource.deleteMessage(by.bashlikovv.chat.sources.structs.Message(
                     room = room,
-                    image = message.value,
+                    image = if (message.isImage) message.value else "no image",
                     value = message.value.encodeToByteArray(),
-                    file = "".encodeToByteArray(),
+                    file = "no file".encodeToByteArray(),
                     owner = owner,
                     time = message.time,
                     from = SecurityUtilsImpl().bytesToString(owner.token)
@@ -415,6 +425,7 @@ class ChatViewModel(
                 }
                 messageCheapVisible = tmpList
                 _chatUiState.update { it.copy(chat = chatData) }
+                _lazyListState.update { LazyListState(size) }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
