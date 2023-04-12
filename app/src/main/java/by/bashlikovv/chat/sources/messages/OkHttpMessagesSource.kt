@@ -23,51 +23,74 @@ class OkHttpMessagesSource(
 ) : BaseOkHttpSource(config) {
 
     suspend fun getRoomMessages(room: String, pagination: IntRange): List<Message> {
-        val getRoomMessagesRequestBody = RoomMessagesRequestBody(
-            room = room,
-            pagination = pagination
-        )
-        val request = Request.Builder()
-            .post(getRoomMessagesRequestBody.toJsonRequestBody())
-            .endpoint("/room-messages")
-            .build()
-        val response = client.newCall(request).suspendEnqueue()
-        return response.parseJsonResponse<RoomMessagesResponseBody>().messages
+        return try {
+            val getRoomMessagesRequestBody = RoomMessagesRequestBody(
+                room = room,
+                pagination = pagination
+            )
+            val request = Request.Builder()
+                .post(getRoomMessagesRequestBody.toJsonRequestBody())
+                .endpoint("/room-messages")
+                .build()
+            val response = client.newCall(request).suspendEnqueue()
+            response.parseJsonResponse<RoomMessagesResponseBody>().messages
+        } catch (e: Exception) {
+            e.printStackTrace()
+            listOf()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun sendMessage(message: Message, me: String): String {
-        val securityUtilsImpl = SecurityUtilsImpl()
-        val addMessagesRequestBody = AddMessageRequestBody(
-            image = message.image,
-            file = message.file,
-            value = message.value.decodeToString(),
-            time = message.time,
-            owner = securityUtilsImpl.bytesToString(message.room.user1.token),
-            receiver = securityUtilsImpl.bytesToString(message.room.user2.token),
-            from = me
-        )
-        val request = Request.Builder()
-            .post(addMessagesRequestBody.toJsonRequestBody())
-            .endpoint("/add-message")
-            .build()
-        val response = client.newCall(request).suspendEnqueue()
-        return response.parseJsonResponse<AddMessageResponseBody>().result
+        return try {
+            val securityUtilsImpl = SecurityUtilsImpl()
+            val addMessagesRequestBody = AddMessageRequestBody(
+                image = message.image,
+                file = message.file,
+                value = message.value.decodeToString(),
+                time = message.time,
+                owner = securityUtilsImpl.bytesToString(message.room.user1.token),
+                receiver = securityUtilsImpl.bytesToString(message.room.user2.token),
+                from = me
+            )
+            val request = Request.Builder()
+                .post(addMessagesRequestBody.toJsonRequestBody())
+                .endpoint("/add-message")
+                .build()
+            val response = client.newCall(request).suspendEnqueue()
+            return response.parseJsonResponse<AddMessageResponseBody>().result
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "ERROR"
+        }
     }
 
     suspend fun deleteMessage(message: Message): String {
-        val deleteMessageRequestBody = DeleteMessageRequestBody(
-            message = message
-        )
-        val request = Request.Builder()
-            .post(deleteMessageRequestBody.toJsonRequestBody())
-            .endpoint("/delete-message")
-            .build()
-        val response = client.newCall(request).suspendEnqueue()
-        return response.message
+        return try {
+            val deleteMessageRequestBody = DeleteMessageRequestBody(
+                message = message
+            )
+            val body = MultipartBody.Builder()
+                .addPart(deleteMessageRequestBody.toJsonRequestBody())
+                .build()
+            val request = Request.Builder()
+                .post(body)
+                .endpoint("/delete-message")
+                .build()
+            val response = client.newCall(request).suspendEnqueue()
+            response.message
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "ERROR"
+        }
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun Socket.connect(baseUrl: String) {
+        val ip = baseUrl.substringAfter("://").substringBefore(":")
+        val port = baseUrl.substringAfter("$ip:").toInt()
+        this.connect(InetSocketAddress(ip, port))
+    }
+
     fun getImage(uri: String): Bitmap {
         var image: Bitmap? = null
         val socket = Socket()
@@ -89,7 +112,8 @@ class OkHttpMessagesSource(
             input.readFully(imageAr)
 
             image = BitmapFactory.decodeByteArray(imageAr, 0, size)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            e.printStackTrace()
         } finally {
             socket.close()
         }
@@ -97,28 +121,26 @@ class OkHttpMessagesSource(
         return image ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
     }
 
-    private fun Socket.connect(baseUrl: String) {
-        val ip = baseUrl.substringAfter("://").substringBefore(":")
-        val port = baseUrl.substringAfter("$ip:").toInt()
-        this.connect(InetSocketAddress(ip, port))
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun sendImage(image: Bitmap, room: String, owner: String) {
-        val stream = ByteArrayOutputStream()
-        image.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-        val addImageRequestBody = AddImageRequestBody(
-            image = stream.toByteArray(),
-            room = SecurityUtilsImpl().stringToBytes(room),
-            owner = SecurityUtilsImpl().stringToBytes(owner)
-        )
-        val body = MultipartBody.Builder()
-            .addPart(addImageRequestBody.toJsonRequestBody())
-            .build()
-        val request = Request.Builder()
-            .post(body)
-            .endpoint("/add-image")
-            .build()
-        client.newCall(request).suspendEnqueue()
+        try {
+            val stream = ByteArrayOutputStream()
+            image.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            val addImageRequestBody = AddImageRequestBody(
+                image = stream.toByteArray(),
+                room = SecurityUtilsImpl().stringToBytes(room),
+                owner = SecurityUtilsImpl().stringToBytes(owner)
+            )
+            val body = MultipartBody.Builder()
+                .addPart(addImageRequestBody.toJsonRequestBody())
+                .build()
+            val request = Request.Builder()
+                .post(body)
+                .endpoint("/add-image")
+                .build()
+            client.newCall(request).suspendEnqueue()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
