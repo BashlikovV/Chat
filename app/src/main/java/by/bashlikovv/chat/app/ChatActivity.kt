@@ -35,8 +35,10 @@ class ChatActivity : ComponentActivity() {
         Repositories.init(this)
 
         setContent {
-            LaunchedEffect(Unit) {
-                chatViewModel.getMessagesFromDb()
+            if (data?.user?.userName != "Bookmarks") {
+                LaunchedEffect(Unit) {
+                    chatViewModel.getMessagesFromDb()
+                }
             }
             MessengerTheme(darkTheme = darkTheme ?: true) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
