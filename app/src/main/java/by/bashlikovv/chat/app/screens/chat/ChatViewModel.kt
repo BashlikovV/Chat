@@ -76,7 +76,6 @@ class ChatViewModel(
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun periodicUpdateWork() {
         var chatData: Chat
         GlobalScope.launch {
@@ -124,7 +123,6 @@ class ChatViewModel(
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     suspend fun getMessagesFromDb() {
         var chatData: Chat
         GlobalScope.launch {
@@ -148,7 +146,6 @@ class ChatViewModel(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun List<by.bashlikovv.chat.sources.structs.Message>.castListOfMessages(): List<Message> {
         return this.map {
             var image: Bitmap? = null
@@ -252,11 +249,11 @@ class ChatViewModel(
     }
 
     fun onActionDelete(message: Message) {
-        val tmp = _chatUiState.value.chat.messages.toMutableList()
-        tmp.remove(message)
         messageCheapVisible = messageCheapVisible.toMutableList().apply {
             removeAt(getMessageIndex(message))
         }
+        val tmp = _chatUiState.value.chat.messages.toMutableList()
+        tmp.remove(message)
         if (message.user.userName == "Bookmark") {
             viewModelScope.launch {
                 onDeleteBookmark(message)
@@ -274,7 +271,7 @@ class ChatViewModel(
                 }
                 messagesSource.deleteMessage(by.bashlikovv.chat.sources.structs.Message(
                     room = room,
-                    image = "",
+                    image = message.value,
                     value = message.value.encodeToByteArray(),
                     file = "".encodeToByteArray(),
                     owner = owner,
