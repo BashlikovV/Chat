@@ -11,6 +11,7 @@ import android.provider.MediaStore.Images.Media.getBitmap
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -40,6 +41,11 @@ class ChatViewModel(
 
     private val _chatUiState = MutableStateFlow(ChatUiState())
     val chatUiState = _chatUiState.asStateFlow()
+
+    private val _lazyListState = MutableStateFlow(
+        LazyListState(_chatUiState.value.chat.messages.size)
+    )
+    val lazyListState = _lazyListState.asStateFlow()
 
     var messageCheapVisible by mutableStateOf(_chatUiState.value.chat.messages.map { false })
         private set
@@ -142,6 +148,7 @@ class ChatViewModel(
                     tmp.add(false)
                 }
                 messageCheapVisible = tmp
+                _lazyListState.update { LazyListState(messageCheapVisible.size) }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -248,6 +255,7 @@ class ChatViewModel(
         messageCheapVisible = messageCheapVisible.toMutableList().apply {
             add(false)
         }
+        _lazyListState.update { LazyListState(messageCheapVisible.size) }
     }
 
     fun onActionDelete(message: Message) {
@@ -417,6 +425,7 @@ class ChatViewModel(
                 }
                 messageCheapVisible = tmpList
                 _chatUiState.update { it.copy(chat = chatData) }
+                _lazyListState.update { LazyListState(size) }
             } catch (e: Exception) {
                 e.printStackTrace()
             }

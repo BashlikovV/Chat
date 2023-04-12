@@ -61,6 +61,7 @@ fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
 @Composable
 fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
+    val lazyListState by chatViewModel.lazyListState.collectAsState()
 
     LaunchedEffect(Unit) {
         chatViewModel.startWork()
@@ -85,7 +86,7 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
             modifier = modifier
                 .fillMaxSize()
                 .pullRefresh(state, true),
-            state = LazyListState(chatUiState.chat.messages.size)
+            state = lazyListState
         ) {
             item {
                 Row(
@@ -263,12 +264,14 @@ fun ClipDelete(
             onClick()
         },
         label = {  },
-        leadingIcon = { Image(
-            painter = painterResource(R.drawable.delete_outline),
-            contentDescription = "Delete message",
-            contentScale = ContentScale.Crop,
-            colorFilter = ColorFilter.tint(MaterialTheme.colors.secondary)
-        ) },
+        leadingIcon = {
+            Image(
+                painter = painterResource(R.drawable.delete_outline),
+                contentDescription = "Delete message",
+                contentScale = ContentScale.Crop,
+                colorFilter = ColorFilter.tint(MaterialTheme.colors.secondary)
+            )
+        },
         enabled = true,
         modifier = modifier,
         colors = androidx.compose.material3.AssistChipDefaults.assistChipColors(
