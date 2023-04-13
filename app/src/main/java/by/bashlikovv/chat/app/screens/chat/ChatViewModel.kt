@@ -359,7 +359,8 @@ class ChatViewModel(
                 messagesSource.sendImage(
                     bitmap,
                     _chatUiState.value.chat.token,
-                    SecurityUtilsImpl().bytesToString(me.token)
+                    SecurityUtilsImpl().bytesToString(me.token),
+                    false
                 )
             }
         } catch (e: Exception) {

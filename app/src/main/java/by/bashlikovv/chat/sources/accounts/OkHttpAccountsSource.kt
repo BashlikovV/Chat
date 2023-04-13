@@ -1,5 +1,8 @@
 package by.bashlikovv.chat.sources.accounts
 
+import android.graphics.Bitmap
+import android.os.Build
+import androidx.annotation.RequiresApi
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.users.entities.GetUsernameRequestBody
@@ -7,10 +10,12 @@ import by.bashlikovv.chat.sources.users.entities.GetUsernameResponseBody
 import okhttp3.Request
 import server.entities.SignInRequestBody
 import server.entities.SignInResponseBody
-import server.entities.SignUpRequestBody
+import by.bashlikovv.chat.sources.accounts.entities.SignUpRequestBody
+import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 
 class OkHttpAccountsSource(
-    config: OkHttpConfig
+    config: OkHttpConfig,
+    private val messagesSource: OkHttpMessagesSource = OkHttpMessagesSource(config)
 ) : BaseOkHttpSource(config) {
 
     suspend fun signIn(email: String, password: String): String {
@@ -27,9 +32,14 @@ class OkHttpAccountsSource(
         }
     }
 
-    suspend fun signUp(email: String, password: String, username: String) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun signUp(email: String, password: String, username: String, image: Bitmap) {
+        val imageUri = messagesSource.sendImage(image, email, email, true)
+        if (!imageUri.contains("/home")) {
+            return
+        }
         val signUpRequestBody = SignUpRequestBody(
-            username, email, password
+            username, email, password, imageUri
         )
         val request = Request.Builder()
             .post(signUpRequestBody.toJsonRequestBody())

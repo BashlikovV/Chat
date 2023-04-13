@@ -19,7 +19,7 @@ class SourceProviderHolder {
 
     private fun createOkHttpClient(): OkHttpClient {
         return Builder()
-            .connectTimeout(10000, TimeUnit.MILLISECONDS)
+            .connectTimeout(1000, TimeUnit.MILLISECONDS)
             .callTimeout(10000, TimeUnit.MILLISECONDS)
             .writeTimeout(10000, TimeUnit.MILLISECONDS)
             .callTimeout(10000, TimeUnit.MILLISECONDS)
