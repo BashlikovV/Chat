@@ -3,12 +3,13 @@ package by.bashlikovv.chat.app.screens.login
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.app.model.AccountAlreadyExistsException
 import by.bashlikovv.chat.app.model.EmptyFieldException
 import by.bashlikovv.chat.app.model.PasswordMismatchException
@@ -18,10 +19,13 @@ import by.bashlikovv.chat.app.model.accounts.entities.SignUpData
 import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.accounts.OkHttpAccountsSource
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.*
 
 class LogInViewModel(
@@ -78,6 +82,7 @@ class LogInViewModel(
         _logInUiState.update { it.copy(userImageBitmap = value) }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onCreateAccountButtonPressed(context: Context) {
         var token: String
         try {
@@ -126,14 +131,19 @@ class LogInViewModel(
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
+    @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun signUp(signUpData: SignUpData, context: Context) {
         _logInUiState.update { it.copy(progressBarVisibility = true) }
         try {
-            accountsSource.signUp(
-                email = signUpData.email,
-                password = signUpData.password,
-                username = signUpData.username
-            )
+            GlobalScope.launch {
+                accountsSource.signUp(
+                    email = signUpData.email,
+                    password = signUpData.password,
+                    username = signUpData.username,
+                    image = _logInUiState.value.userImageBitmap.userImageBitmap
+                )
+            }
             val token: String = accountsSource.signIn(email = signUpData.email, password = signUpData.password)
             _logInUiState.update { it.copy(token = token) }
             if (!_logInUiState.value.token.contains("500")) {
