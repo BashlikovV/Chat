@@ -11,12 +11,14 @@ import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.messages.entities.*
 import by.bashlikovv.chat.sources.structs.Message
 import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.nio.ByteBuffer
+import java.util.concurrent.TimeUnit
 
 class OkHttpMessagesSource(
     config: OkHttpConfig
@@ -122,14 +124,39 @@ class OkHttpMessagesSource(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun sendImage(image: Bitmap, room: String, owner: String) {
+    suspend fun sendImage(
+        image: Bitmap,
+        room: String,
+        owner: String,
+        isSignUp: Boolean
+    ): String {
         try {
+            val client = OkHttpClient.Builder()
+                .connectTimeout(10000, TimeUnit.MILLISECONDS)
+                .callTimeout(10000, TimeUnit.MILLISECONDS)
+                .writeTimeout(10000, TimeUnit.MILLISECONDS)
+                .callTimeout(10000, TimeUnit.MILLISECONDS)
+                .readTimeout(10000, TimeUnit.MILLISECONDS)
+                .retryOnConnectionFailure(true)
+                .build()
             val stream = ByteArrayOutputStream()
             image.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+
+            val roomBytes = if (isSignUp) {
+                room.encodeToByteArray()
+            } else {
+                SecurityUtilsImpl().stringToBytes(room)
+            }
+            val ownerBytes = if (isSignUp) {
+                owner.encodeToByteArray()
+            } else {
+                SecurityUtilsImpl().stringToBytes(owner)
+            }
+
             val addImageRequestBody = AddImageRequestBody(
                 image = stream.toByteArray(),
-                room = SecurityUtilsImpl().stringToBytes(room),
-                owner = SecurityUtilsImpl().stringToBytes(owner)
+                room = roomBytes,
+                owner = ownerBytes
             )
             val body = MultipartBody.Builder()
                 .addPart(addImageRequestBody.toJsonRequestBody())
@@ -138,9 +165,11 @@ class OkHttpMessagesSource(
                 .post(body)
                 .endpoint("/add-image")
                 .build()
-            client.newCall(request).suspendEnqueue()
+            val response = client.newCall(request).suspendEnqueue()
+            return response.parseJsonResponse<AddImageResponseBody>().imageUri.decodeToString()
         } catch (e: Exception) {
             e.printStackTrace()
+            return e.message.toString()
         }
     }
 }
