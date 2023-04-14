@@ -1,5 +1,7 @@
 package by.bashlikovv.chat.app.screens.messenger
 
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.material.DrawerState
@@ -11,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.Account
+import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.Pagination
@@ -239,7 +242,11 @@ class MessengerViewModel(
                     result.add(
                         Chat(
                             user = User(
-                                userName = it.username, userToken = SecurityUtilsImpl().bytesToString(it.token)
+                                userName = it.username, userToken = SecurityUtilsImpl().bytesToString(it.token),
+                                userImage = UserImage(
+                                    userImageBitmap = messagesSource.getImage(it.image.decodeToString()),
+                                    userImageUri = Uri.parse(it.image.decodeToString())
+                                )
                             ),
                             messages = listOf(Message(value = "")), time = "")
                     )
@@ -253,7 +260,11 @@ class MessengerViewModel(
                                 Chat(
                                     user = User(
                                         userName = it.username,
-                                        userToken = SecurityUtilsImpl().bytesToString(it.token)
+                                        userToken = SecurityUtilsImpl().bytesToString(it.token),
+                                        userImage = UserImage(
+                                            userImageBitmap = messagesSource.getImage(it.image.decodeToString()),
+                                            userImageUri = Uri.parse(it.image.decodeToString())
+                                        )
                                     ),
                                     messages = listOf(Message(value = "")),
                                     time = ""
@@ -370,5 +381,9 @@ class MessengerViewModel(
         }
 
         return result
+    }
+
+    suspend fun getImage(imageUri: String): Bitmap {
+        return messagesSource.getImage(imageUri)
     }
 }
