@@ -120,7 +120,6 @@ class ChatViewModel(
     }
 
     fun applyChatData(chat: Chat) {
-        val userImage = UserImage()
         _chatUiState.update { it.copy(chat = chat) }
         messageCheapVisible = chat.messages.map { false }
         getUniqueUsers()
