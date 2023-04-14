@@ -165,7 +165,8 @@ fun MessageView(
         ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
             val (clip, canvas) = createRefs()
 
-            if (chatViewModel.messageCheapVisible[chatUiState.chat.messages.indexOf(message)]) {
+            val idx = chatUiState.chat.messages.indexOf(message)
+            if (chatViewModel.messageCheapVisible[if (idx in chatViewModel.messageCheapVisible.indices) idx else 0]) {
                 ClipDelete(
                     modifier = Modifier
                         .constrainAs(clip) {
@@ -176,7 +177,12 @@ fun MessageView(
                             }
                         }
                         .fillMaxWidth(0.1f)
-                        .height((measuredText.lineCount * height).dp)
+                        .height(
+                            if (message.isImage)
+                                message.imageBitmap.height.dp
+                            else
+                               (measuredText.lineCount * height).dp
+                        )
                 ) {
                     chatViewModel.onActionDelete(message)
                 }
