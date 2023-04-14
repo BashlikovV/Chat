@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -31,6 +32,8 @@ import by.bashlikovv.chat.app.theme.MessengerTheme
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.viewModelCreator
 import by.bashlikovv.chat.sources.structs.Room
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -74,7 +77,9 @@ class MessengerActivity : ComponentActivity() {
                             if (chat.user.userName != "Bookmarks") {
                                 chat = chat.copy(messages = listOf(Message()))
                             }
-                            putExtra(CHAT, chat)
+                            putExtra(CHAT, chat.copy(user = chat.user.copy(userImage = chat.user.userImage.copy(
+                                userImageBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+                            ))))
                             messengerViewModel.viewModelScope.launch {
                                 putExtra(TOKEN, messengerViewModel.messengerUiState.value.me.userToken)
                             }
@@ -101,13 +106,16 @@ class MessengerActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun loadChatsFromServer(messengerViewModel: MessengerViewModel) {
-        val messengerUiState = messengerViewModel.messengerUiState.value
+        GlobalScope.launch {
+            val messengerUiState = messengerViewModel.messengerUiState.value
 
-        val rooms = getRooms()
+            val rooms = getRooms()
 
-        messengerViewModel.applyMessengerUiState(MessengerUiState(chats = messengerUiState.chats + rooms))
+            messengerViewModel.applyMessengerUiState(MessengerUiState(chats = messengerUiState.chats + rooms))
+        }
     }
 
     private suspend fun getBookmarks(): List<Chat> {
@@ -133,17 +141,22 @@ class MessengerActivity : ComponentActivity() {
         } catch (e: Exception) {
             return listOf(Chat(messages = listOf(Message(value = "${e.message}")), time = ""))
         }
-        return  rooms.map {
+        return rooms.map {
             val user = if (it.user2.username == messengerViewModel.getUser().userName) {
                 it.user1
             } else {
                 it.user2
             }
             val messages = messengerViewModel.getMessagesByRoom(room = it)
+            val image = UserImage(
+                userImageBitmap = messengerViewModel.getImage(user.image.decodeToString()),
+                userImageUri = Uri.parse(user.image.decodeToString())
+            )
             Chat(
                 user = User(
                     userName = user.username,
-                    userToken = SecurityUtilsImpl().bytesToString(user.token)
+                    userToken = SecurityUtilsImpl().bytesToString(user.token),
+                    userImage = image
                 ),
                 messages = messages,
                 token = SecurityUtilsImpl().bytesToString(it.token)

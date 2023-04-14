@@ -9,13 +9,16 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
@@ -31,6 +34,7 @@ import by.bashlikovv.chat.app.views.dropmenu.ChatMenu
 private fun getTopChatBarConstraints(): ConstraintSet {
     return ConstraintSet {
         val closeChat = createRefFor("closeChat")
+        val userImage = createRefFor("userImage")
         val more = createRefFor("more")
         val chatName = createRefFor("chatName")
 
@@ -39,8 +43,13 @@ private fun getTopChatBarConstraints(): ConstraintSet {
             top.linkTo(anchor = parent.top)
             bottom.linkTo(anchor = parent.bottom)
         }
-        constrain(chatName) {
+        constrain(userImage) {
             start.linkTo(anchor = closeChat.end, margin = 5.dp)
+            bottom.linkTo(anchor = parent.bottom, margin = 5.dp)
+            top.linkTo(anchor = parent.top, margin = 5.dp)
+        }
+        constrain(chatName) {
+            start.linkTo(anchor = userImage.end, margin = 5.dp)
             bottom.linkTo(anchor = parent.bottom, margin = 5.dp)
             top.linkTo(anchor = parent.top, margin = 5.dp)
         }
@@ -72,6 +81,14 @@ fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> U
                     .clickable {
                         onBackAction()
                     }.layoutId("closeChat")
+            )
+            Image(
+                bitmap = chatUiState.chat.user.userImage.userImageBitmap.asImageBitmap(),
+                contentDescription = "User image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .layoutId("userImage")
+                    .clip(RoundedCornerShape(25.dp)).size(50.dp)
             )
             Text(
                 text = chatUiState.chat.user.userName,

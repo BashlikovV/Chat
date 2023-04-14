@@ -20,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories.accountsRepository
 import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
+import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.*
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.StatusNotification
@@ -119,6 +120,7 @@ class ChatViewModel(
     }
 
     fun applyChatData(chat: Chat) {
+        val userImage = UserImage()
         _chatUiState.update { it.copy(chat = chat) }
         messageCheapVisible = chat.messages.map { false }
         getUniqueUsers()
@@ -141,6 +143,12 @@ class ChatViewModel(
         var chatData: Chat
         GlobalScope.launch {
             try {
+                val userImage = UserImage(messagesSource.getImage(
+                    _chatUiState.value.chat.user.userImage.userImageUri.encodedPath.toString()
+                ))
+                _chatUiState.update {
+                    it.copy(chat = it.chat.copy(user = it.chat.user.copy(userImage = userImage)))
+                }
                 val messages = messagesSource.getRoomMessages(
                     _chatUiState.value.chat.token,
                     Pagination().getRange()
@@ -162,7 +170,7 @@ class ChatViewModel(
         }
     }
 
-    private fun List<by.bashlikovv.chat.sources.structs.Message>.castListOfMessages(): List<Message> {
+    private suspend fun List<by.bashlikovv.chat.sources.structs.Message>.castListOfMessages(): List<Message> {
         return this.map {
             var image: Bitmap? = null
             if (it.image.contains("/home")) {
