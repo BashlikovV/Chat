@@ -165,7 +165,6 @@ fun MessengerItem(
                 bitmap = chat.user.userImage.userImageBitmap.asImageBitmap(),
                 contentDescription = "chat with ${chat.user.userName}",
                 contentScale = ContentScale.Crop,
-                colorFilter = ColorFilter.tint(color = messengerViewModel.getTintColor(chat)),
                 modifier = Modifier.clip(RoundedCornerShape(25.dp)).size(50.dp).layoutId("image")
             )
             MessengerItemText(
