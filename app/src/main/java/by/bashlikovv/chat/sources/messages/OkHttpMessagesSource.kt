@@ -10,6 +10,7 @@ import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.messages.entities.*
 import by.bashlikovv.chat.sources.structs.Message
+import kotlinx.coroutines.delay
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -93,7 +94,8 @@ class OkHttpMessagesSource(
         this.connect(InetSocketAddress(ip, port))
     }
 
-    fun getImage(uri: String): Bitmap {
+    suspend fun getImage(uri: String): Bitmap {
+        delay(1)
         var image: Bitmap? = null
         val socket = Socket()
         val input: DataInputStream
