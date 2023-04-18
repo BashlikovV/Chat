@@ -89,20 +89,34 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
                 .pullRefresh(state, true),
             state = lazyListState
         ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Pull up to load messages",
-                        style = TextStyle(fontSize = 19.sp, color = MaterialTheme.colors.secondary)
-                    )
+            if (chatUiState.chat.messages.isEmpty() || chatViewModel.messageCheapVisible.isEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "You do not have messages now",
+                            style = TextStyle(fontSize = 19.sp, color = MaterialTheme.colors.secondary)
+                        )
+                    }
                 }
-            }
-            items(chatUiState.chat.messages) {
-                MessageView(message = it) { message ->
-                    chatViewModel.onActionItemClicked(message)
+            } else {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Pull up to load messages",
+                            style = TextStyle(fontSize = 19.sp, color = MaterialTheme.colors.secondary)
+                        )
+                    }
+                }
+                items(chatUiState.chat.messages) {
+                    MessageView(message = it) { message ->
+                        chatViewModel.onActionItemClicked(message)
+                    }
                 }
             }
         }

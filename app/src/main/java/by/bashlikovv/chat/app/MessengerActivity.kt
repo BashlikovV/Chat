@@ -178,7 +178,7 @@ class MessengerActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onRestart() {
-        updateViewData(messengerViewModel)
         super.onRestart()
+        updateViewData(messengerViewModel)
     }
 }

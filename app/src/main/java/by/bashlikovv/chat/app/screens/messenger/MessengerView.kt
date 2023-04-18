@@ -149,7 +149,9 @@ fun MessengerItem(
     BoxWithConstraints {
         ConstraintLayout(
             constraintSet = getMessengerItemConstraints(),
-            modifier = modifier.fillMaxWidth().background(messengerViewModel.getChatBackground(chat))
+            modifier = modifier
+                .fillMaxWidth()
+                .background(messengerViewModel.getChatBackground(chat))
                 .pointerInput(chat) {
                     detectTapGestures(
                         onLongPress = { messengerViewModel.onActionSelect(chat) },
@@ -164,7 +166,10 @@ fun MessengerItem(
                 bitmap = chat.user.userImage.userImageBitmap.asImageBitmap(),
                 contentDescription = "chat with ${chat.user.userName}",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.clip(RoundedCornerShape(25.dp)).size(50.dp).layoutId("image")
+                modifier = Modifier
+                    .clip(RoundedCornerShape(25.dp))
+                    .size(50.dp)
+                    .layoutId("image")
             )
             MessengerItemText(
                 text = chat.user.userName,
@@ -177,7 +182,7 @@ fun MessengerItem(
                 text = if (chat.messages.last().value.isNotEmpty()) {
                     "${chat.messages.last().user.userName}: ${chat.messages.last().value}"
                 } else {
-                       ""
+                    ""
                 },
                 fontWeight = FontWeight.Light,
                 fontSize = 14,
@@ -232,7 +237,10 @@ fun MessagesCount(
             fontSize = 14.sp,
             maxLines = 1,
             overflow = TextOverflow.Clip,
-            modifier = modifier.clip(RoundedCornerShape(25.dp)).background(color).padding(
+            modifier = modifier
+                .clip(RoundedCornerShape(25.dp))
+                .background(color)
+                .padding(
                     horizontal = 7.5.dp, vertical = 2.dp
                 ),
             color = countColor
