@@ -228,14 +228,13 @@ class ChatViewModel(
     @RequiresApi(Build.VERSION_CODES.O)
     fun onActionSend() {
         val newValue = _chatUiState.value.chat.messages.toMutableList()
-        newValue.add(
-            Message(
-                value = _chatUiState.value.textInputState,
-                user = _chatUiState.value.usersData.last(),
-                time = Calendar.getInstance().time.toString(),
-                isRead = true
-            )
+        val msg = Message(
+            value = _chatUiState.value.textInputState,
+            user = _chatUiState.value.usersData.last(),
+            time = Calendar.getInstance().time.toString(),
+            isRead = true
         )
+        newValue.add(msg)
         clearInput()
         _chatUiState.update {
             it.copy(
@@ -257,9 +256,9 @@ class ChatViewModel(
                 messagesSource.sendMessage(
                     by.bashlikovv.chat.sources.structs.Message(
                         room = room,
-                        value = _chatUiState.value.chat.messages.last().value.encodeToByteArray(),
+                        value = msg.value.encodeToByteArray(),
                         owner = me,
-                        image = "",
+                        image = "no image",
                         file = "".encodeToByteArray()
                     ),
                     SecurityUtilsImpl().bytesToString(me.token)
@@ -272,6 +271,7 @@ class ChatViewModel(
         _lazyListState.update { LazyListState(messageCheapVisible.size) }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun onActionDelete(message: Message) {
         messageCheapVisible = messageCheapVisible.toMutableList().apply {
             removeAt(getMessageIndex(message))
@@ -283,7 +283,7 @@ class ChatViewModel(
                 onDeleteBookmark(message)
             }
         } else {
-            viewModelScope.launch {
+            GlobalScope.launch {
                 val room = roomsSource.getRoom(
                     _chatUiState.value.usersData.first().userToken,
                     _chatUiState.value.usersData.last().userToken
@@ -297,7 +297,7 @@ class ChatViewModel(
                     room = room,
                     image = if (message.isImage) message.value else "no image",
                     value = message.value.encodeToByteArray(),
-                    file = "no file".encodeToByteArray(),
+                    file = "".encodeToByteArray(),
                     owner = owner,
                     time = message.time,
                     from = SecurityUtilsImpl().bytesToString(owner.token)
