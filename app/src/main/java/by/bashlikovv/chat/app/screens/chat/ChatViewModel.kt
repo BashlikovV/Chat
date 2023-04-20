@@ -225,6 +225,7 @@ class ChatViewModel(
         _chatUiState.update { it.copy(textInputState = "", isCanSend = false) }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     fun onActionSend() {
         val newValue = _chatUiState.value.chat.messages.toMutableList()
@@ -248,7 +249,7 @@ class ChatViewModel(
                 onSendBookmark(newValue.last())
             }
         } else {
-            viewModelScope.launch {
+            GlobalScope.launch {
                 val room = roomsSource.getRoom(
                     SecurityUtilsImpl().bytesToString(me.token),
                     _chatUiState.value.chat.user.userToken
@@ -297,7 +298,7 @@ class ChatViewModel(
                     room = room,
                     image = if (message.isImage) message.value else "no image",
                     value = message.value.encodeToByteArray(),
-                    file = "".encodeToByteArray(),
+                    file = "no file".encodeToByteArray(),
                     owner = owner,
                     time = message.time,
                     from = SecurityUtilsImpl().bytesToString(owner.token)
