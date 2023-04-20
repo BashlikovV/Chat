@@ -3,13 +3,14 @@ package by.bashlikovv.chat.sources.accounts
 import android.graphics.Bitmap
 import android.os.Build
 import androidx.annotation.RequiresApi
+import by.bashlikovv.chat.sources.HttpContract
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.users.entities.GetUsernameRequestBody
 import by.bashlikovv.chat.sources.users.entities.GetUsernameResponseBody
 import okhttp3.Request
-import server.entities.SignInRequestBody
-import server.entities.SignInResponseBody
+import by.bashlikovv.chat.sources.accounts.entities.SignInRequestBody
+import by.bashlikovv.chat.sources.accounts.entities.SignInResponseBody
 import by.bashlikovv.chat.sources.accounts.entities.SignUpRequestBody
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 
@@ -22,7 +23,7 @@ class OkHttpAccountsSource(
         val signInRequestBody = SignInRequestBody(email, password)
         val request = Request.Builder()
             .post(signInRequestBody.toJsonRequestBody())
-            .endpoint("/sign-in")
+            .endpoint("/${HttpContract.UrlMethods.SIGN_IN}")
             .build()
         return try {
             val response = client.newCall(request).suspendEnqueue()
@@ -43,7 +44,7 @@ class OkHttpAccountsSource(
         )
         val request = Request.Builder()
             .post(signUpRequestBody.toJsonRequestBody())
-            .endpoint("/sign-up")
+            .endpoint("/${HttpContract.UrlMethods.SIGN_UP}")
             .build()
         try {
             client.newCall(request).suspendEnqueue()
@@ -55,7 +56,7 @@ class OkHttpAccountsSource(
         val getUsernameRequestBody = GetUsernameRequestBody(token)
         val request = Request.Builder()
             .post(getUsernameRequestBody.toJsonRequestBody())
-            .endpoint("/get-username")
+            .endpoint("/${HttpContract.UrlMethods.GET_USERNAME}")
             .build()
         return try {
             val response = client.newCall(request).suspendEnqueue()

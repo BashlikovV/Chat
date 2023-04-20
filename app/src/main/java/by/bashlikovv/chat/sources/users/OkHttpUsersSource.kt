@@ -1,5 +1,6 @@
 package by.bashlikovv.chat.sources.users
 
+import by.bashlikovv.chat.sources.HttpContract
 import by.bashlikovv.chat.sources.users.entities.GetUsersResponseBody
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
@@ -19,7 +20,7 @@ class OkHttpUsersSource(
         )
         val request = Request.Builder()
             .post(getUsersRequestBody.toJsonRequestBody())
-            .endpoint("/get-users")
+            .endpoint("/${HttpContract.UrlMethods.GET_USERS}")
             .build()
         val response = client.newCall(request).suspendEnqueue()
         return response.parseJsonResponse<GetUsersResponseBody>().users
@@ -29,7 +30,7 @@ class OkHttpUsersSource(
         val getUserRequestBody = GetUserRequestBody(token)
         val request = Request.Builder()
             .post(getUserRequestBody.toJsonRequestBody())
-            .endpoint("/get-user")
+            .endpoint("/${HttpContract.UrlMethods.GET_USER}")
             .build()
         val response = client.newCall(request).suspendEnqueue()
         return response.parseJsonResponse<GetUserResponseBody>().user

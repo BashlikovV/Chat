@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import by.bashlikovv.chat.Const
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
+import by.bashlikovv.chat.sources.HttpContract
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.messages.entities.*
@@ -33,7 +34,7 @@ class OkHttpMessagesSource(
             )
             val request = Request.Builder()
                 .post(getRoomMessagesRequestBody.toJsonRequestBody())
-                .endpoint("/room-messages")
+                .endpoint("/${HttpContract.UrlMethods.ROOM_MESSAGES}")
                 .build()
             val response = client.newCall(request).suspendEnqueue()
             response.parseJsonResponse<RoomMessagesResponseBody>().messages
@@ -58,7 +59,7 @@ class OkHttpMessagesSource(
             )
             val request = Request.Builder()
                 .post(addMessagesRequestBody.toJsonRequestBody())
-                .endpoint("/add-message")
+                .endpoint("/${HttpContract.UrlMethods.ADD_MESSAGE}")
                 .build()
             val response = client.newCall(request).suspendEnqueue()
             return response.parseJsonResponse<AddMessageResponseBody>().result
@@ -78,7 +79,7 @@ class OkHttpMessagesSource(
                 .build()
             val request = Request.Builder()
                 .post(body)
-                .endpoint("/delete-message")
+                .endpoint("/${HttpContract.UrlMethods.DELETE_MESSAGE}")
                 .build()
             val response = client.newCall(request).suspendEnqueue()
             response.message
@@ -102,7 +103,7 @@ class OkHttpMessagesSource(
         try {
             socket.connect(Const.BASE_URL)
 
-            val request = "GET /get-image?$uri\r\nContent-Type:image/jpg \r\n\r\n"
+            val request = "GET /${HttpContract.UrlMethods.GET_IMAGE}?$uri\r\nContent-Type:image/jpg \r\n\r\n"
 
             socket.getOutputStream().write(request.encodeToByteArray())
             socket.getOutputStream().flush()
@@ -165,7 +166,7 @@ class OkHttpMessagesSource(
                 .build()
             val request = Request.Builder()
                 .post(body)
-                .endpoint("/add-image")
+                .endpoint("/${HttpContract.UrlMethods.ADD_IMAGE}")
                 .build()
             val response = client.newCall(request).suspendEnqueue()
             return response.parseJsonResponse<AddImageResponseBody>().imageUri.decodeToString()
