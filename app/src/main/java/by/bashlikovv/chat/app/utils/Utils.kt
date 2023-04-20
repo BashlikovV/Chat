@@ -12,7 +12,8 @@ fun Float.dpToFloat(resources: Resources): Float {
 class AsyncLoader<T>(
     private val loader: suspend () -> T
 ) {
-
+    
+    //Code can executed only in single thread
     private val mutex = Mutex()
     private var value: T? = null
 
