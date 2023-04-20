@@ -1,5 +1,6 @@
 package by.bashlikovv.chat.sources.rooms
 
+import by.bashlikovv.chat.sources.HttpContract
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.rooms.entities.*
@@ -14,7 +15,7 @@ class OkHttpRoomsSource(
         val getRoomsRequestBody = GetRoomsRequestBody(user = user)
         val request = Request.Builder()
             .post(getRoomsRequestBody.toJsonRequestBody())
-            .endpoint("/get-rooms")
+            .endpoint("/${HttpContract.UrlMethods.GET_ROOMS}")
             .build()
         val response = client.newCall(request).suspendEnqueue()
         return response.parseJsonResponse<GetRoomsResponseBody>().rooms
@@ -24,7 +25,7 @@ class OkHttpRoomsSource(
         val getRoomsRequestBody = AddRoomRequestBody(user1, user2)
         val request = Request.Builder()
             .post(getRoomsRequestBody.toJsonRequestBody())
-            .endpoint("/add-room")
+            .endpoint("/${HttpContract.UrlMethods.ADD_ROOM}")
             .build()
         val response = client.newCall(request).suspendEnqueue()
         return response.parseJsonResponse<AddRoomResponseBody>().token
@@ -34,7 +35,7 @@ class OkHttpRoomsSource(
         val deleteRoomRequestBody = DeleteRoomRequestBody(user1, user2)
         val request = Request.Builder()
             .post(deleteRoomRequestBody.toJsonRequestBody())
-            .endpoint("/delete-room")
+            .endpoint("/${HttpContract.UrlMethods.DELETE_ROOM}")
             .build()
         val response = client.newCall(request).suspendEnqueue()
         return response.parseJsonResponse<DeleteRoomResponseBody>().result
@@ -44,7 +45,7 @@ class OkHttpRoomsSource(
         val getRoomRequestBody = GetRoomRequestBody(user1, user2)
         val request = Request.Builder()
             .post(getRoomRequestBody.toJsonRequestBody())
-            .endpoint("/get-room")
+            .endpoint("/${HttpContract.UrlMethods.GET_ROOM}")
             .build()
         val response = client.newCall(request).suspendEnqueue()
         return response.parseJsonResponse<GetRoomResponseBody>().room
