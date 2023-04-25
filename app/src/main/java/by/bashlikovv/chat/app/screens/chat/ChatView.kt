@@ -55,7 +55,9 @@ fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
         topBar = { TopChatBar { onBackAction() } },
         bottomBar = { BottomInputFiled() }
     ) {
-        ChatContent(modifier = modifier.padding(it).fillMaxSize())
+        ChatContent(modifier = modifier
+            .padding(it)
+            .fillMaxSize())
     }
 }
 
@@ -76,6 +78,11 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
             }
         }
     }
+    var prevDate = try {
+        chatUiState.chat.messages.first().time.subSequence(0, 9)
+    } catch (_: Exception) {
+        ""
+    }
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
     fun refresh() = scope.launch(Dispatchers.IO) {
@@ -94,34 +101,9 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
             state = lazyListState
         ) {
             if (chatUiState.chat.messages.isEmpty() || chatViewModel.messageCheapVisible.isEmpty()) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "You do not have messages now",
-                            style = TextStyle(fontSize = 19.sp, color = MaterialTheme.colors.secondary)
-                        )
-                    }
-                }
+                item { RowCenteredText(text = "You do not have messages now") }
             } else {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "Pull up to load messages",
-                            style = TextStyle(fontSize = 19.sp, color = MaterialTheme.colors.secondary)
-                        )
-                    }
-                }
-                var prevDate = try {
-                    chatUiState.chat.messages.first().time.subSequence(0, 9)
-                } catch (_: Exception) {
-                    ""
-                }
+                item { RowCenteredText(text = "Pull up to load messages") }
                 items(chatUiState.chat.messages) {
                     if (it.time.isNotEmpty() && it.time.subSequence(0, 9) != prevDate) {
                         prevDate = it.time.subSequence(0, 9)
@@ -134,7 +116,21 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
             }
         }
         PullRefreshIndicator(
-            refreshing, state, Modifier.align(Alignment.TopCenter), contentColor = MaterialTheme.colors.secondary
+            refreshing, state, Modifier.align(Alignment.TopCenter),
+            contentColor = MaterialTheme.colors.secondary
+        )
+    }
+}
+
+@Composable
+fun RowCenteredText(text: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = text,
+            style = TextStyle(fontSize = 19.sp, color = MaterialTheme.colors.secondary)
         )
     }
 }
