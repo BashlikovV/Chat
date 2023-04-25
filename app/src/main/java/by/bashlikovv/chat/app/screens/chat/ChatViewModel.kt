@@ -260,7 +260,7 @@ class ChatViewModel(
                         value = msg.value.encodeToByteArray(),
                         owner = me,
                         image = "no image",
-                        file = "".encodeToByteArray()
+                        file = "no file".encodeToByteArray()
                     ),
                     SecurityUtilsImpl().bytesToString(me.token)
                 )
