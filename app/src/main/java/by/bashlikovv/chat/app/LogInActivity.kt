@@ -3,10 +3,12 @@ package by.bashlikovv.chat.app
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore.Images.Media.getBitmap
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -26,6 +28,7 @@ class LogInActivity : ComponentActivity() {
         LogInViewModel(Repositories.accountsRepository)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Repositories.init(this)
@@ -40,7 +43,7 @@ class LogInActivity : ComponentActivity() {
 
             MessengerTheme(darkTheme = true) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                    LogInView(logInActivity = this)
+                    LogInView()
 
                     if (logInUiState.isSuccess) {
                         val messengerIntent = Intent(this, MessengerActivity::class.java)

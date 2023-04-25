@@ -5,7 +5,15 @@ import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.Text
@@ -131,18 +139,32 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
         painter = painterResource(R.drawable.test_face_man),
         contentDescription = "user image",
         contentScale = ContentScale.Crop,
-        modifier = Modifier.clip(RoundedCornerShape(15.dp)).background(MaterialTheme.colors.secondary).size(75.dp)
+        modifier = Modifier
+            .clip(RoundedCornerShape(15.dp))
+            .background(MaterialTheme.colors.secondary)
+            .size(75.dp)
             .layoutId("userImage")
     )
     Image(
-        painter = painterResource(if (messengerUiState.darkTheme) R.drawable.wb_cloudy else R.drawable.wb_sunny),
+        painter = painterResource(
+            if (messengerUiState.darkTheme)
+                R.drawable.wb_cloudy
+            else
+                R.drawable.wb_sunny
+        ),
         contentDescription = "theme",
         contentScale = ContentScale.Crop,
         colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-        modifier = Modifier.size(40.dp).clickable { messengerViewModel.onThemeChange() }.layoutId("themeBtn")
+        modifier = Modifier
+            .size(40.dp)
+            .clickable { messengerViewModel.onThemeChange() }
+            .layoutId("themeBtn")
     )
     Text(
-        text = messengerUiState.me.userName, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.layoutId("username"),
+        text = messengerUiState.me.userName,
+        fontSize = 24.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.layoutId("username"),
         color = MaterialTheme.colors.secondary
     )
 }
@@ -155,7 +177,11 @@ fun BottomContent(messengerViewModel: MessengerViewModel = viewModel()) {
     BottomContentItem(text = "Settings", layoutId = "settingsBtn", leadingIcon = R.drawable.settings) {}
     BottomContentItem(text = "Contacts", layoutId = "contactsBtn", leadingIcon = R.drawable.person) {}
     Spacer(
-        modifier = Modifier.height(1.dp).fillMaxWidth().background(MaterialTheme.colors.secondary).layoutId("spacer")
+        modifier = Modifier
+            .height(1.dp)
+            .fillMaxWidth()
+            .background(MaterialTheme.colors.secondary)
+            .layoutId("spacer")
     )
     BottomContentItem(text = "Sign out", layoutId = "signOutBtn", leadingIcon = R.drawable.exit) {
         messengerViewModel.onSignOut()
@@ -181,7 +207,9 @@ fun BottomContentItem(text: String, layoutId: String, leadingIcon: Int, onClickL
         Text(
             text = text, fontSize = 20.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colors.secondary,
             modifier = Modifier
-                .background(Color.Transparent).fillMaxWidth().padding(
+                .background(Color.Transparent)
+                .fillMaxWidth()
+                .padding(
                     start = 5.dp,
                     end = 5.dp,
                     top = 10.dp,

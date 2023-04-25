@@ -13,6 +13,8 @@ import by.bashlikovv.chat.sources.accounts.entities.SignInRequestBody
 import by.bashlikovv.chat.sources.accounts.entities.SignInResponseBody
 import by.bashlikovv.chat.sources.accounts.entities.SignUpRequestBody
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class OkHttpAccountsSource(
     config: OkHttpConfig,
@@ -35,20 +37,23 @@ class OkHttpAccountsSource(
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun signUp(email: String, password: String, username: String, image: Bitmap) {
-        val imageUri = messagesSource.sendImage(image, email, email, true)
-        if (!imageUri.contains("/home")) {
-            return
-        }
-        val signUpRequestBody = SignUpRequestBody(
-            username, email, password, imageUri
-        )
-        val request = Request.Builder()
-            .post(signUpRequestBody.toJsonRequestBody())
-            .endpoint("/${HttpContract.UrlMethods.SIGN_UP}")
-            .build()
-        try {
-            client.newCall(request).suspendEnqueue()
-        } catch (_: Exception) {
+        withContext(Dispatchers.IO) {
+            val imageUri = messagesSource.sendImage(image, email, email, true)
+            if (!imageUri.contains("/home")) {
+                return@withContext
+            }
+            val signUpRequestBody = SignUpRequestBody(
+                username, email, password, imageUri
+            )
+            val request = Request.Builder()
+                .post(signUpRequestBody.toJsonRequestBody())
+                .endpoint("/${HttpContract.UrlMethods.SIGN_UP}")
+                .build()
+            try {
+                client.newCall(request).suspendEnqueue()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

@@ -2,7 +2,6 @@ package by.bashlikovv.chat.app.utils
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import by.bashlikovv.chat.app.utils.SecurityUtils
 import java.security.SecureRandom
 import java.util.Base64
 import javax.crypto.SecretKeyFactory

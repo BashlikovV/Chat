@@ -10,12 +10,22 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewModelScope
@@ -33,7 +43,9 @@ import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.viewModelCreator
 import by.bashlikovv.chat.sources.structs.Room
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -55,44 +67,79 @@ class MessengerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Repositories.init(this)
         setContent {
-            LaunchedEffect(Unit) {
+            var updateVisibility by remember { mutableStateOf(false) }
+            val scope = rememberCoroutineScope()
+            fun update() = scope.launch(Dispatchers.IO) {
+                updateVisibility = true
                 updateViewData(messengerViewModel)
+                delay(2000)
+                updateVisibility = false
             }
+            LaunchedEffect(Unit) { update() }
 
             val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.primary) {
-                    MessengerView(updateViewData = ::updateViewData) {
-                        chatIntent = Intent(applicationContext, ChatActivity::class.java)
-                        if (messengerUiState.newChat) {
-                            messengerViewModel.onCreateNewChat(User(userToken = it.user.userToken))
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        MessengerView(updateViewData = ::updateViewData) {
+                            startActivity(onOpenChat(messengerUiState, it))
                         }
-                        chatIntent.apply {
-                            putExtra(DARK_THEME, messengerUiState.darkTheme)
-                            var chat = if (messengerUiState.newChat) {
-                                messengerViewModel.messengerUiState.value.chats.last()
-                            } else {
-                                it
-                            }
-                            if (chat.user.userName != "Bookmarks") {
-                                chat = chat.copy(messages = listOf(Message()))
-                            }
-                            putExtra(CHAT, chat.copy(user = chat.user.copy(userImage = chat.user.userImage.copy(
-                                userImageBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-                            ))))
-                            messengerViewModel.viewModelScope.launch {
-                                putExtra(TOKEN, messengerViewModel.messengerUiState.value.me.userToken)
-                            }
-                        }
-                        startActivity(chatIntent)
+                        if (updateVisibility) { ProgressIndicator() }
                     }
                 }
             }
         }
     }
 
+    private fun onOpenChat(messengerUiState: MessengerUiState, it: Chat): Intent {
+        chatIntent = Intent(applicationContext, ChatActivity::class.java)
+        if (messengerUiState.newChat) {
+            messengerViewModel.onCreateNewChat(User(userToken = it.user.userToken))
+        }
+        chatIntent.apply {
+            putExtra(DARK_THEME, messengerUiState.darkTheme)
+            var chat = if (messengerUiState.newChat) {
+                messengerViewModel.messengerUiState.value.chats.last()
+            } else {
+                it
+            }
+            if (chat.user.userName != "Bookmarks") {
+                chat = chat.copy(messages = listOf(Message()))
+            }
+            putExtra(
+                CHAT,
+                chat.copy(
+                    user = chat.user.copy(
+                        userImage = chat.user.userImage.copy(
+                            userImageBitmap = Bitmap.createBitmap(
+                                1, 1, Bitmap.Config.ARGB_8888
+                            )
+                        )
+                    )
+                )
+            )
+            messengerViewModel.viewModelScope.launch {
+                putExtra(TOKEN, messengerViewModel.messengerUiState.value.me.userToken)
+            }
+        }
+        return chatIntent
+    }
+
+    @Composable
+    private fun ProgressIndicator() {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colors.secondary
+            )
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updateViewData(messengerViewModel: MessengerViewModel) {
+    fun updateViewData(messengerViewModel: MessengerViewModel) {
         val messengerUiState = messengerViewModel.messengerUiState.value
 
         runBlocking {
@@ -114,7 +161,9 @@ class MessengerActivity : ComponentActivity() {
 
             val rooms = getRooms()
 
-            messengerViewModel.applyMessengerUiState(MessengerUiState(chats = messengerUiState.chats + rooms))
+            messengerViewModel.applyMessengerUiState(
+                MessengerUiState(chats = messengerUiState.chats + rooms)
+            )
         }
     }
 
