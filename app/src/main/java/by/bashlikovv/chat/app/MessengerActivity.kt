@@ -77,9 +77,18 @@ class MessengerActivity : ComponentActivity() {
                             if (chat.user.userName != "Bookmarks") {
                                 chat = chat.copy(messages = listOf(Message()))
                             }
-                            putExtra(CHAT, chat.copy(user = chat.user.copy(userImage = chat.user.userImage.copy(
-                                userImageBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-                            ))))
+                            putExtra(
+                                CHAT,
+                                chat.copy(
+                                    user = chat.user.copy(
+                                        userImage = chat.user.userImage.copy(
+                                            userImageBitmap = Bitmap.createBitmap(
+                                                1, 1, Bitmap.Config.ARGB_8888
+                                            )
+                                        )
+                                    )
+                                )
+                            )
                             messengerViewModel.viewModelScope.launch {
                                 putExtra(TOKEN, messengerViewModel.messengerUiState.value.me.userToken)
                             }
