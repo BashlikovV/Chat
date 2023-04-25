@@ -14,13 +14,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.app.screens.chat.ChatView
 import by.bashlikovv.chat.app.screens.chat.ChatViewModel
@@ -28,8 +27,8 @@ import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.theme.MessengerTheme
 import by.bashlikovv.chat.app.utils.viewModelCreator
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 class ChatActivity : ComponentActivity() {
 
@@ -49,13 +48,17 @@ class ChatActivity : ComponentActivity() {
         Repositories.init(this)
 
         setContent {
-            var updateVisibility by remember { mutableStateOf(false) }
+            val updateVisibility by chatViewModel.updateVisibility.collectAsState()
             val scope = rememberCoroutineScope()
             fun update() = scope.launch(Dispatchers.IO) {
-                updateVisibility = true
-                chatViewModel.getMessagesFromDb()
-                delay(2000)
-                updateVisibility = false
+                chatViewModel.setUpdateVisibility(true)
+                val result = suspendCancellableCoroutine {
+                    chatViewModel.viewModelScope.launch(Dispatchers.IO) {
+                        chatViewModel.getMessagesFromDb()
+                        it.resumeWith(Result.success(false))
+                    }
+                }
+                chatViewModel.setUpdateVisibility(result)
             }
             if (data?.user?.userName != "Bookmarks") {
                 LaunchedEffect(Unit) { update() }
