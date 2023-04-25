@@ -44,95 +44,68 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel()) {
         containerColor = MaterialTheme.colors.primary,
         contentColor = MaterialTheme.colors.secondary,
         content = { paddingValues ->
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-
+                verticalArrangement = Arrangement.Center
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    AnimatedVisibility(visible = !logInUiState.isHaveAccount) {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                if (logInUiState.userImageBitmap.userImageUrl == "") {
-                                    DefaultImage(logInActivity = logInActivity)
-                                } else {
-                                    UserImage(logInActivity = logInActivity)
-                                }
-                            }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(15.dp),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                InputField(value = logInUiState.userName, text = "User name") {
-                                    logInViewModel.onUserNameChange(it)
-                                }
+                AnimatedVisibility(visible = !logInUiState.isHaveAccount) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            if (logInUiState.userImageBitmap.userImageUrl == "") {
+                                DefaultImage(logInActivity = logInActivity)
+                            } else {
+                                UserImage(logInActivity = logInActivity)
                             }
                         }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 15.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        InputField(value = logInUiState.identifier, text = "Email") {
-                            logInViewModel.onIdentifierChange(it)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(15.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            InputField(value = logInUiState.userName, text = "User name") {
+                                logInViewModel.onUserNameChange(it)
+                            }
                         }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 15.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        InputField(value = logInUiState.password, text = "Password") {
-                            logInViewModel.onPasswordChange(it)
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 15.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Button(
-                            onClick = {
-                                logInViewModel.onCreateAccountButtonPressed(context)
-                            },
-                            content = { Text("LogIn") }
-                        )
                     }
                 }
-                Column(
+                Row(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    verticalArrangement = Arrangement.Center
+                        .fillMaxWidth()
+                        .padding(top = 15.dp),
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        if (logInUiState.progressBarVisibility) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colors.secondary,
-                                strokeWidth = 35.dp
-                            )
-                        }
+                    InputField(value = logInUiState.identifier, text = "Email") {
+                        logInViewModel.onIdentifierChange(it)
                     }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 15.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    InputField(value = logInUiState.password, text = "Password") {
+                        logInViewModel.onPasswordChange(it)
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 15.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(
+                        onClick = {
+                            logInViewModel.onCreateAccountButtonPressed(context)
+                        },
+                        content = { Text("LogIn") }
+                    )
                 }
             }
         }
