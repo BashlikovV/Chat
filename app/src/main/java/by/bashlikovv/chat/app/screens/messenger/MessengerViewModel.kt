@@ -30,9 +30,7 @@ import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import by.bashlikovv.chat.sources.structs.Room
 import by.bashlikovv.chat.sources.users.OkHttpUsersSource
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -221,17 +219,26 @@ class MessengerViewModel(
     /**
      * [onSearchInputChange] - function that updates search input state in [MessengerUiState.searchInput]
      * */
-    @OptIn(DelicateCoroutinesApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     fun onSearchInputChange(newValue: String) {
         _messengerUiState.update {
             it.copy(searchInput = newValue)
         }
-        GlobalScope.launch {
-            _messengerUiState.update {
-                it.copy(searchedItems = getSearchOutput(newValue))
+        updateSearchData(newValue)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun updateSearchData(newValue: String) = viewModelScope.launch(Dispatchers.IO) {
+        setUpdateVisibility(true)
+        val result = suspendCancellableCoroutine {
+            viewModelScope.launch(Dispatchers.IO) {
+                _messengerUiState.update {
+                    it.copy(searchedItems = getSearchOutput(newValue))
+                }
+                it.resumeWith(Result.success(false))
             }
         }
+        setUpdateVisibility(result)
     }
 
     /**
@@ -403,7 +410,7 @@ class MessengerViewModel(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun update() = viewModelScope.launch(Dispatchers.IO) {
+    fun loadViewData() = viewModelScope.launch(Dispatchers.IO) {
         setUpdateVisibility(true)
         val result = suspendCancellableCoroutine {
             viewModelScope.launch(Dispatchers.IO) {
