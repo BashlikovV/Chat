@@ -6,7 +6,10 @@ import android.database.sqlite.SQLiteException
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.core.content.contentValuesOf
-import by.bashlikovv.chat.app.model.*
+import by.bashlikovv.chat.app.model.AccountAlreadyExistsException
+import by.bashlikovv.chat.app.model.AuthException
+import by.bashlikovv.chat.app.model.EmptyFieldException
+import by.bashlikovv.chat.app.model.StorageException
 import by.bashlikovv.chat.app.model.accounts.entities.Account
 import by.bashlikovv.chat.app.model.accounts.entities.SignUpData
 import by.bashlikovv.chat.app.model.settings.MessengerSettings
@@ -15,14 +18,12 @@ import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.utils.AsyncLoader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import java.util.*
 
 class SQLiteAccountsRepository(
     private val db: SQLiteDatabase,
@@ -57,8 +58,8 @@ class SQLiteAccountsRepository(
     }
 
     override suspend fun signIn(email: String, password: String) = wrapSQLiteException(ioDispatcher) {
-        if (email.isBlank()) throw EmptyFieldException(Field.Email)
-        if (password.isBlank()) throw EmptyFieldException(Field.Password)
+        if (email.isBlank()) throw EmptyFieldException()
+        if (password.isBlank()) throw EmptyFieldException()
 
         val accountId = findAccountIdByEmailAndPassword(email, password)
         messengerSettings.setCurrentAccountId(accountId)
@@ -97,8 +98,7 @@ class SQLiteAccountsRepository(
     }
 
     override suspend fun updateAccountUsername(newUsername: String) = wrapSQLiteException(ioDispatcher) {
-        if (newUsername.isBlank()) throw EmptyFieldException(Field.Username)
-        delay(1000)
+        if (newUsername.isBlank()) throw EmptyFieldException()
         val accountId = messengerSettings.getCurrentAccountId()
         if (accountId == MessengerSettings.NO_ACCOUNT_ID) throw AuthException()
 
@@ -159,7 +159,6 @@ class SQLiteAccountsRepository(
             val bos = ByteArrayOutputStream()
             photo.compress(Bitmap.CompressFormat.PNG, 10, bos)
             val input = bos.toByteArray()
-            val date = Date(System.currentTimeMillis())
 
             db.insertOrThrow(
                 MessengerSQLiteContract.BookmarksTable.TABLE_NAME,
@@ -168,9 +167,7 @@ class SQLiteAccountsRepository(
                     MessengerSQLiteContract.BookmarksTable.COLUMN_MESSAGE to bookmark.value,
                     MessengerSQLiteContract.BookmarksTable.COLUMN_IMAGE to input,
                     MessengerSQLiteContract.BookmarksTable.COLUMN_HAS_IMAGE to bookmark.isImage,
-                    MessengerSQLiteContract.BookmarksTable.COLUMN_TIME to date.toGMTString()
-                        .substringBefore(" G").substringAfter("2023 ")
-                        .substringBeforeLast(":")
+                    MessengerSQLiteContract.BookmarksTable.COLUMN_TIME to bookmark.time
                 )
             )
         } catch (e: SQLiteConstraintException) {
