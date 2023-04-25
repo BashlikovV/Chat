@@ -1,5 +1,7 @@
 package by.bashlikovv.chat.app.views.dropmenu
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.material.MaterialTheme
@@ -24,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.app.screens.chat.ChatViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ChatMenu(chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
@@ -42,23 +45,27 @@ fun ChatMenu(chatViewModel: ChatViewModel = viewModel()) {
     ) {
         DropdownMenuItem(
             text = { ChatMenuTextItem("Clear history") },
-            leadingIcon = { Image(
-                painter = painterResource(R.drawable.history),
-                contentDescription = "Clear history",
-                contentScale = ContentScale.Crop,
-                colorFilter = ColorFilter.tint(MaterialTheme.colors.secondary)
-            ) },
+            leadingIcon = {
+                Image(
+                    painter = painterResource(R.drawable.history),
+                    contentDescription = "Clear history",
+                    contentScale = ContentScale.Crop,
+                    colorFilter = ColorFilter.tint(MaterialTheme.colors.secondary)
+                )
+            },
             onClick = {  }
         )
         Divider(color = MaterialTheme.colors.secondary)
         DropdownMenuItem(
             text = { ChatMenuTextItem("Delete chat") },
-            leadingIcon = { Image(
-                painter = painterResource(R.drawable.delete_outline),
-                contentDescription = "Delete chat",
-                contentScale = ContentScale.Crop,
-                colorFilter = ColorFilter.tint(MaterialTheme.colors.secondary)
-            ) },
+            leadingIcon = {
+                Image(
+                    painter = painterResource(R.drawable.delete_outline),
+                    contentDescription = "Delete chat",
+                    contentScale = ContentScale.Crop,
+                    colorFilter = ColorFilter.tint(MaterialTheme.colors.secondary)
+                )
+            },
             onClick = { chatViewModel.onActionDeleteChat() },
             colors = androidx.compose.material3.MenuDefaults.itemColors(
                 textColor = MaterialTheme.colors.secondary
