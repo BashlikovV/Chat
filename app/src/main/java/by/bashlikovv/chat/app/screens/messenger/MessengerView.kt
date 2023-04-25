@@ -43,7 +43,6 @@ import kotlinx.coroutines.launch
 fun MessengerView(
     modifier: Modifier = Modifier,
     messengerViewModel: MessengerViewModel = viewModel(),
-    updateViewData: suspend (MessengerViewModel) -> Unit,
     onOpenChat: (Chat) -> Unit
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
@@ -52,7 +51,7 @@ fun MessengerView(
     var refreshing by remember { mutableStateOf(false) }
     fun refresh () = scope.launch(Dispatchers.IO) {
         refreshing = true
-        updateViewData(messengerViewModel)
+        messengerViewModel.update()
         delay(500)
         refreshing = false
     }
