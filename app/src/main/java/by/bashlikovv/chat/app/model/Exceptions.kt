@@ -5,9 +5,7 @@ open class AppException : RuntimeException {
     constructor(cause: Throwable) : super(cause)
 }
 
-class EmptyFieldException(
-    val field: Field
-) : AppException()
+class EmptyFieldException : AppException()
 
 class PasswordMismatchException : AppException()
 
