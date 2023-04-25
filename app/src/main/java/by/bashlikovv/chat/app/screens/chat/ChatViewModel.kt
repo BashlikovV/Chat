@@ -50,6 +50,9 @@ class ChatViewModel(
     )
     val lazyListState = _lazyListState.asStateFlow()
 
+    private val _updateVisibility = MutableStateFlow(false)
+    var updateVisibility = _updateVisibility.asStateFlow()
+
     var messageCheapVisible by mutableStateOf(_chatUiState.value.chat.messages.map { false })
         private set
 
@@ -137,35 +140,32 @@ class ChatViewModel(
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     suspend fun getMessagesFromDb() {
-        var chatData: Chat
-        GlobalScope.launch {
-            try {
-                val userImage = UserImage(messagesSource.getImage(
-                    _chatUiState.value.chat.user.userImage.userImageUri.encodedPath.toString()
-                ))
-                _chatUiState.update {
-                    it.copy(chat = it.chat.copy(user = it.chat.user.copy(userImage = userImage)))
-                }
-                val messages = messagesSource.getRoomMessages(
-                    _chatUiState.value.chat.token,
-                    Pagination().getRange()
-                )
-                val  newValue = messages.castListOfMessages()
-                chatData = _chatUiState.value.chat.copy(messages = newValue)
-                applyChatData(chatData)
-
-                val size = _chatUiState.value.chat.messages.size - messages.size
-                val tmp = messageCheapVisible.toMutableList()
-                for (i in 0 until size) {
-                    tmp.add(false)
-                }
-                messageCheapVisible = tmp
-                _lazyListState.update { LazyListState(messageCheapVisible.size) }
-            } catch (e: Exception) {
-                e.printStackTrace()
+        val chatData: Chat
+        try {
+            val userImage = UserImage(messagesSource.getImage(
+                _chatUiState.value.chat.user.userImage.userImageUri.encodedPath.toString()
+            ))
+            _chatUiState.update {
+                it.copy(chat = it.chat.copy(user = it.chat.user.copy(userImage = userImage)))
             }
+            val messages = messagesSource.getRoomMessages(
+                _chatUiState.value.chat.token,
+                Pagination().getRange()
+            )
+            val  newValue = messages.castListOfMessages()
+            chatData = _chatUiState.value.chat.copy(messages = newValue)
+            applyChatData(chatData)
+
+            val size = _chatUiState.value.chat.messages.size - messages.size
+            val tmp = messageCheapVisible.toMutableList()
+            for (i in 0 until size) {
+                tmp.add(false)
+            }
+            messageCheapVisible = tmp
+            _lazyListState.update { LazyListState(messageCheapVisible.size) }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -423,28 +423,29 @@ class ChatViewModel(
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    @OptIn(DelicateCoroutinesApi::class)
     private suspend fun processRefresh() {
-        var chatData: Chat
-        GlobalScope.launch {
-            try {
-                val messages = messagesSource.getRoomMessages(
-                    _chatUiState.value.chat.token,
-                    pagination = pagination.getRange()
-                )
-                val  newValue = messages.castListOfMessages() + _chatUiState.value.chat.messages
-                chatData = _chatUiState.value.chat.copy(messages = newValue)
-                val size = chatData.messages.size - _chatUiState.value.chat.messages.size
-                val tmpList = messageCheapVisible.toMutableList()
-                for (i in 0 until size) {
-                    tmpList.add(false)
-                }
-                messageCheapVisible = tmpList
-                _chatUiState.update { it.copy(chat = chatData) }
-                _lazyListState.update { LazyListState(size) }
-            } catch (e: Exception) {
-                e.printStackTrace()
+        val chatData: Chat
+        try {
+            val messages = messagesSource.getRoomMessages(
+                _chatUiState.value.chat.token,
+                pagination = pagination.getRange()
+            )
+            val  newValue = messages.castListOfMessages() + _chatUiState.value.chat.messages
+            chatData = _chatUiState.value.chat.copy(messages = newValue)
+            val size = chatData.messages.size - _chatUiState.value.chat.messages.size
+            val tmpList = messageCheapVisible.toMutableList()
+            for (i in 0 until size) {
+                tmpList.add(false)
             }
+            messageCheapVisible = tmpList
+            _chatUiState.update { it.copy(chat = chatData) }
+            _lazyListState.update { LazyListState(size) }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+    }
+
+    fun setUpdateVisibility(newValue: Boolean) {
+        _updateVisibility.update { newValue }
     }
 }

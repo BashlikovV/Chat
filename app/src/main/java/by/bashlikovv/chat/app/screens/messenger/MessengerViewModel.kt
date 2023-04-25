@@ -1,6 +1,8 @@
 package by.bashlikovv.chat.app.screens.messenger
 
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -9,8 +11,12 @@ import androidx.compose.material.DrawerValue
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import by.bashlikovv.chat.R
+import by.bashlikovv.chat.Repositories
+import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.Account
 import by.bashlikovv.chat.app.screens.login.UserImage
@@ -24,13 +30,13 @@ import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import by.bashlikovv.chat.sources.structs.Room
 import by.bashlikovv.chat.sources.users.OkHttpUsersSource
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * [MessengerViewModel] - class that contains data of [MessengerView]
@@ -43,6 +49,9 @@ class MessengerViewModel(
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
     val messengerUiState = _messengerUiState.asStateFlow()
 
+    private val _updateVisibility = MutableStateFlow(false)
+    var updateVisibility = _updateVisibility.asStateFlow()
+
     private val sourceProvider = SourceProviderHolder().sourcesProvider
 
     private val usersSource = OkHttpUsersSource(sourceProvider)
@@ -52,7 +61,7 @@ class MessengerViewModel(
     private val selectedItem
         get() = _messengerUiState.value.selectedItem
 
-    fun applyMessengerUiState(state: MessengerUiState) {
+    private fun applyMessengerUiState(state: MessengerUiState) {
         _messengerUiState.update { state }
     }
 
@@ -210,17 +219,26 @@ class MessengerViewModel(
     /**
      * [onSearchInputChange] - function that updates search input state in [MessengerUiState.searchInput]
      * */
-    @OptIn(DelicateCoroutinesApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     fun onSearchInputChange(newValue: String) {
         _messengerUiState.update {
             it.copy(searchInput = newValue)
         }
-        GlobalScope.launch {
-            _messengerUiState.update {
-                it.copy(searchedItems = getSearchOutput(newValue))
+        updateSearchData(newValue)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun updateSearchData(newValue: String) = viewModelScope.launch(Dispatchers.IO) {
+        setUpdateVisibility(true)
+        val result = suspendCancellableCoroutine {
+            viewModelScope.launch(Dispatchers.IO) {
+                _messengerUiState.update {
+                    it.copy(searchedItems = getSearchOutput(newValue))
+                }
+                it.resumeWith(Result.success(false))
             }
         }
+        setUpdateVisibility(result)
     }
 
     /**
@@ -295,11 +313,11 @@ class MessengerViewModel(
     /**
      * [applyMe] - function for applying current user data after registration
      * */
-    fun applyMe(me: User) {
+    private fun applyMe(me: User) {
         _messengerUiState.update { it.copy(me = me) }
     }
 
-    suspend fun getUser(): User {
+    private suspend fun getUser(): User {
         val data: Account? = accountsRepository.getAccount().first()
         return User(
             userId = data?.id ?: 0,
@@ -309,7 +327,7 @@ class MessengerViewModel(
         )
     }
 
-    suspend fun getBookmarks(): List<Message>? {
+    private suspend fun getBookmarks(): List<Message>? {
         return accountsRepository.getBookmarks().first()
     }
 
@@ -340,7 +358,7 @@ class MessengerViewModel(
         return roomsSource.addRoom(user1, user2)
     }
 
-    suspend fun getRooms(): List<Room> {
+    private suspend fun getRooms(): List<Room> {
         return roomsSource.getRooms(
             getUser().userToken
         )
@@ -383,7 +401,96 @@ class MessengerViewModel(
         return result
     }
 
-    suspend fun getImage(imageUri: String): Bitmap {
+    private suspend fun getImage(imageUri: String): Bitmap {
         return messagesSource.getImage(imageUri)
+    }
+
+    private fun setUpdateVisibility(newValue: Boolean) {
+        _updateVisibility.update { newValue }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun loadViewData() = viewModelScope.launch(Dispatchers.IO) {
+        setUpdateVisibility(true)
+        val result = suspendCancellableCoroutine {
+            viewModelScope.launch(Dispatchers.IO) {
+                updateViewData()
+                it.resumeWith(Result.success(false))
+            }
+        }
+        setUpdateVisibility(result)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun updateViewData() {
+        applyMe(getUser())
+        var chats = getBookmarks()
+        if (chats.isNullOrEmpty()) {
+            chats = listOf(Message(value = "You do not have bookmarks"))
+        }
+        val data = listOf(
+            Chat(
+                user = User(userName = "Bookmarks", userImage = UserImage(
+                    userImageBitmap = R.drawable.bookmark.getBitmapFromImage(applicationContext)
+                )),
+                messages = chats
+            )
+        )
+        applyMessengerUiState(MessengerUiState(chats = data))
+        if (_messengerUiState.value.darkTheme != Repositories.accountsRepository.isDarkTheme()) {
+            onThemeChange()
+        }
+        loadChatsFromServer()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun loadChatsFromServer() {
+        var rooms: List<Room> = listOf()
+        var result: List<Chat>
+        try {
+            rooms = getRooms()
+        } catch (e: Exception) {
+            result = listOf(Chat(messages = listOf(Message(value = "${e.message}")), time = ""))
+            applyMessengerUiState(
+                MessengerUiState(chats = _messengerUiState.value.chats + result)
+            )
+        }
+        result = rooms.map {
+            val user = if (it.user2.username == getUser().userName) {
+                it.user1
+            } else {
+                it.user2
+            }
+            val messages = getMessagesByRoom(room = it)
+            val image = UserImage(
+                userImageBitmap = getImage(user.image.decodeToString()),
+                userImageUri = Uri.parse(user.image.decodeToString())
+            )
+            Chat(
+                user = User(
+                    userName = user.username,
+                    userToken = SecurityUtilsImpl().bytesToString(user.token),
+                    userImage = image
+                ),
+                messages = messages,
+                token = SecurityUtilsImpl().bytesToString(it.token)
+            )
+        }
+
+        applyMessengerUiState(
+            MessengerUiState(chats = _messengerUiState.value.chats + result)
+        )
+    }
+
+    private fun Int.getBitmapFromImage(context: Context): Bitmap {
+        val db = ContextCompat.getDrawable(context, this)
+        val bit = Bitmap.createBitmap(
+            db!!.intrinsicWidth, db.intrinsicHeight, Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bit)
+        db.setBounds(0, 0, canvas.width, canvas.height)
+        db.draw(canvas)
+
+        return bit
     }
 }

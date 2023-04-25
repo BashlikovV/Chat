@@ -10,6 +10,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.app.model.AccountAlreadyExistsException
 import by.bashlikovv.chat.app.model.EmptyFieldException
 import by.bashlikovv.chat.app.model.PasswordMismatchException
@@ -20,19 +21,20 @@ import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.accounts.OkHttpAccountsSource
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.*
 
 class LogInViewModel(
     private val accountsRepository: AccountsRepository
 ) : ViewModel() {
 
-    private val _logInUiState = MutableStateFlow(LogInUiState())
+    private val _logInUiState = MutableStateFlow(LogInUiState(progressBarVisibility = true))
     val logInUiState = _logInUiState.asStateFlow()
 
     private val sourceProvider = SourceProviderHolder().sourcesProvider
@@ -85,52 +87,59 @@ class LogInViewModel(
     @RequiresApi(Build.VERSION_CODES.O)
     fun onCreateAccountButtonPressed(context: Context) {
         _logInUiState.update { it.copy(progressBarVisibility = true) }
-        var token: String
-        try {
-            if (_logInUiState.value.isHaveAccount) {
-                runBlocking {
-                    token = accountsSource.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
-                    if (token.contains("500")) {
-                        showToast(context, "Network error")
-                    }
-                    _logInUiState.update { it.copy(token = token) }
-                    if (!_logInUiState.value.token.contains("500")) {
-                        if (!accountsRepository.isSignedIn()) {
+        viewModelScope.launch(Dispatchers.Main) {
+            val result = suspendCancellableCoroutine {
+                viewModelScope.launch(Dispatchers.Main) {
+                    val token: String
+                    try {
+                        if (_logInUiState.value.isHaveAccount) {
+                            token = accountsSource.signIn(
+                                _logInUiState.value.identifier,
+                                _logInUiState.value.password
+                            )
+                            if (token.contains("500")) {
+                                showToast(context, "Network error")
+                            }
+                            _logInUiState.update { it.copy(token = token) }
+                            if (!_logInUiState.value.token.contains("500")) {
+                                if (!accountsRepository.isSignedIn()) {
+                                    val signUpData = SignUpData(
+                                        email = _logInUiState.value.identifier,
+                                        username = accountsSource.getUsername(token),
+                                        password = _logInUiState.value.password,
+                                    )
+                                    signUp(signUpData, context)
+                                }
+                                accountsRepository.signIn(
+                                    _logInUiState.value.identifier,
+                                    _logInUiState.value.password
+                                )
+                            } else {
+                                showToast(context, "Authentication error.")
+                            }
+                        } else {
                             val signUpData = SignUpData(
                                 email = _logInUiState.value.identifier,
-                                username = accountsSource.getUsername(token),
+                                username = _logInUiState.value.userName,
                                 password = _logInUiState.value.password,
                             )
                             signUp(signUpData, context)
                         }
-                        accountsRepository.signIn(_logInUiState.value.identifier, _logInUiState.value.password)
-                    } else {
-                        showToast(context, "Authentication error.")
+                    } catch (e: Exception) {
+                        showToast(context, "Authentication error ${e.message}")
+                    } finally {
+                        if (accountsRepository.isSignedIn() && !_logInUiState.value.token.contains("500")) {
+                            applySuccess()
+                            showToast(context, "token: ${_logInUiState.value.token}")
+                        } else {
+                            showToast(context, "Authentication error.")
+                        }
                     }
-                }
-            } else {
-                val signUpData = SignUpData(
-                    email = _logInUiState.value.identifier,
-                    username = _logInUiState.value.userName,
-                    password = _logInUiState.value.password,
-                )
-                runBlocking {
-                    signUp(signUpData, context)
+                    it.resumeWith(Result.success(false))
                 }
             }
-        } catch (e: Exception) {
-            showToast(context, "Authentication error ${e.message}")
-        } finally {
-            runBlocking {
-                if (accountsRepository.isSignedIn() && !_logInUiState.value.token.contains("500")) {
-                    applySuccess()
-                    Toast.makeText(context, "token: ${_logInUiState.value.token}", Toast.LENGTH_LONG).show()
-                } else {
-                    showToast(context, "Authentication error.")
-                }
-            }
+            _logInUiState.update { it.copy(progressBarVisibility = result) }
         }
-        _logInUiState.update { it.copy(progressBarVisibility = false) }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -186,5 +195,9 @@ class LogInViewModel(
 
     private fun showSuccessSignUpMessage(context: Context) {
         showToast(context, "Success!")
+    }
+
+    fun setProgressVisibility(newValue: Boolean) {
+        _logInUiState.update { it.copy(progressBarVisibility = newValue) }
     }
 }
