@@ -1,7 +1,6 @@
 package by.bashlikovv.chat.app.model.accounts.entities
 
 import by.bashlikovv.chat.app.model.EmptyFieldException
-import by.bashlikovv.chat.app.model.Field
 
 data class SignUpData(
     val username: String,
@@ -9,8 +8,8 @@ data class SignUpData(
     val password: String
 ) {
     fun validate() {
-        if (email.isBlank()) throw EmptyFieldException(Field.Email)
-        if (username.isBlank()) throw EmptyFieldException(Field.Username)
-        if (password.isBlank()) throw EmptyFieldException(Field.Password)
+        if (email.isBlank()) throw EmptyFieldException()
+        if (username.isBlank()) throw EmptyFieldException()
+        if (password.isBlank()) throw EmptyFieldException()
     }
 }
