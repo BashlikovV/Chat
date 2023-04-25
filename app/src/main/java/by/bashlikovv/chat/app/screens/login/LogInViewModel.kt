@@ -20,9 +20,7 @@ import by.bashlikovv.chat.app.model.accounts.entities.SignUpData
 import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.accounts.OkHttpAccountsSource
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -142,18 +140,15 @@ class LogInViewModel(
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun signUp(signUpData: SignUpData, context: Context) {
         try {
-            GlobalScope.launch {
-                accountsSource.signUp(
-                    email = signUpData.email,
-                    password = signUpData.password,
-                    username = signUpData.username,
-                    image = _logInUiState.value.userImageBitmap.userImageBitmap
-                )
-            }
+            accountsSource.signUp(
+                email = signUpData.email,
+                password = signUpData.password,
+                username = signUpData.username,
+                image = _logInUiState.value.userImageBitmap.userImageBitmap
+            )
             val token: String = accountsSource.signIn(email = signUpData.email, password = signUpData.password)
             _logInUiState.update { it.copy(token = token) }
             if (!_logInUiState.value.token.contains("500")) {
