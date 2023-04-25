@@ -84,6 +84,7 @@ class LogInViewModel(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun onCreateAccountButtonPressed(context: Context) {
+        _logInUiState.update { it.copy(progressBarVisibility = true) }
         var token: String
         try {
             if (_logInUiState.value.isHaveAccount) {
@@ -129,12 +130,12 @@ class LogInViewModel(
                 }
             }
         }
+        _logInUiState.update { it.copy(progressBarVisibility = false) }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun signUp(signUpData: SignUpData, context: Context) {
-        _logInUiState.update { it.copy(progressBarVisibility = true) }
         try {
             GlobalScope.launch {
                 accountsSource.signUp(
@@ -153,17 +154,14 @@ class LogInViewModel(
                 showToast(context, "Authentication error.")
             }
         } catch (e: EmptyFieldException) {
-            processEmptyFieldException(e)
+            processEmptyFieldException()
         } catch (e: PasswordMismatchException) {
             processPasswordMismatchException(context)
         } catch (e: AccountAlreadyExistsException) {
             processAccountAlreadyExistsException(context)
         } catch (e: StorageException) {
             processStorageException(context)
-        } finally {
-            hideProgress()
         }
-        _logInUiState.update { it.copy(progressBarVisibility = false) }
     }
 
     private fun showToast(context: Context, text: String) {
@@ -174,10 +172,6 @@ class LogInViewModel(
         showToast(context, "Storage process exception")
     }
 
-    private fun hideProgress() {
-        _logInUiState.update { it.copy(progressBarVisibility = false) }
-    }
-
     private fun processAccountAlreadyExistsException(context: Context) {
         showToast(context, "Account already exists")
     }
@@ -186,7 +180,7 @@ class LogInViewModel(
         showToast(context, "Error. Incorrect password")
     }
 
-    private fun processEmptyFieldException(e: EmptyFieldException) {
+    private fun processEmptyFieldException() {
         TODO("Not yet implemented")
     }
 
