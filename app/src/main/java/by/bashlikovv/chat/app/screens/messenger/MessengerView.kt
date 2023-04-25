@@ -51,7 +51,7 @@ fun MessengerView(
     var refreshing by remember { mutableStateOf(false) }
     fun refresh () = scope.launch(Dispatchers.IO) {
         refreshing = true
-        messengerViewModel.update()
+        messengerViewModel.loadViewData()
         delay(500)
         refreshing = false
     }
