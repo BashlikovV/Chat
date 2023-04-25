@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.app.struct.Message
@@ -46,6 +47,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(DelicateCoroutinesApi::class)
@@ -87,9 +89,13 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
     var refreshing by remember { mutableStateOf(false) }
     fun refresh() = scope.launch(Dispatchers.IO) {
         refreshing = true
-        chatViewModel.onActionRefresh()
-        delay(500)
-        refreshing = false
+        refreshing = suspendCancellableCoroutine {
+            chatViewModel.viewModelScope.launch(Dispatchers.IO) {
+                chatViewModel.onActionRefresh()
+                delay(500)
+                it.resumeWith(Result.success(false))
+            }
+        }
     }
     val state = rememberPullRefreshState(refreshing, ::refresh)
 
@@ -180,7 +186,7 @@ fun MessageView(
             (LocalConfiguration.current.screenWidthDp * 2.15).toFloat() + 10f
         } else {
             (LocalConfiguration.current.screenWidthDp * 2.15).toFloat()
-        }, label = ""
+        }
     )
 
     val measuredText = textMeasurer.measure(
