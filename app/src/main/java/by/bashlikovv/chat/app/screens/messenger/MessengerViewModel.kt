@@ -423,8 +423,6 @@ class MessengerViewModel(
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun updateViewData() {
-        val messengerUiState = messengerUiState.value
-
         applyMe(getUser())
         var chats = getBookmarks()
         if (chats.isNullOrEmpty()) {
@@ -439,7 +437,7 @@ class MessengerViewModel(
             )
         )
         applyMessengerUiState(MessengerUiState(chats = data))
-        if (messengerUiState.darkTheme != Repositories.accountsRepository.isDarkTheme()) {
+        if (_messengerUiState.value.darkTheme != Repositories.accountsRepository.isDarkTheme()) {
             onThemeChange()
         }
         loadChatsFromServer()
