@@ -50,7 +50,7 @@ class MessengerActivity : ComponentActivity() {
         Repositories.init(this)
         setContent {
             val updateVisibility by messengerViewModel.updateVisibility.collectAsState()
-            LaunchedEffect(Unit) { messengerViewModel.update() }
+            LaunchedEffect(Unit) { messengerViewModel.loadViewData() }
 
             val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
@@ -116,6 +116,6 @@ class MessengerActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onRestart() {
         super.onRestart()
-        messengerViewModel.update()
+        messengerViewModel.loadViewData()
     }
 }
