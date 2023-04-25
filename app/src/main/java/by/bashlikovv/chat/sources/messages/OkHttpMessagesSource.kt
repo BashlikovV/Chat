@@ -11,7 +11,8 @@ import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.messages.entities.*
 import by.bashlikovv.chat.sources.structs.Message
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -74,11 +75,8 @@ class OkHttpMessagesSource(
             val deleteMessageRequestBody = DeleteMessageRequestBody(
                 message = message
             )
-            val body = MultipartBody.Builder()
-                .addPart(deleteMessageRequestBody.toJsonRequestBody())
-                .build()
             val request = Request.Builder()
-                .post(body)
+                .post(deleteMessageRequestBody.toJsonRequestBody())
                 .endpoint("/${HttpContract.UrlMethods.DELETE_MESSAGE}")
                 .build()
             val response = client.newCall(request).suspendEnqueue()
@@ -96,7 +94,6 @@ class OkHttpMessagesSource(
     }
 
     suspend fun getImage(uri: String): Bitmap {
-        delay(1)
         var image: Bitmap? = null
         val socket = Socket()
         val input: DataInputStream
@@ -105,22 +102,26 @@ class OkHttpMessagesSource(
 
             val request = "GET /${HttpContract.UrlMethods.GET_IMAGE}?$uri\r\nContent-Type:image/jpg \r\n\r\n"
 
-            socket.getOutputStream().write(request.encodeToByteArray())
-            socket.getOutputStream().flush()
-            input = DataInputStream(socket.getInputStream())
+            withContext(Dispatchers.IO) {
+                socket.getOutputStream().write(request.encodeToByteArray())
+                socket.getOutputStream().flush()
+                input = DataInputStream(socket.getInputStream())
 
-            val sizeAr = ByteArray(4, init = { 0 })
-            input.read(sizeAr)
-            val size = ByteBuffer.wrap(sizeAr).asIntBuffer().get()
+                val sizeAr = ByteArray(4, init = { 0 })
+                input.read(sizeAr)
+                val size = ByteBuffer.wrap(sizeAr).asIntBuffer().get()
 
-            val imageAr = ByteArray(size)
-            input.readFully(imageAr)
+                val imageAr = ByteArray(size)
+                input.readFully(imageAr)
 
-            image = BitmapFactory.decodeByteArray(imageAr, 0, size)
+                image = BitmapFactory.decodeByteArray(imageAr, 0, size)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
-            socket.close()
+            withContext(Dispatchers.IO) {
+                socket.close()
+            }
         }
 
         return image ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
@@ -135,11 +136,11 @@ class OkHttpMessagesSource(
     ): String {
         try {
             val client = OkHttpClient.Builder()
-                .connectTimeout(10000, TimeUnit.MILLISECONDS)
-                .callTimeout(10000, TimeUnit.MILLISECONDS)
-                .writeTimeout(10000, TimeUnit.MILLISECONDS)
-                .callTimeout(10000, TimeUnit.MILLISECONDS)
-                .readTimeout(10000, TimeUnit.MILLISECONDS)
+                .connectTimeout(20000, TimeUnit.MILLISECONDS)
+                .callTimeout(20000, TimeUnit.MILLISECONDS)
+                .writeTimeout(20000, TimeUnit.MILLISECONDS)
+                .callTimeout(20000, TimeUnit.MILLISECONDS)
+                .readTimeout(20000, TimeUnit.MILLISECONDS)
                 .retryOnConnectionFailure(true)
                 .build()
             val stream = ByteArrayOutputStream()
