@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -50,7 +51,10 @@ import kotlinx.coroutines.launch
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
-    Scaffold(topBar = { TopChatBar { onBackAction() } }, bottomBar = { BottomInputFiled() }) {
+    Scaffold(
+        topBar = { TopChatBar { onBackAction() } },
+        bottomBar = { BottomInputFiled() }
+    ) {
         ChatContent(modifier = modifier.padding(it).fillMaxSize())
     }
 }
@@ -113,7 +117,16 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
                         )
                     }
                 }
+                var prevDate = try {
+                    chatUiState.chat.messages.first().time.subSequence(0, 9)
+                } catch (_: Exception) {
+                    ""
+                }
                 items(chatUiState.chat.messages) {
+                    if (it.time.isNotEmpty() && it.time.subSequence(0, 9) != prevDate) {
+                        prevDate = it.time.subSequence(0, 9)
+                        DateSeparator(it)
+                    }
                     MessageView(message = it) { message ->
                         chatViewModel.onActionItemClicked(message)
                     }
@@ -122,6 +135,34 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
         }
         PullRefreshIndicator(
             refreshing, state, Modifier.align(Alignment.TopCenter), contentColor = MaterialTheme.colors.secondary
+        )
+    }
+}
+
+@Composable
+fun DateSeparator(it: Message) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Spacer(
+            modifier = Modifier
+                .weight(0.4f)
+                .height(1.dp)
+                .background(MaterialTheme.colors.secondary)
+        )
+        Text(
+            text = it.time.substringBefore(buildTime(it.time)),
+            modifier = Modifier.weight(0.2f),
+            fontWeight = FontWeight.W100,
+            color = MaterialTheme.colors.secondary
+        )
+        Spacer(
+            modifier = Modifier
+                .weight(0.4f)
+                .height(1.dp)
+                .background(MaterialTheme.colors.secondary)
         )
     }
 }
@@ -143,7 +184,7 @@ fun MessageView(
             (LocalConfiguration.current.screenWidthDp * 2.15).toFloat() + 10f
         } else {
             (LocalConfiguration.current.screenWidthDp * 2.15).toFloat()
-        }
+        }, label = ""
     )
 
     val measuredText = textMeasurer.measure(
@@ -172,7 +213,8 @@ fun MessageView(
                 if (!message.isImage)
                     ((measuredText.lineCount * 24 + 5f * 2).dp)
                 else
-                    (message.imageBitmap.height / 8).dp)
+                    (message.imageBitmap.height / 8).dp
+            )
             .padding(start = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -195,7 +237,7 @@ fun MessageView(
                             if (message.isImage)
                                 message.imageBitmap.height.dp
                             else
-                               (measuredText.lineCount * height).dp
+                                (measuredText.lineCount * height).dp
                         )
                 ) {
                     chatViewModel.onActionDelete(message)
@@ -210,14 +252,17 @@ fun MessageView(
                             onItemClicked(message)
                             chatViewModel.onCheapItemClicked(
                                 message,
-                                !chatViewModel.messageCheapVisible[chatViewModel.getMessageIndex(message)]
+                                !chatViewModel.messageCheapVisible[chatViewModel.getMessageIndex(
+                                    message
+                                )]
                             )
                         }
                         .height(
                             if (!message.isImage)
                                 (measuredText.lineCount * height).dp
                             else
-                                (message.imageBitmap.height / 10).dp)
+                                (message.imageBitmap.height / 10).dp
+                        )
                         .constrainAs(canvas) {
                             if (message.from != chatUiState.chat.user.userToken) {
                                 end.linkTo(anchor = parent.end)
@@ -257,7 +302,9 @@ fun MessageView(
                             onItemClicked(message)
                             chatViewModel.onCheapItemClicked(
                                 message,
-                                !chatViewModel.messageCheapVisible[chatViewModel.getMessageIndex(message)]
+                                !chatViewModel.messageCheapVisible[chatViewModel.getMessageIndex(
+                                    message
+                                )]
                             )
                         }
                         .constrainAs(canvas) {
