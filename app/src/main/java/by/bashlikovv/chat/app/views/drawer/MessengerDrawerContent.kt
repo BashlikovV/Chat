@@ -2,6 +2,10 @@ package by.bashlikovv.chat.app.views.drawer
 
 import android.app.Activity
 import android.content.Intent
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,12 +18,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.AbsoluteCutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +44,7 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -82,6 +97,8 @@ private fun bottomItemsConstraint(): ConstraintSet {
         val contactsBtn = createRefFor("contactsBtn")
         val signOutBtn = createRefFor("signOutBtn")
         val spacer = createRefFor("spacer")
+        val editUsername = createRefFor("editUsername")
+        val bottomInput = createRefFor("bottomInput")
 
         constrain(settingsBtn) {
             top.linkTo(anchor = parent.top, margin = 5.dp)
@@ -99,6 +116,15 @@ private fun bottomItemsConstraint(): ConstraintSet {
             bottom.linkTo(anchor = parent.bottom, margin = 5.dp)
             start.linkTo(anchor = parent.start)
             top.linkTo(anchor = spacer.bottom, margin = 5.dp)
+        }
+        constrain(editUsername) {
+            start.linkTo(anchor = parent.start)
+            top.linkTo(anchor = spacer.bottom, margin = 5.dp)
+        }
+        constrain(bottomInput) {
+            bottom.linkTo(anchor = parent.bottom, margin = 5.dp)
+            start.linkTo(anchor = parent.start)
+            top.linkTo(anchor = editUsername.bottom, margin = 5.dp)
         }
     }
 }
@@ -122,7 +148,13 @@ fun MessengerDrawerContent() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colors.primary)
-                        .layoutId("bottomElements"),
+                        .layoutId("bottomElements")
+                        .animateContentSize(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
                 ) {
                     BottomContent()
                 }
@@ -173,28 +205,62 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
 fun BottomContent(messengerViewModel: MessengerViewModel = viewModel()) {
     val context = LocalContext.current
     val activity = (LocalContext.current as? Activity)
+    var settingsVisibility by rememberSaveable { mutableStateOf(false) }
 
-    BottomContentItem(text = "Settings", layoutId = "settingsBtn", leadingIcon = R.drawable.settings) {}
-    BottomContentItem(text = "Contacts", layoutId = "contactsBtn", leadingIcon = R.drawable.person) {}
-    Spacer(
-        modifier = Modifier
-            .height(1.dp)
-            .fillMaxWidth()
-            .background(MaterialTheme.colors.secondary)
-            .layoutId("spacer")
-    )
-    BottomContentItem(text = "Sign out", layoutId = "signOutBtn", leadingIcon = R.drawable.exit) {
-        messengerViewModel.onSignOut()
-        val logInIntent = Intent(context, LogInActivity::class.java)
-        context.startActivity(logInIntent)
-        activity?.finish()
+    val topText = if (settingsVisibility) "Close settings" else "Settings"
+    val topIcon by animateIntAsState(targetValue = if (settingsVisibility) R.drawable.arrow_back else R.drawable.settings)
+    var inputVisibility by rememberSaveable { mutableStateOf(false) }
+
+    BottomContentItem(text = topText, layoutId = "settingsBtn", leadingIcon = topIcon) {
+        settingsVisibility = !settingsVisibility
+    }
+    if (!settingsVisibility) {
+        BottomContentItem(text = "Contacts", layoutId = "contactsBtn", leadingIcon = R.drawable.person) {}
+        Spacer(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+                .background(MaterialTheme.colors.secondary)
+                .layoutId("spacer")
+        )
+        BottomContentItem(text = "Sign out", layoutId = "signOutBtn", leadingIcon = R.drawable.exit) {
+            messengerViewModel.onSignOut()
+            val logInIntent = Intent(context, LogInActivity::class.java)
+            context.startActivity(logInIntent)
+            activity?.finish()
+        }
+    } else {
+        Spacer(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+                .background(MaterialTheme.colors.secondary)
+                .layoutId("spacer")
+        )
+        BottomContentItem(text = "Change username", layoutId = "editUsername", leadingIcon = R.drawable.edit) {
+            inputVisibility = !inputVisibility
+        }
+        if(inputVisibility) {
+            BottomInputField(layoutId = "bottomInput") {
+                messengerViewModel.updateUsername(it)
+                inputVisibility = false
+            }
+        }
     }
 }
 
 @Composable
-fun BottomContentItem(text: String, layoutId: String, leadingIcon: Int, onClickListener: () -> Unit) {
+fun BottomContentItem(
+    text: String,
+    layoutId: String,
+    leadingIcon: Int,
+    modifier: Modifier = Modifier,
+    onClickListener: () -> Unit
+) {
     Row(
-        modifier = Modifier.layoutId(layoutId).clickable { onClickListener() },
+        modifier = modifier
+            .layoutId(layoutId)
+            .clickable { onClickListener() },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
@@ -216,5 +282,55 @@ fun BottomContentItem(text: String, layoutId: String, leadingIcon: Int, onClickL
                     bottom = 10.dp
                 )
         )
+    }
+}
+
+@Composable
+fun BottomInputField(
+    layoutId: String,
+    modifier: Modifier = Modifier,
+    onClickListener: (String) -> Unit
+) {
+    var inputState by rememberSaveable { mutableStateOf("") }
+
+    Row(
+        modifier = modifier.layoutId(layoutId),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TextField(
+            value = inputState,
+            onValueChange = { inputState = it},
+            colors = TextFieldDefaults.textFieldColors(
+                textColor = MaterialTheme.colors.secondary,
+                focusedIndicatorColor = MaterialTheme.colors.primary,
+                unfocusedIndicatorColor = MaterialTheme.colors.primary
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    onClickListener(inputState)
+                    inputState = ""
+                }
+            ),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done
+            ),
+        )
+        FloatingActionButton(
+            onClick = {
+                onClickListener(inputState)
+                inputState = ""
+            },
+            backgroundColor = MaterialTheme.colors.primary,
+            shape = AbsoluteCutCornerShape(0.dp),
+            modifier = Modifier.padding(
+                horizontal = 2.dp,
+                vertical = 5.dp
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.build),
+                contentDescription = "Confirm"
+            )
+        }
     }
 }

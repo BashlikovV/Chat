@@ -4,17 +4,18 @@ import android.graphics.Bitmap
 import android.os.Build
 import androidx.annotation.RequiresApi
 import by.bashlikovv.chat.sources.HttpContract
-import by.bashlikovv.chat.sources.base.BaseOkHttpSource
-import by.bashlikovv.chat.sources.base.OkHttpConfig
-import by.bashlikovv.chat.sources.users.entities.GetUsernameRequestBody
-import by.bashlikovv.chat.sources.users.entities.GetUsernameResponseBody
-import okhttp3.Request
 import by.bashlikovv.chat.sources.accounts.entities.SignInRequestBody
 import by.bashlikovv.chat.sources.accounts.entities.SignInResponseBody
 import by.bashlikovv.chat.sources.accounts.entities.SignUpRequestBody
+import by.bashlikovv.chat.sources.accounts.entities.UpdateUsernameRequestBody
+import by.bashlikovv.chat.sources.base.BaseOkHttpSource
+import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
+import by.bashlikovv.chat.sources.users.entities.GetUsernameRequestBody
+import by.bashlikovv.chat.sources.users.entities.GetUsernameResponseBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.Request
 
 class OkHttpAccountsSource(
     config: OkHttpConfig,
@@ -67,6 +68,20 @@ class OkHttpAccountsSource(
             val response = client.newCall(request).suspendEnqueue()
             response.parseJsonResponse<GetUsernameResponseBody>().username
         } catch (e: Exception) {
+            "500 ERROR"
+        }
+    }
+
+    suspend fun updateUsername(token: String, newName: String): String {
+        val updateUsernameRequestBody = UpdateUsernameRequestBody(token, newName)
+        val request = Request.Builder()
+            .post(updateUsernameRequestBody.toJsonRequestBody())
+            .endpoint("/${HttpContract.UrlMethods.UPDATE_USERNAME}")
+            .build()
+        return try {
+            val response = client.newCall(request).suspendEnqueue()
+            response.parseJsonResponse<GetUsernameResponseBody>().username
+        } catch (_: Exception) {
             "500 ERROR"
         }
     }

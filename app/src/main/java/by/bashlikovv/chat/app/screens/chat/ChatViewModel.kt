@@ -25,6 +25,7 @@ import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -71,7 +72,7 @@ class ChatViewModel(
         countDownInterval: Long = 2000
     ) : CountDownTimer(millsInFuture, countDownInterval) {
         override fun onTick(millisUntilFinished: Long) {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 periodicUpdateWork()
             }
         }

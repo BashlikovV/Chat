@@ -190,9 +190,15 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
             }
         ),
         maxLines = 1,
-        modifier = Modifier.background(MaterialTheme.colors.primary).padding(
-            top = 3.dp, bottom = 2.5.dp, end = 5.dp, start = 5.dp
-        ).fillMaxWidth(0.9f),
+        modifier = Modifier
+            .background(MaterialTheme.colors.primary)
+            .padding(
+                top = 3.dp,
+                bottom = 2.5.dp,
+                end = 5.dp,
+                start = 5.dp
+            )
+            .fillMaxWidth(0.9f),
         colors = TextFieldDefaults.textFieldColors(
             backgroundColor = Color.Transparent,
             textColor = MaterialTheme.colors.secondary,
@@ -213,7 +219,10 @@ fun ContentIcon(messengerViewModel: MessengerViewModel = viewModel()) {
             contentDescription = "Search",
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-            modifier = Modifier.size(50.dp).clip(RoundedCornerShape(25.dp)).clickable {
+            modifier = Modifier
+                .size(50.dp)
+                .clip(RoundedCornerShape(25.dp))
+                .clickable {
                     messengerViewModel.onSearchClick(false)
                 }
         )
