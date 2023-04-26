@@ -2,7 +2,7 @@ package by.bashlikovv.chat.app.struct
 
 import android.os.Parcelable
 import by.bashlikovv.chat.app.screens.login.UserImage
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class User(

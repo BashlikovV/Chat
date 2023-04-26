@@ -1,14 +1,13 @@
 package by.bashlikovv.chat.app.screens.login
 
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.provider.MediaStore
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.app.model.AccountAlreadyExistsException
@@ -59,21 +58,12 @@ class LogInViewModel(
         _logInUiState.update { it.copy(isHaveAccount = newValue) }
     }
 
-    fun selectImage(activity: ComponentActivity) {
-        val intent = Intent(Intent.ACTION_PICK).apply {
-            type = "image/*"
-        }
-        activity.startActivityForResult(intent, 0)
-    }
-
-    fun applyUserImageUri(newValue: Uri) {
-        val value = _logInUiState.value.userImageBitmap.copy(userImageUri = newValue)
-        _logInUiState.update { it.copy(userImageBitmap = value) }
-    }
-
-    fun applyUserBitmapImage(bitmap: ImageBitmap) {
+    fun applyUserImage(context: Context, imageUri: Uri) {
+        val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri).asImageBitmap()
         val value = _logInUiState.value.userImageBitmap.copy(
-            userImageBitmap = bitmap.asAndroidBitmap(), userImageUrl = "URL"
+            userImageUri = imageUri,
+            userImageBitmap = bitmap.asAndroidBitmap(),
+            userImageUrl = imageUri.path.toString()
         )
         _logInUiState.update { it.copy(userImageBitmap = value) }
     }
