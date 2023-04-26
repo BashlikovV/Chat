@@ -67,7 +67,7 @@ class ChatActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        ChatView { onBackPressed() }
+                        ChatView { onBackPressedDispatcher.onBackPressed() }
                         if (updateVisibility) { ProgressIndicator() }
                     }
                 }

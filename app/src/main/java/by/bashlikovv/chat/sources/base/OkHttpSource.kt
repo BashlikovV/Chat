@@ -2,12 +2,16 @@ package by.bashlikovv.chat.sources.base
 
 import by.bashlikovv.chat.app.model.ParseBackendResponseException
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
-import okhttp3.*
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import okhttp3.internal.readBomAsCharset
 import java.io.IOException
 import kotlin.coroutines.resume
@@ -54,14 +58,6 @@ open class BaseOkHttpSource(
         return json.toRequestBody(contentType)
     }
 
-    fun <T> Response.parseJsonResponse(typeToken: TypeToken<T>): T {
-        try {
-            return gson.fromJson(this.body!!.string(), typeToken.type)
-        } catch (e: Exception) {
-            throw ParseBackendResponseException(e)
-        }
-    }
-
     inline fun <reified T> Response.parseJsonResponse(): T {
         try {
             val str = this.body!!.source().use {
@@ -77,7 +73,6 @@ open class BaseOkHttpSource(
         response: Response,
         continuation: CancellableContinuation<Response>
     ) {
-        val httpCode = response.code
         try {
             // parse error body:
             // {
