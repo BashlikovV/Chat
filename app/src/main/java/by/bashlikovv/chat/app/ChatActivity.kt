@@ -62,7 +62,10 @@ class ChatActivity : ComponentActivity() {
                 LaunchedEffect(Unit) { update() }
             }
             MessengerTheme(darkTheme = darkTheme ?: true) {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         ChatView { onBackPressed() }
                         if (updateVisibility) { ProgressIndicator() }

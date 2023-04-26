@@ -19,7 +19,6 @@ import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.SignUpData
 import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.accounts.OkHttpAccountsSource
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,12 +72,9 @@ class LogInViewModel(
     }
 
     fun applyUserBitmapImage(bitmap: ImageBitmap) {
-        val fileName = UUID.randomUUID()
-        val ref = FirebaseStorage.getInstance().getReference("/images/$fileName")
         val value = _logInUiState.value.userImageBitmap.copy(
-            userImageBitmap = bitmap.asAndroidBitmap(), userImageUrl = ref.downloadUrl.toString()
+            userImageBitmap = bitmap.asAndroidBitmap(), userImageUrl = "URL"
         )
-        ref.putFile(_logInUiState.value.userImageBitmap.userImageUri)
         _logInUiState.update { it.copy(userImageBitmap = value) }
     }
 
