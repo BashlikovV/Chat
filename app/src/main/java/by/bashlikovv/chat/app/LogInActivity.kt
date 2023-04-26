@@ -53,18 +53,16 @@ class LogInActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 logInViewModel.setProgressVisibility(true)
-                logInViewModel.viewModelScope.launch(Dispatchers.IO) {
-                    val result = suspendCancellableCoroutine {
-                        logInViewModel.viewModelScope.launch(Dispatchers.IO) {
-                            kotlinx.coroutines.delay(1000)
-                            if (Repositories.accountsRepository.isSignedIn()) {
-                                logInViewModel.applySuccess()
-                            }
-                            it.resumeWith(Result.success(false))
+                val result = suspendCancellableCoroutine {
+                    logInViewModel.viewModelScope.launch(Dispatchers.IO) {
+                        kotlinx.coroutines.delay(1000)
+                        if (Repositories.accountsRepository.isSignedIn()) {
+                            logInViewModel.applySuccess()
                         }
+                        it.resumeWith(Result.success(false))
                     }
-                    logInViewModel.setProgressVisibility(result)
                 }
+                logInViewModel.setProgressVisibility(result)
             }
 
             MessengerTheme(darkTheme = true) {
