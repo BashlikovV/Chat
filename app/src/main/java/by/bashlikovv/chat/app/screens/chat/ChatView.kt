@@ -20,6 +20,7 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -106,7 +107,7 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
                 .pullRefresh(state, true),
             state = lazyListState
         ) {
-            if (chatUiState.chat.messages.isEmpty() || chatViewModel.messageCheapVisible.isEmpty()) {
+            if (chatUiState.chat.messages.isEmpty()) {
                 item { RowCenteredText(text = "You do not have messages now") }
             } else {
                 item { RowCenteredText(text = "Pull up to load messages") }
@@ -203,6 +204,9 @@ fun MessageView(
 
     val rectColor = MaterialTheme.colors.primary
     val height = (if(measuredText.lineCount == 1) 28.8 else 24.5)
+    var cheapVisibility by rememberSaveable {
+        mutableStateOf(false)
+    }
 
     Row(
         horizontalArrangement = if (message.from != chatUiState.chat.user.userToken)
@@ -223,8 +227,7 @@ fun MessageView(
         ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
             val (clip, canvas) = createRefs()
 
-            val idx = chatUiState.chat.messages.indexOf(message)
-            if (chatViewModel.messageCheapVisible[if (idx in chatViewModel.messageCheapVisible.indices) idx else 0]) {
+            if (cheapVisibility) {
                 ClipDelete(
                     modifier = Modifier
                         .constrainAs(clip) {
@@ -252,12 +255,7 @@ fun MessageView(
                         .width(boxWidth.dp)
                         .clickable {
                             onItemClicked(message)
-                            chatViewModel.onCheapItemClicked(
-                                message,
-                                !chatViewModel.messageCheapVisible[chatViewModel.getMessageIndex(
-                                    message
-                                )]
-                            )
+                            cheapVisibility = !cheapVisibility
                         }
                         .height(
                             if (!message.isImage)
@@ -302,12 +300,7 @@ fun MessageView(
                         .fillMaxWidth(0.8f)
                         .clickable {
                             onItemClicked(message)
-                            chatViewModel.onCheapItemClicked(
-                                message,
-                                !chatViewModel.messageCheapVisible[chatViewModel.getMessageIndex(
-                                    message
-                                )]
-                            )
+                            cheapVisibility = !cheapVisibility
                         }
                         .constrainAs(canvas) {
                             if (message.from != chatUiState.chat.user.userToken) {

@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.Repositories
@@ -118,11 +117,5 @@ class LogInActivity : ComponentActivity() {
             )
             LinearProgressIndicator()
         }
-    }
-
-    @Preview(showBackground = true, showSystemUi = true)
-    @Composable
-    fun Tets() {
-        ProgressIndicator()
     }
 }
