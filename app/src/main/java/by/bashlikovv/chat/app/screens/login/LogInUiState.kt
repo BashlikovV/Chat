@@ -3,7 +3,7 @@ package by.bashlikovv.chat.app.screens.login
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
 data class LogInUiState(
     val identifier: String = "",

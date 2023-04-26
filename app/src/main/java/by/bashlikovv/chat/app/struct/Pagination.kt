@@ -1,7 +1,7 @@
 package by.bashlikovv.chat.app.struct
 
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
 const val PAGE_HEIGHT = 30
 

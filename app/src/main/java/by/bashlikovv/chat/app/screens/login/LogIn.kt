@@ -1,7 +1,10 @@
 package by.bashlikovv.chat.app.screens.login
 
+import android.net.Uri
 import android.os.Build
-import androidx.activity.ComponentActivity
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
@@ -37,7 +40,13 @@ import by.bashlikovv.chat.R
 fun LogInView(logInViewModel: LogInViewModel = viewModel()) {
     val logInUiState by logInViewModel.logInUiState.collectAsState()
     val context = LocalContext.current
-    val logInActivity = context as ComponentActivity
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = {
+            logInViewModel.applyUserImage(context, it ?: Uri.EMPTY)
+        }
+    )
 
     Scaffold(
         topBar = { TopAppContent() },
@@ -57,9 +66,9 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel()) {
                             horizontalArrangement = Arrangement.Center
                         ) {
                             if (logInUiState.userImageBitmap.userImageUrl == "") {
-                                DefaultImage(logInActivity = logInActivity)
+                                DefaultImage(cameraLauncher)
                             } else {
-                                UserImage(logInActivity = logInActivity)
+                                UserImage(res = cameraLauncher)
                             }
                         }
                         Row(
@@ -149,7 +158,7 @@ fun InputField(
 }
 
 @Composable
-fun DefaultImage(logInViewModel: LogInViewModel = viewModel(), logInActivity: ComponentActivity) {
+fun DefaultImage(res: ManagedActivityResultLauncher<String, Uri?>) {
     Image(
         painter = painterResource(R.drawable.add_photo),
         contentDescription = "Your image",
@@ -158,14 +167,14 @@ fun DefaultImage(logInViewModel: LogInViewModel = viewModel(), logInActivity: Co
             .size(100.dp)
             .clip(RoundedCornerShape(50.dp))
             .clickable {
-                logInViewModel.selectImage(logInActivity)
+                res.launch("image/")
             },
         colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary)
     )
 }
 
 @Composable
-fun UserImage(logInViewModel: LogInViewModel = viewModel(), logInActivity: ComponentActivity) {
+fun UserImage(logInViewModel: LogInViewModel = viewModel(), res: ManagedActivityResultLauncher<String, Uri?>) {
     val logInUiState by logInViewModel.logInUiState.collectAsState()
 
     Image(
@@ -176,7 +185,7 @@ fun UserImage(logInViewModel: LogInViewModel = viewModel(), logInActivity: Compo
             .size(100.dp)
             .clip(RoundedCornerShape(50.dp))
             .clickable {
-                logInViewModel.selectImage(logInActivity)
+                res.launch("image/")
             }
     )
 }

@@ -1,11 +1,8 @@
 package by.bashlikovv.chat.app
 
 import android.content.Intent
-import android.content.res.Resources
-import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore.Images.Media.getBitmap
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -25,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.R
@@ -85,18 +81,6 @@ class LogInActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == 0 && resultCode == RESULT_OK && data != null) {
-            val uri = data.data ?: return
-            val bitmap = getBitmap(contentResolver, uri)
-            val bitmapDrawable = BitmapDrawable(Resources.getSystem(), bitmap)
-            logInViewModel.applyUserImageUri(uri)
-            logInViewModel.applyUserBitmapImage(bitmapDrawable.bitmap.asImageBitmap())
-        }
-        super.onActivityResult(requestCode, resultCode, data)
     }
 
     @Composable
