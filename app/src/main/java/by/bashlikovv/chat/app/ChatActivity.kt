@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewModelScope
@@ -49,8 +48,7 @@ class ChatActivity : ComponentActivity() {
 
         setContent {
             val updateVisibility by chatViewModel.updateVisibility.collectAsState()
-            val scope = rememberCoroutineScope()
-            fun update() = scope.launch(Dispatchers.IO) {
+            suspend fun update() {
                 chatViewModel.setUpdateVisibility(true)
                 val result = suspendCancellableCoroutine {
                     chatViewModel.viewModelScope.launch(Dispatchers.IO) {

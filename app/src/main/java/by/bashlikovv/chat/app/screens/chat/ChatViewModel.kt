@@ -12,9 +12,6 @@ import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories.accountsRepository
@@ -52,9 +49,6 @@ class ChatViewModel(
 
     private val _updateVisibility = MutableStateFlow(false)
     var updateVisibility = _updateVisibility.asStateFlow()
-
-    var messageCheapVisible by mutableStateOf(_chatUiState.value.chat.messages.map { false })
-        private set
 
     private val sourceProvider = SourceProviderHolder().sourcesProvider
     private val roomsSource = OkHttpRoomsSource(sourceProvider)
@@ -102,20 +96,15 @@ class ChatViewModel(
                     return@launch
                 }
                 chatData = _chatUiState.value.chat.copy(messages = newValue)
-                val size = chatData.messages.size - _chatUiState.value.chat.messages.size
-                val tmpList = messageCheapVisible.toMutableList()
-                for (i in 0 until size) {
-                    tmpList.add(false)
-                }
                 StatusNotification.makeStatusNotification(
                     message = "You have new messages from ${_chatUiState.value.chat.user.userName}",
                     context = applicationContext,
                     lastMessage = chatData.messages.last().value
                 )
-                messageCheapVisible = tmpList
                 if (_chatUiState.value.chat.messages.map { it.value } != chatData.messages.map { it.value }) {
                     _chatUiState.update { it.copy(chat = chatData) }
                 }
+                _lazyListState.update { LazyListState(chatData.messages.size) }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -124,7 +113,6 @@ class ChatViewModel(
 
     fun applyChatData(chat: Chat) {
         _chatUiState.update { it.copy(chat = chat) }
-        messageCheapVisible = chat.messages.map { false }
         getUniqueUsers()
     }
 
@@ -156,14 +144,7 @@ class ChatViewModel(
             val  newValue = messages.castListOfMessages()
             chatData = _chatUiState.value.chat.copy(messages = newValue)
             applyChatData(chatData)
-
-            val size = _chatUiState.value.chat.messages.size - messages.size
-            val tmp = messageCheapVisible.toMutableList()
-            for (i in 0 until size) {
-                tmp.add(false)
-            }
-            messageCheapVisible = tmp
-            _lazyListState.update { LazyListState(messageCheapVisible.size) }
+            _lazyListState.update { LazyListState(chatData.messages.size) }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -266,17 +247,11 @@ class ChatViewModel(
                 )
             }
         }
-        messageCheapVisible = messageCheapVisible.toMutableList().apply {
-            add(false)
-        }
-        _lazyListState.update { LazyListState(messageCheapVisible.size) }
+        _lazyListState.update { LazyListState(_chatUiState.value.chat.messages.size) }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     fun onActionDelete(message: Message) {
-        messageCheapVisible = messageCheapVisible.toMutableList().apply {
-            removeAt(getMessageIndex(message))
-        }
         val tmp = _chatUiState.value.chat.messages.toMutableList()
         tmp.remove(message)
         if (message.user.userName == "Bookmark") {
@@ -308,6 +283,7 @@ class ChatViewModel(
         _chatUiState.update {
             it.copy(chat = _chatUiState.value.chat.copy(messages = tmp))
         }
+        _lazyListState.update { LazyListState(_chatUiState.value.chat.messages.size) }
     }
 
     fun onActionGallery(res: ManagedActivityResultLauncher<String, Uri?>) {
@@ -355,9 +331,6 @@ class ChatViewModel(
             val messages = _chatUiState.value.chat.messages.toMutableList()
             messages.add(message)
             _chatUiState.update { it.copy(chat = it.chat.copy(messages = messages)) }
-            messageCheapVisible = messageCheapVisible.toMutableList().apply {
-                add(false)
-            }
             if (_chatUiState.value.chat.user.userName == "Bookmarks") {
                 viewModelScope.launch {
                     onSendBookmark(message)
@@ -389,14 +362,6 @@ class ChatViewModel(
     private suspend fun onDeleteBookmark(bookmark: Message) {
         accountsRepository.deleteBookmark(bookmark)
     }
-
-    fun onCheapItemClicked(message: Message, value: Boolean) {
-        val tmp = messageCheapVisible.toMutableList()
-        tmp[getMessageIndex(message)] = value
-        messageCheapVisible = tmp
-    }
-
-    fun getMessageIndex(message: Message): Int = _chatUiState.value.chat.messages.indexOf(message)
 
     fun onActionDeleteChat() {
         val user1 = _chatUiState.value.usersData.first().userToken
@@ -433,11 +398,6 @@ class ChatViewModel(
             val  newValue = messages.castListOfMessages() + _chatUiState.value.chat.messages
             chatData = _chatUiState.value.chat.copy(messages = newValue)
             val size = chatData.messages.size - _chatUiState.value.chat.messages.size
-            val tmpList = messageCheapVisible.toMutableList()
-            for (i in 0 until size) {
-                tmpList.add(false)
-            }
-            messageCheapVisible = tmpList
             _chatUiState.update { it.copy(chat = chatData) }
             _lazyListState.update { LazyListState(size) }
         } catch (e: Exception) {

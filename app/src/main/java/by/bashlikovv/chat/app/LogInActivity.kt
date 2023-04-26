@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.Repositories
@@ -53,18 +52,16 @@ class LogInActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 logInViewModel.setProgressVisibility(true)
-                logInViewModel.viewModelScope.launch(Dispatchers.IO) {
-                    val result = suspendCancellableCoroutine {
-                        logInViewModel.viewModelScope.launch(Dispatchers.IO) {
-                            kotlinx.coroutines.delay(1000)
-                            if (Repositories.accountsRepository.isSignedIn()) {
-                                logInViewModel.applySuccess()
-                            }
-                            it.resumeWith(Result.success(false))
+                val result = suspendCancellableCoroutine {
+                    logInViewModel.viewModelScope.launch(Dispatchers.IO) {
+                        kotlinx.coroutines.delay(1000)
+                        if (Repositories.accountsRepository.isSignedIn()) {
+                            logInViewModel.applySuccess()
                         }
+                        it.resumeWith(Result.success(false))
                     }
-                    logInViewModel.setProgressVisibility(result)
                 }
+                logInViewModel.setProgressVisibility(result)
             }
 
             MessengerTheme(darkTheme = true) {
@@ -120,11 +117,5 @@ class LogInActivity : ComponentActivity() {
             )
             LinearProgressIndicator()
         }
-    }
-
-    @Preview(showBackground = true, showSystemUi = true)
-    @Composable
-    fun Tets() {
-        ProgressIndicator()
     }
 }
