@@ -26,6 +26,7 @@ import by.bashlikovv.chat.app.struct.Pagination
 import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.SourceProviderHolder
+import by.bashlikovv.chat.sources.accounts.OkHttpAccountsSource
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import by.bashlikovv.chat.sources.structs.Room
@@ -57,6 +58,7 @@ class MessengerViewModel(
     private val usersSource = OkHttpUsersSource(sourceProvider)
     private val roomsSource = OkHttpRoomsSource(sourceProvider)
     private val messagesSource = OkHttpMessagesSource(sourceProvider)
+    private val accountsSource = OkHttpAccountsSource(sourceProvider)
 
     private val selectedItem
         get() = _messengerUiState.value.selectedItem
@@ -492,5 +494,14 @@ class MessengerViewModel(
         db.draw(canvas)
 
         return bit
+    }
+
+    fun updateUsername(newName: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            accountsSource.updateUsername(
+                token = accountsRepository.getAccount().first()?.token ?: "",
+                newName = newName
+            )
+        }
     }
 }
