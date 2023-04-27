@@ -228,7 +228,7 @@ class ChatViewModel(
         }
         if (_chatUiState.value.chat.user.userName == "Bookmarks") {
             viewModelScope.launch {
-                onSendBookmark(newValue.last())
+                onSendBookmark(msg)
             }
         } else {
             GlobalScope.launch {
@@ -318,7 +318,6 @@ class ChatViewModel(
         return result
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun applyImageUri(imageUri: Uri, context: Context) {
         try {
             val bitmap = getBitmap(context.contentResolver, imageUri)
@@ -337,7 +336,7 @@ class ChatViewModel(
                     onSendBookmark(message)
                 }
             }
-            GlobalScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 messagesSource.sendImage(
                     bitmap,
                     _chatUiState.value.chat.token,

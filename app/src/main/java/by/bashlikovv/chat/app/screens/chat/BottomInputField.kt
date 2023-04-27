@@ -27,10 +27,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
-import kotlinx.coroutines.DelicateCoroutinesApi
 
 @RequiresApi(Build.VERSION_CODES.O)
-@DelicateCoroutinesApi
 @Composable
 fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
@@ -75,7 +73,7 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
             contentDescription = "Open file",
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp)/*.fillMaxWidth(0.1f)*/
+            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp)
                 .clickable {  }.weight(0.1f).fillMaxSize()
         )
         Image(

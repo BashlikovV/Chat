@@ -44,14 +44,12 @@ import by.bashlikovv.chat.R
 import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.utils.buildTime
 import by.bashlikovv.chat.app.utils.dpToFloat
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
     Scaffold(

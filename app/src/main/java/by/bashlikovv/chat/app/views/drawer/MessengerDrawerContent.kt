@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
@@ -32,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
@@ -166,16 +169,26 @@ fun MessengerDrawerContent() {
 @Composable
 fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+    val me by messengerViewModel.me.collectAsState()
+    var imageSize by remember { mutableStateOf(75.dp) }
+    val size by animateDpAsState(targetValue = imageSize)
 
     Image(
-        painter = painterResource(R.drawable.test_face_man),
+        bitmap = me.userImage.userImageBitmap.asImageBitmap(),
         contentDescription = "user image",
         contentScale = ContentScale.Crop,
         modifier = Modifier
-            .clip(RoundedCornerShape(15.dp))
+            .clip(RoundedCornerShape(size = size - 60.dp))
             .background(MaterialTheme.colors.secondary)
-            .size(75.dp)
+            .size(size = size)
             .layoutId("userImage")
+            .clickable {
+                if (imageSize == 75.dp) {
+                    imageSize += 175.dp
+                } else {
+                    imageSize -= 175.dp
+                }
+            }
     )
     Image(
         painter = painterResource(
@@ -193,7 +206,7 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
             .layoutId("themeBtn")
     )
     Text(
-        text = messengerUiState.me.userName,
+        text = me.userName,
         fontSize = 24.sp,
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier.layoutId("username"),

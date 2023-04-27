@@ -69,7 +69,10 @@ fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> U
     BoxWithConstraints {
         ConstraintLayout(
             constraintSet = getTopChatBarConstraints(),
-            modifier = Modifier.fillMaxWidth().height(55.dp).background(MaterialTheme.colors.primary)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp)
+                .background(MaterialTheme.colors.primary)
         ) {
             Image(
                 painter = painterResource(R.drawable.arrow_back),
@@ -80,7 +83,8 @@ fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> U
                     .size(40.dp)
                     .clickable {
                         onBackAction()
-                    }.layoutId("closeChat")
+                    }
+                    .layoutId("closeChat")
             )
             Image(
                 bitmap = chatUiState.chat.user.userImage.userImageBitmap.asImageBitmap(),
@@ -88,7 +92,8 @@ fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> U
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .layoutId("userImage")
-                    .clip(RoundedCornerShape(25.dp)).size(50.dp)
+                    .clip(RoundedCornerShape(25.dp))
+                    .size(50.dp)
             )
             Text(
                 text = chatUiState.chat.user.userName,
@@ -111,7 +116,8 @@ fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> U
                     .size(40.dp)
                     .clickable {
                         chatViewModel.onDMenuAction(true)
-                    }.layoutId("more")
+                    }
+                    .layoutId("more")
             )
         }
         ChatMenu()
