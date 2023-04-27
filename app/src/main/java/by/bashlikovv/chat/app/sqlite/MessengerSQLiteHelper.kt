@@ -18,7 +18,17 @@ class MessengerSQLiteHelper(
             }
     }
 
-    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        db.execSQL("DROP TABLE IF EXISTS ${MessengerSQLiteContract.BookmarksTable};")
+        db.execSQL("DROP TABLE IF EXISTS ${MessengerSQLiteContract.CurrentUserTable};")
 
+        val sql = applicationContext.assets.open("db_init.sql").bufferedReader().use {
+            it.readText()
+        }
+        sql.split(';')
+            .filter { it.isNotBlank() }
+            .forEach {
+                db.execSQL(it)
+            }
     }
 }
