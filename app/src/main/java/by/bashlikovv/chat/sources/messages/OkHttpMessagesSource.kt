@@ -90,7 +90,11 @@ class OkHttpMessagesSource(
     private fun Socket.connect(baseUrl: String) {
         val ip = baseUrl.substringAfter("://").substringBefore(":")
         val port = baseUrl.substringAfter("$ip:").toInt()
-        this.connect(InetSocketAddress(ip, port))
+        try {
+            this.connect(InetSocketAddress(ip, port), 1000)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     suspend fun getImage(uri: String): Bitmap {
@@ -144,7 +148,7 @@ class OkHttpMessagesSource(
                 .retryOnConnectionFailure(true)
                 .build()
             val stream = ByteArrayOutputStream()
-            image.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            image.compress(Bitmap.CompressFormat.JPEG, 50, stream)
 
             val roomBytes = if (isSignUp) {
                 room.encodeToByteArray()
