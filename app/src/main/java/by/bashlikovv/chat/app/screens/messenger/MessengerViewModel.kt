@@ -397,13 +397,13 @@ class MessengerViewModel(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun getMessagesByRoom(room: Room): List<Message> {
+    suspend fun getMessagesByRoom(room: Room, pagination: Pagination = Pagination(0, 1)): List<Message> {
         val result: MutableList<Message> = mutableListOf()
 
         try {
             val it = messagesSource.getRoomMessages(
                 room = SecurityUtilsImpl().bytesToString(room.token),
-                pagination = Pagination(0, 1).getRange()
+                pagination = pagination.getRange()
             ).last()
             val user = if (room.user2.username == getUser().userName) {
                 room.user1
@@ -505,9 +505,13 @@ class MessengerViewModel(
                     userImage = image
                 ),
                 messages = messages,
-                token = SecurityUtilsImpl().bytesToString(it.token)
+                token = SecurityUtilsImpl().bytesToString(it.token),
+                time = messages.last().time
             )
         }
+        /*.stream().sorted { o1, o2 ->
+            f.parse(o1.time)?.compareTo(f.parse(o2.time)) ?: -1
+        }.toList()*/
 
         applyMessengerUiState(
             MessengerUiState(chats = _messengerUiState.value.chats + result)
