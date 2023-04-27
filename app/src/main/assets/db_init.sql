@@ -10,6 +10,6 @@ CREATE TABLE "current_user" (
 CREATE TABLE "bookmarks" (
     "has_image" INTEGER,
     "message"   TEXT,
-    "image"     BLOB,
+    "image"     TEXT,
     "time"      INTEGER NOT NULL
 );
