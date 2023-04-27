@@ -53,6 +53,9 @@ class MessengerViewModel(
     private val _updateVisibility = MutableStateFlow(false)
     var updateVisibility = _updateVisibility.asStateFlow()
 
+    private val _me = MutableStateFlow(User())
+    var me = _me.asStateFlow()
+
     private val sourceProvider = SourceProviderHolder().sourcesProvider
 
     private val usersSource = OkHttpUsersSource(sourceProvider)
@@ -252,7 +255,7 @@ class MessengerViewModel(
         if (_messengerUiState.value.newChat) {
             val users: List<by.bashlikovv.chat.sources.structs.User>
             try {
-                users = usersSource.getAllUsers(_messengerUiState.value.me.userToken)
+                users = usersSource.getAllUsers(_me.value.userToken)
             } catch (e: Exception) {
                 result.add(Chat(User(userName = "Network error."), messages = listOf(Message(value = ""))))
                 return result
@@ -316,17 +319,44 @@ class MessengerViewModel(
      * [applyMe] - function for applying current user data after registration
      * */
     private fun applyMe(me: User) {
-        _messengerUiState.update { it.copy(me = me) }
+        _me.update { me }
     }
 
     private suspend fun getUser(): User {
         val data: Account? = accountsRepository.getAccount().first()
-        return User(
-            userId = data?.id ?: 0,
-            userName = data?.username ?: "unknown user",
-            userEmail = data?.email ?: "unknown email",
-            userToken = data?.token ?: "token error"
+        val userName = data?.username ?: _me.value.userName
+        val userToken = data?.token ?: _me.value.userToken
+
+        return _me.value.copy(
+            userName = userName,
+            userToken = userToken
         )
+    }
+
+    private suspend fun getStartUser(): User {
+        val result: User = suspendCancellableCoroutine {
+            viewModelScope.launch(Dispatchers.IO) {
+                val data: Account? = accountsRepository.getAccount().first()
+                val user = usersSource.getUser(data?.token ?: "")
+                val userBitmapImageUrl = user.image.decodeToString()
+                val userBitmapImage = messagesSource.getImage(userBitmapImageUrl)
+                it.resumeWith(
+                    Result.success(
+                        User(
+                            userId = data?.id ?: 0,
+                            userName = data?.username ?: "unknown user",
+                            userEmail = data?.email ?: "unknown email",
+                            userToken = data?.token ?: "token error",
+                            userImage = UserImage(
+                                userImageBitmap = userBitmapImage,
+                                userImageUrl = userBitmapImageUrl
+                            )
+                        )
+                    )
+                )
+            }
+        }
+        return result
     }
 
     private suspend fun getBookmarks(): List<Message>? {
@@ -425,7 +455,7 @@ class MessengerViewModel(
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun updateViewData() {
-        applyMe(getUser())
+        applyMe(getStartUser())
         var chats = getBookmarks()
         if (chats.isNullOrEmpty()) {
             chats = listOf(Message(value = "You do not have bookmarks"))

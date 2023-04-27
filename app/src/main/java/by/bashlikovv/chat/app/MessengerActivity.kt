@@ -94,7 +94,7 @@ class MessengerActivity : ComponentActivity() {
                 )
             )
             messengerViewModel.viewModelScope.launch {
-                putExtra(TOKEN, messengerViewModel.messengerUiState.value.me.userToken)
+                putExtra(TOKEN, messengerViewModel.me.value.userToken)
             }
         }
         return chatIntent

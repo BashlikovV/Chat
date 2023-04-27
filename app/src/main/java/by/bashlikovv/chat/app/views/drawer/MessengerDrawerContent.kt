@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
@@ -166,9 +167,10 @@ fun MessengerDrawerContent() {
 @Composable
 fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+    val me by messengerViewModel.me.collectAsState()
 
     Image(
-        painter = painterResource(R.drawable.test_face_man),
+        bitmap = me.userImage.userImageBitmap.asImageBitmap(),
         contentDescription = "user image",
         contentScale = ContentScale.Crop,
         modifier = Modifier
@@ -193,7 +195,7 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
             .layoutId("themeBtn")
     )
     Text(
-        text = messengerUiState.me.userName,
+        text = me.userName,
         fontSize = 24.sp,
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier.layoutId("username"),
