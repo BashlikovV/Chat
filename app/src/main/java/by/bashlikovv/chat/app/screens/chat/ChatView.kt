@@ -56,9 +56,11 @@ fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
         topBar = { TopChatBar { onBackAction() } },
         bottomBar = { BottomInputFiled() }
     ) {
-        ChatContent(modifier = modifier
-            .padding(it)
-            .fillMaxSize())
+        ChatContent(
+            modifier = modifier
+                .padding(it)
+                .fillMaxSize()
+        )
     }
 }
 
