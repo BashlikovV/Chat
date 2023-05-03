@@ -536,6 +536,7 @@ class MessengerViewModel(
                 token = accountsRepository.getAccount().first()?.token ?: "",
                 newName = newName
             )
+            accountsRepository.updateAccountUsername(newUsername = newName)
         }
     }
 }
