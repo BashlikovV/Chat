@@ -27,7 +27,7 @@ class OkHttpMessagesSource(
     config: OkHttpConfig
 ) : BaseOkHttpSource(config) {
 
-    suspend fun getRoomMessages(room: String, pagination: IntRange): List<Message> {
+    suspend fun getRoomMessages(room: String, pagination: IntRange): GetMessagesResult {
         return try {
             val getRoomMessagesRequestBody = RoomMessagesRequestBody(
                 room = room,
@@ -38,10 +38,14 @@ class OkHttpMessagesSource(
                 .endpoint("/${HttpContract.UrlMethods.ROOM_MESSAGES}")
                 .build()
             val response = client.newCall(request).suspendEnqueue()
-            response.parseJsonResponse<RoomMessagesResponseBody>().messages
+            val result = response.parseJsonResponse<RoomMessagesResponseBody>()
+            GetMessagesResult(
+                messages = result.messages,
+                unreadMessagesCount = result.unreadMessagesCount
+            )
         } catch (e: Exception) {
             e.printStackTrace()
-            listOf()
+            GetMessagesResult()
         }
     }
 
@@ -178,6 +182,19 @@ class OkHttpMessagesSource(
         } catch (e: Exception) {
             e.printStackTrace()
             return e.message.toString()
+        }
+    }
+
+    suspend fun readRoomMessages(room: String) {
+        try {
+            val readMessagesRequestBody = ReadMessagesRequestBody(room)
+            val request = Request.Builder()
+                .post(readMessagesRequestBody.toJsonRequestBody())
+                .endpoint("/${HttpContract.UrlMethods.READ_MESSAGES}")
+                .build()
+            client.newCall(request).suspendEnqueue()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }
