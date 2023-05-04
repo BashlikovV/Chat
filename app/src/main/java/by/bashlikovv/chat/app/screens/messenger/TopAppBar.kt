@@ -209,6 +209,7 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ContentIcon(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
@@ -224,6 +225,7 @@ fun ContentIcon(messengerViewModel: MessengerViewModel = viewModel()) {
                 .clip(RoundedCornerShape(25.dp))
                 .clickable {
                     messengerViewModel.onSearchClick(false)
+                    messengerViewModel.onSearchInputChange("")
                 }
         )
     }
