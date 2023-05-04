@@ -1,5 +1,7 @@
 package by.bashlikovv.chat.app.views.fab
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.app.screens.messenger.MessengerViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MessengerFABContent(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
@@ -25,6 +28,7 @@ fun MessengerFABContent(messengerViewModel: MessengerViewModel = viewModel()) {
     FilledIconButton(
         onClick = {
             messengerViewModel.onAddChatClicked(!messengerUiState.newChat)
+            messengerViewModel.onSearchInputChange("")
         },
         shape = RoundedCornerShape(25.dp),
         colors = IconButtonDefaults.filledIconButtonColors(
