@@ -166,7 +166,7 @@ class ChatViewModel(
                     userToken = SecurityUtilsImpl().bytesToString(it.owner.token),
                     userEmail = it.owner.email
                 ),
-                isRead = false,
+                isRead = it.isRead,
                 from = it.from,
                 isImage = image != null,
                 imageBitmap = image ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
