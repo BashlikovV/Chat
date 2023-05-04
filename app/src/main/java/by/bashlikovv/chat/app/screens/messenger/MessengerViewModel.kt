@@ -92,6 +92,9 @@ class MessengerViewModel(
         _messengerUiState.update { currentState ->
             currentState.copy(chats = currentState.chats.map { if (it == chat) it.copy(count = 0) else it })
         }
+        viewModelScope.launch(Dispatchers.IO) {
+            messagesSource.readRoomMessages(chat.token)
+        }
     }
 
     /**
@@ -396,15 +399,22 @@ class MessengerViewModel(
         )
     }
 
+    data class GetMessagesResult(
+        val messages: List<Message> = listOf(),
+        val unreadMessageCount: Int = 0
+    )
+
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun getMessagesByRoom(room: Room, pagination: Pagination = Pagination(0, 1)): List<Message> {
+    suspend fun getMessagesByRoom(room: Room, pagination: Pagination = Pagination(0, 1)): GetMessagesResult {
         val result: MutableList<Message> = mutableListOf()
+        var count = 0
 
         try {
-            val it = messagesSource.getRoomMessages(
+            val getMessagesResult = messagesSource.getRoomMessages(
                 room = SecurityUtilsImpl().bytesToString(room.token),
                 pagination = pagination.getRange()
-            ).last()
+            )
+            count = getMessagesResult.unreadMessagesCount
             val user = if (room.user2.username == getUser().userName) {
                 room.user1
             } else {
@@ -412,13 +422,13 @@ class MessengerViewModel(
             }
             result.add(
                 Message(
-                    value = it.value.decodeToString(),
+                    value = getMessagesResult.messages.last().value.decodeToString(),
                     user = User(
                         userName = user.username,
                         userToken = SecurityUtilsImpl().bytesToString(user.token),
                         userEmail = user.email
                     ),
-                    time = it.time,
+                    time = getMessagesResult.messages.last().time,
                     from = SecurityUtilsImpl().bytesToString(user.token)
                 )
             )
@@ -430,7 +440,7 @@ class MessengerViewModel(
             }
         }
 
-        return result
+        return GetMessagesResult(messages = result, unreadMessageCount = count)
     }
 
     private suspend fun getImage(imageUri: String): Bitmap {
@@ -493,7 +503,8 @@ class MessengerViewModel(
             } else {
                 it.user2
             }
-            val messages = getMessagesByRoom(room = it)
+            val tmp = getMessagesByRoom(room = it)
+            val messages = tmp.messages
             val image = UserImage(
                 userImageBitmap = getImage(user.image.decodeToString()),
                 userImageUri = Uri.parse(user.image.decodeToString())
@@ -506,7 +517,8 @@ class MessengerViewModel(
                 ),
                 messages = messages,
                 token = SecurityUtilsImpl().bytesToString(it.token),
-                time = messages.last().time
+                time = messages.last().time,
+                count = tmp.unreadMessageCount
             )
         }
         /*.stream().sorted { o1, o2 ->

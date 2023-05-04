@@ -87,11 +87,11 @@ class ChatViewModel(
         var chatData: Chat
         GlobalScope.launch {
             try {
-                val messages = messagesSource.getRoomMessages(
+                val getMessagesResult = messagesSource.getRoomMessages(
                     _chatUiState.value.chat.token,
                     Pagination().getRange()
                 )
-                val  newValue = messages.castListOfMessages()
+                val  newValue = getMessagesResult.messages.castListOfMessages()
                 val tmp = _chatUiState.value.chat.messages.takeLast(newValue.size)
                 if (tmp.map { it.value } == newValue.map { it.value }) {
                     return@launch
@@ -138,11 +138,11 @@ class ChatViewModel(
             _chatUiState.update {
                 it.copy(chat = it.chat.copy(user = it.chat.user.copy(userImage = userImage)))
             }
-            val messages = messagesSource.getRoomMessages(
+            val getMessagesResult = messagesSource.getRoomMessages(
                 _chatUiState.value.chat.token,
                 Pagination().getRange()
             )
-            val  newValue = messages.castListOfMessages()
+            val  newValue = getMessagesResult.messages.castListOfMessages()
             chatData = _chatUiState.value.chat.copy(messages = newValue)
             applyChatData(chatData)
             _lazyListState.update { LazyListState(chatData.messages.size) }
@@ -391,11 +391,11 @@ class ChatViewModel(
     private suspend fun processRefresh() {
         val chatData: Chat
         try {
-            val messages = messagesSource.getRoomMessages(
+            val getMessagesResult = messagesSource.getRoomMessages(
                 _chatUiState.value.chat.token,
                 pagination = pagination.getRange()
             )
-            val  newValue = messages.castListOfMessages() + _chatUiState.value.chat.messages
+            val  newValue = getMessagesResult.messages.castListOfMessages() + _chatUiState.value.chat.messages
             chatData = _chatUiState.value.chat.copy(messages = newValue)
             val size = chatData.messages.size - _chatUiState.value.chat.messages.size
             _chatUiState.update { it.copy(chat = chatData) }
