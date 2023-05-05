@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
@@ -53,6 +54,14 @@ class MessengerActivity : ComponentActivity() {
             LaunchedEffect(Unit) { messengerViewModel.loadViewData() }
 
             val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+            onBackPressedDispatcher.addCallback {
+                if (messengerUiState.expanded) {
+                    messengerViewModel.onSearchClick(false)
+                    return@addCallback
+                } else {
+                    finish()
+                }
+            }
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.primary) {
                     Box(modifier = Modifier.fillMaxSize()) {
