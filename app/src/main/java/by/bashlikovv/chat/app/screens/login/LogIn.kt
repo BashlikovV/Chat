@@ -134,8 +134,17 @@ fun InputField(
 
     TextField(
         value = value,
-        onValueChange = { onTextChange(it) },
-        isError = !logInUiState.isIdentifierCorrect,
+        onValueChange = {
+            if (!logInUiState.isIdentifierCorrect || !logInUiState.isPasswordCorrect) {
+                logInViewModel.clearInputErrors()
+            }
+            onTextChange(it)
+        },
+        isError = when(text) {
+            "Password" -> !logInUiState.isPasswordCorrect
+            "Email" -> !logInUiState.isIdentifierCorrect
+            else -> false
+        },
         placeholder = { Text(text) },
         colors = TextFieldDefaults.textFieldColors(
             textColor = MaterialTheme.colors.primaryVariant,
