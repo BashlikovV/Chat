@@ -59,13 +59,17 @@ class LogInViewModel(
     }
 
     fun applyUserImage(context: Context, imageUri: Uri) {
-        val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri).asImageBitmap()
-        val value = _logInUiState.value.userImageBitmap.copy(
-            userImageUri = imageUri,
-            userImageBitmap = bitmap.asAndroidBitmap(),
-            userImageUrl = imageUri.path.toString()
-        )
-        _logInUiState.update { it.copy(userImageBitmap = value) }
+        try {
+            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri).asImageBitmap()
+            val value = _logInUiState.value.userImageBitmap.copy(
+                userImageUri = imageUri,
+                userImageBitmap = bitmap.asAndroidBitmap(),
+                userImageUrl = imageUri.path.toString()
+            )
+            _logInUiState.update { it.copy(userImageBitmap = value) }
+        } catch (e: Exception) {
+            showToast(context, "Image not found")
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -99,6 +103,8 @@ class LogInViewModel(
                                     _logInUiState.value.password
                                 )
                             } else {
+                                processAccountAlreadyExistsException(context)
+                                processPasswordMismatchException(context)
                                 showToast(context, "Authentication error.")
                             }
                         } else {
@@ -110,6 +116,8 @@ class LogInViewModel(
                             signUp(signUpData, context)
                         }
                     } catch (e: Exception) {
+                        processAccountAlreadyExistsException(context)
+                        processPasswordMismatchException(context)
                         showToast(context, "Authentication error ${e.message}")
                     } finally {
                         if (accountsRepository.isSignedIn() && !_logInUiState.value.token.contains("500")) {
@@ -142,6 +150,7 @@ class LogInViewModel(
                 showSuccessSignUpMessage(context)
             } else {
                 showToast(context, "Authentication error.")
+                throw Exception()
             }
         } catch (e: EmptyFieldException) {
             processEmptyFieldException()
@@ -151,6 +160,9 @@ class LogInViewModel(
             processAccountAlreadyExistsException(context)
         } catch (e: StorageException) {
             processStorageException(context)
+        } catch (e: Exception) {
+            processAccountAlreadyExistsException(context)
+            processPasswordMismatchException(context)
         }
     }
 
@@ -163,10 +175,12 @@ class LogInViewModel(
     }
 
     private fun processAccountAlreadyExistsException(context: Context) {
+        _logInUiState.update { it.copy(isIdentifierCorrect = false) }
         showToast(context, "Account already exists")
     }
 
     private fun processPasswordMismatchException(context: Context) {
+        _logInUiState.update { it.copy(isPasswordCorrect = false) }
         showToast(context, "Error. Incorrect password")
     }
 
@@ -180,5 +194,12 @@ class LogInViewModel(
 
     fun setProgressVisibility(newValue: Boolean) {
         _logInUiState.update { it.copy(progressBarVisibility = newValue) }
+    }
+
+    fun clearInputErrors() {
+        _logInUiState.update { it.copy(
+            isIdentifierCorrect = true,
+            isPasswordCorrect = true
+        ) }
     }
 }
