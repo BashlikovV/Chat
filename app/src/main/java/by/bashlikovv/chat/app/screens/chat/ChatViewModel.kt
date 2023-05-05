@@ -366,7 +366,7 @@ class ChatViewModel(
     fun onActionDeleteChat() {
         val user1 = _chatUiState.value.usersData.first().userToken
         val user2 = _chatUiState.value.usersData.last().userToken
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             roomsSource.deleteRoom(user1, user2)
         }
     }
