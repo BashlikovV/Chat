@@ -154,7 +154,7 @@ class ChatViewModel(
     private suspend fun List<by.bashlikovv.chat.sources.structs.Message>.castListOfMessages(): List<Message> {
         return this.map {
             var image: Bitmap? = null
-            if (it.image.contains("/home")) {
+            if (!it.image.contains("no image") && it.image.isNotEmpty()) {
                 image = messagesSource.getImage(it.image)
             }
 
