@@ -65,6 +65,7 @@ private fun getTopChatBarConstraints(): ConstraintSet {
 @Composable
 fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> Unit) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
+    val dMenuState by chatViewModel.dMenuExpanded.collectAsState()
 
     BoxWithConstraints {
         ConstraintLayout(
@@ -104,7 +105,7 @@ fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> U
             )
             Image(
                 painter = painterResource(
-                    if (chatUiState.dMenuExpanded)
+                    if (dMenuState)
                         R.drawable.more_horiz
                     else
                         R.drawable.more_vert

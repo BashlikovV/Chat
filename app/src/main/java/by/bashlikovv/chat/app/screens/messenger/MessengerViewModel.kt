@@ -19,6 +19,12 @@ import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.Account
+import by.bashlikovv.chat.app.model.chats.ChatRoomsRepository
+import by.bashlikovv.chat.app.model.chats.RoomsRepository
+import by.bashlikovv.chat.app.model.messages.ChatMessagesRepository
+import by.bashlikovv.chat.app.model.messages.MessagesRepository
+import by.bashlikovv.chat.app.model.users.ChatUsersRepository
+import by.bashlikovv.chat.app.model.users.UsersRepository
 import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
@@ -44,7 +50,10 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  * */
 
 class MessengerViewModel(
-    private val accountsRepository: AccountsRepository
+    private val accountsRepository: AccountsRepository,
+    private val roomsRepository: RoomsRepository = ChatRoomsRepository(),
+    private val messagesRepository: MessagesRepository = ChatMessagesRepository(),
+    private val usersRepository: UsersRepository = ChatUsersRepository()
 ) : ViewModel() {
 
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
@@ -52,6 +61,12 @@ class MessengerViewModel(
 
     private val _updateVisibility = MutableStateFlow(false)
     var updateVisibility = _updateVisibility.asStateFlow()
+
+    private val _drawerState = MutableStateFlow(DrawerState(DrawerValue.Closed))
+    var drawerState = _drawerState.asStateFlow()
+
+    private val _searchedItems = MutableStateFlow(listOf<Chat>())
+    var searchedItems = _searchedItems.asStateFlow()
 
     private val _me = MutableStateFlow(User())
     var me = _me.asStateFlow()
@@ -102,14 +117,14 @@ class MessengerViewModel(
      * */
     fun onActionDelete(chat: Chat) {
         onActionCloseItems()
-        _messengerUiState.update { currentState ->
-            currentState.copy(chats = currentState.chats.toMutableList().apply { remove(chat) })
-        }
-        viewModelScope.launch {
-            roomsSource.deleteRoom(
+        viewModelScope.launch(Dispatchers.IO) {
+            roomsRepository.onDeleteChat(
                 user1 = getUser().userToken,
                 user2 = chat.user.userToken
             )
+        }
+        _messengerUiState.update { currentState ->
+            currentState.copy(chats = currentState.chats.toMutableList().apply { remove(chat) })
         }
     }
 
@@ -144,13 +159,12 @@ class MessengerViewModel(
      * [onExpandModalDrawer] - function that implements logic of [onActionMenu] function
      * */
     private fun onExpandModalDrawer() {
-        _messengerUiState.update {
-            it.copy(
-                drawerState = if (it.drawerState.isClosed)
-                    DrawerState(DrawerValue.Open)
-                else
-                    DrawerState(DrawerValue.Closed)
-            )
+        _drawerState.update {
+            if (it.isClosed) {
+                DrawerState(DrawerValue.Open)
+            } else {
+                DrawerState(DrawerValue.Closed)
+            }
         }
     }
 
@@ -240,7 +254,7 @@ class MessengerViewModel(
         setUpdateVisibility(true)
         val result = suspendCancellableCoroutine {
             viewModelScope.launch(Dispatchers.IO) {
-                _messengerUiState.update { it.copy(searchedItems = listOf()) }
+                _searchedItems.update { listOf() }
                 getSearchOutput(newValue)
                 it.resumeWith(Result.success(false))
             }
@@ -256,14 +270,12 @@ class MessengerViewModel(
         if (_messengerUiState.value.newChat) {
             var users = listOf<by.bashlikovv.chat.sources.structs.User>()
             try {
-                users = usersSource.getAllUsers(_me.value.userToken)
+                users = usersRepository.getUsers(_me.value.userToken)
             } catch (e: Exception) {
-                _messengerUiState.update { state ->
-                    state.copy(
-                        searchedItems = listOf(Chat(
-                            user = User(userName = "Network error."),
-                            messages = listOf(Message(value = "")))
-                        )
+                _searchedItems.update {
+                    listOf(Chat(
+                        user = User(userName = "Network error."),
+                        messages = listOf(Message(value = "")))
                     )
                 }
             }
@@ -272,15 +284,12 @@ class MessengerViewModel(
                     val tmp = Chat(
                         user = User(
                             userName = it.username, userToken = SecurityUtilsImpl().bytesToString(it.token),
-                            userImage = UserImage(
-                                userImageBitmap = messagesSource.getImage(it.image.decodeToString()),
-                                userImageUri = Uri.parse(it.image.decodeToString())
-                            )
+                            userImage = usersRepository.getUserImage(it.image.decodeToString())
                         ),
                         messages = listOf(Message(value = "")), time = ""
                     )
-                    _messengerUiState.update { state ->
-                        state.copy(searchedItems = state.searchedItems + tmp)
+                    _searchedItems.update { state ->
+                        state + tmp
                     }
                 }
             } else {
@@ -292,16 +301,13 @@ class MessengerViewModel(
                                 user = User(
                                     userName = it.username,
                                     userToken = SecurityUtilsImpl().bytesToString(it.token),
-                                    userImage = UserImage(
-                                        userImageBitmap = messagesSource.getImage(it.image.decodeToString()),
-                                        userImageUri = Uri.parse(it.image.decodeToString())
-                                    )
+                                    userImage = usersRepository.getUserImage(it.image.decodeToString())
                                 ),
                                 messages = listOf(Message(value = "")),
                                 time = ""
                             )
-                            _messengerUiState.update { state ->
-                                state.copy(searchedItems = state.searchedItems + tmp)
+                            _searchedItems.update { state ->
+                                state + tmp
                             }
                         }
                     }
@@ -310,16 +316,14 @@ class MessengerViewModel(
         } else {
             if (input.isEmpty()) {
                 val tmp = _messengerUiState.value.chats.toMutableList()
-                _messengerUiState.update {
-                    it.copy(searchedItems = tmp)
-                }
+                _searchedItems.update { tmp }
             } else {
                 _messengerUiState.value.chats.forEach {
                     if (input.length <= it.user.userName.length) {
                         val subStr = it.user.userName.subSequence(0, input.length).toString().lowercase()
                         if (subStr == input.lowercase()) {
-                            _messengerUiState.update { state ->
-                                state.copy(searchedItems = state.searchedItems + it)
+                            _searchedItems.update { state ->
+                                state + it
                             }
                         }
                     }
@@ -350,9 +354,9 @@ class MessengerViewModel(
         val result: User = suspendCancellableCoroutine {
             viewModelScope.launch(Dispatchers.IO) {
                 val data: Account? = accountsRepository.getAccount().first()
-                val user = usersSource.getUser(data?.token ?: "")
+                val user = usersRepository.getUser(data?.token ?: "")
                 val userBitmapImageUrl = user.image.decodeToString()
-                val userBitmapImage = messagesSource.getImage(userBitmapImageUrl)
+                val userImage = usersRepository.getUserImage(userBitmapImageUrl)
                 it.resumeWith(
                     Result.success(
                         User(
@@ -360,10 +364,7 @@ class MessengerViewModel(
                             userName = data?.username ?: "unknown user",
                             userEmail = data?.email ?: "unknown email",
                             userToken = data?.token ?: "token error",
-                            userImage = UserImage(
-                                userImageBitmap = userBitmapImage,
-                                userImageUrl = userBitmapImageUrl
-                            )
+                            userImage = userImage
                         )
                     )
                 )
@@ -377,7 +378,7 @@ class MessengerViewModel(
     }
 
     fun onSignOut() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             accountsRepository.logout()
         }
     }
@@ -392,65 +393,15 @@ class MessengerViewModel(
         tmp.add(Chat(user, messages = listOf(Message(value = "You do not have messages now."))))
         _messengerUiState.update { it.copy(chats = tmp) }
         viewModelScope.launch {
-            addRoom(
+            roomsSource.addRoom(
                 getUser().userToken,
                 _messengerUiState.value.chats.last().user.userToken
             )
         }
     }
 
-    private suspend fun addRoom(user1: String, user2: String): String {
-        return roomsSource.addRoom(user1, user2)
-    }
-
     private suspend fun getRooms(): List<Room> {
-        return roomsSource.getRooms(
-            getUser().userToken
-        )
-    }
-
-    data class GetMessagesResult(
-        val messages: List<Message> = listOf(),
-        val unreadMessageCount: Int = 0
-    )
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun getMessagesByRoom(room: Room, pagination: Pagination = Pagination(0, 1)): GetMessagesResult {
-        val result: MutableList<Message> = mutableListOf()
-        var count = 0
-
-        try {
-            val getMessagesResult = messagesSource.getRoomMessages(
-                room = SecurityUtilsImpl().bytesToString(room.token),
-                pagination = pagination.getRange()
-            )
-            count = getMessagesResult.unreadMessagesCount
-            val user = if (room.user2.username == getUser().userName) {
-                room.user1
-            } else {
-                room.user2
-            }
-            result.add(
-                Message(
-                    value = getMessagesResult.messages.last().value.decodeToString(),
-                    user = User(
-                        userName = user.username,
-                        userToken = SecurityUtilsImpl().bytesToString(user.token),
-                        userEmail = user.email
-                    ),
-                    time = getMessagesResult.messages.last().time,
-                    from = SecurityUtilsImpl().bytesToString(user.token)
-                )
-            )
-        } catch (e: Exception) {
-            result.add(Message(value = "You do not have messages now.", time = ""))
-        } finally {
-            if (result.isEmpty()) {
-                result.add(Message(value = "You do not have messages now.", time = ""))
-            }
-        }
-
-        return GetMessagesResult(messages = result, unreadMessageCount = count)
+        return roomsRepository.getRooms(getUser().userToken)
     }
 
     private suspend fun getImage(imageUri: String): Bitmap {
@@ -512,7 +463,11 @@ class MessengerViewModel(
             } else {
                 it.user2
             }
-            val tmp = getMessagesByRoom(room = it)
+            val tmp = messagesRepository.getMessagesByRoom(
+                room = it,
+                pagination = Pagination(0, 1),
+                firstUserName = getUser().userName
+            )
             val messages = tmp.messages
             val image = UserImage(
                 userImageBitmap = getImage(user.image.decodeToString()),
@@ -534,9 +489,6 @@ class MessengerViewModel(
             )
             chat
         }
-        /*.stream().sorted { o1, o2 ->
-            f.parse(o1.time)?.compareTo(f.parse(o2.time)) ?: -1
-        }.toList()*/
     }
 
     private fun Int.getBitmapFromImage(context: Context): Bitmap {

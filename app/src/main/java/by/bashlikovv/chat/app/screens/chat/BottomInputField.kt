@@ -32,6 +32,7 @@ import by.bashlikovv.chat.R
 @Composable
 fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
+    val chatInputState by chatViewModel.chatInputState.collectAsState()
     val context = LocalContext.current
 
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -42,7 +43,9 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
     )
 
     Row(
-        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.primary),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colors.primary),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
@@ -50,11 +53,15 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
             contentDescription = "Emoji selection",
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp)/*.fillMaxWidth(0.1f)*/
-                .clickable {  }.weight(0.1f).fillMaxSize()
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .size(35.dp)/*.fillMaxWidth(0.1f)*/
+                .clickable { }
+                .weight(0.1f)
+                .fillMaxSize()
         )
         TextField(
-            value = chatUiState.textInputState,
+            value = chatInputState,
             onValueChange = { chatViewModel.onTextInputChange(it) },
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Send),
             keyboardActions = KeyboardActions(onSend = {
@@ -73,22 +80,30 @@ fun BottomInputFiled(chatViewModel: ChatViewModel = viewModel()) {
             contentDescription = "Open file",
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp)
-                .clickable {  }.weight(0.1f).fillMaxSize()
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .size(35.dp)
+                .clickable { }
+                .weight(0.1f)
+                .fillMaxSize()
         )
         Image(
             painter = painterResource(if (chatUiState.isCanSend) R.drawable.send else  R.drawable.camera),
             contentDescription = "Open camera",
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-            modifier = Modifier.padding(horizontal = 5.dp).size(35.dp)
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .size(35.dp)
                 .clickable {
                     if (chatUiState.isCanSend) {
                         chatViewModel.onActionSend()
                     } else {
-                         chatViewModel.onActionGallery(cameraLauncher)
+                        chatViewModel.onActionGallery(cameraLauncher)
                     }
-                }.weight(0.1f).fillMaxSize()
+                }
+                .weight(0.1f)
+                .fillMaxSize()
         )
     }
 }

@@ -14,10 +14,14 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import by.bashlikovv.chat.Repositories.accountsRepository
 import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
-import by.bashlikovv.chat.app.screens.login.UserImage
+import by.bashlikovv.chat.app.model.chats.ChatRoomsRepository
+import by.bashlikovv.chat.app.model.chats.RoomsRepository
+import by.bashlikovv.chat.app.model.messages.ChatMessagesRepository
+import by.bashlikovv.chat.app.model.messages.MessagesRepository
+import by.bashlikovv.chat.app.model.users.ChatUsersRepository
+import by.bashlikovv.chat.app.model.users.UsersRepository
 import by.bashlikovv.chat.app.struct.*
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.StatusNotification
@@ -37,7 +41,10 @@ import kotlin.concurrent.thread
 
 @RequiresApi(Build.VERSION_CODES.O)
 class ChatViewModel(
-    accountsRepository: AccountsRepository
+    accountsRepository: AccountsRepository,
+    private val messagesRepository: MessagesRepository = ChatMessagesRepository(),
+    private val usersRepository: UsersRepository = ChatUsersRepository(),
+    private val roomsRepository: RoomsRepository = ChatRoomsRepository()
 ) : ViewModel() {
 
     private val _chatUiState = MutableStateFlow(ChatUiState())
@@ -50,6 +57,12 @@ class ChatViewModel(
 
     private val _updateVisibility = MutableStateFlow(false)
     var updateVisibility = _updateVisibility.asStateFlow()
+
+    private val _dMenuExpanded = MutableStateFlow(false)
+    var dMenuExpanded = _dMenuExpanded.asStateFlow()
+
+    private val _chatInputState = MutableStateFlow("")
+    var chatInputState = _chatInputState.asStateFlow()
 
     private val sourceProvider = SourceProviderHolder().sourcesProvider
     private val roomsSource = OkHttpRoomsSource(sourceProvider)
@@ -130,25 +143,16 @@ class ChatViewModel(
     }
 
     suspend fun getMessagesFromDb() {
-        val chatData: Chat
-        try {
-            val userImage = UserImage(messagesSource.getImage(
-                _chatUiState.value.chat.user.userImage.userImageUri.encodedPath.toString()
-            ))
-            _chatUiState.update {
-                it.copy(chat = it.chat.copy(user = it.chat.user.copy(userImage = userImage)))
-            }
-            val getMessagesResult = messagesSource.getRoomMessages(
-                _chatUiState.value.chat.token,
-                Pagination().getRange()
-            )
-            val  newValue = getMessagesResult.messages.castListOfMessages()
-            chatData = _chatUiState.value.chat.copy(messages = newValue)
-            applyChatData(chatData)
-            _lazyListState.update { LazyListState(chatData.messages.size) }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        _chatUiState.update {
+            it.copy(chat = it.chat.copy(user = it.chat.user.copy(
+                userImage = usersRepository.getUserImage(
+                    uri = _chatUiState.value.chat.user.userImage.userImageUri.encodedPath.toString()
+                )
+            )))
         }
+        val chatData = messagesRepository.getMessagesFromDb(_chatUiState.value)
+        applyChatData(chatData)
+        _lazyListState.update { LazyListState(chatData.messages.size) }
     }
 
     private suspend fun List<by.bashlikovv.chat.sources.structs.Message>.castListOfMessages(): List<Message> {
@@ -195,29 +199,29 @@ class ChatViewModel(
     }
 
     fun onTextInputChange(newValue: String) {
+        _chatInputState.update { newValue }
         _chatUiState.update {
-            it.copy(
-                textInputState = newValue,
-                isCanSend = newValue.isNotEmpty()
-            )
+            it.copy(isCanSend = newValue.isNotEmpty())
         }
     }
 
     private fun clearInput() {
-        _chatUiState.update { it.copy(textInputState = "", isCanSend = false) }
+        _chatInputState.update { "" }
+        _chatUiState.update { it.copy(isCanSend = false) }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     fun onActionSend() {
-        val newValue = _chatUiState.value.chat.messages.toMutableList()
-        val msg = Message(
-            value = _chatUiState.value.textInputState,
-            user = _chatUiState.value.usersData.last(),
-            time = Calendar.getInstance().time.toString(),
-            isRead = true
+        val newValue = messagesRepository.onSend(
+            message = Message(
+                value = chatInputState.value,
+                user = _chatUiState.value.usersData.last(),
+                time = Calendar.getInstance().time.toString(),
+                isRead = true
+            ),
+            chatUiState = _chatUiState.value,
+            me = me
         )
-        newValue.add(msg)
         clearInput()
         _chatUiState.update {
             it.copy(
@@ -225,28 +229,6 @@ class ChatViewModel(
                     messages = newValue
                 )
             )
-        }
-        if (_chatUiState.value.chat.user.userName == "Bookmarks") {
-            viewModelScope.launch {
-                onSendBookmark(msg)
-            }
-        } else {
-            GlobalScope.launch {
-                val room = roomsSource.getRoom(
-                    SecurityUtilsImpl().bytesToString(me.token),
-                    _chatUiState.value.chat.user.userToken
-                )
-                messagesSource.sendMessage(
-                    by.bashlikovv.chat.sources.structs.Message(
-                        room = room,
-                        value = msg.value.encodeToByteArray(),
-                        owner = me,
-                        image = "no image",
-                        file = "no file".encodeToByteArray()
-                    ),
-                    SecurityUtilsImpl().bytesToString(me.token)
-                )
-            }
         }
         _lazyListState.update { LazyListState(_chatUiState.value.chat.messages.size) }
     }
@@ -352,22 +334,22 @@ class ChatViewModel(
     }
 
     private suspend fun onSendBookmark(bookmark: Message) {
-        accountsRepository.addBookmark(bookmark = bookmark)
+        messagesRepository.onSendBookmark(bookmark)
     }
 
     fun onDMenuAction(value: Boolean) {
-        _chatUiState.update { it.copy(dMenuExpanded = value) }
+        _dMenuExpanded.update { value }
     }
 
     private suspend fun onDeleteBookmark(bookmark: Message) {
-        accountsRepository.deleteBookmark(bookmark)
+        messagesRepository.onDeleteBookmark(bookmark)
     }
 
     fun onActionDeleteChat() {
         val user1 = _chatUiState.value.usersData.first().userToken
         val user2 = _chatUiState.value.usersData.last().userToken
         viewModelScope.launch(Dispatchers.IO) {
-            roomsSource.deleteRoom(user1, user2)
+            roomsRepository.onDeleteChat(user1, user2)
         }
     }
 
