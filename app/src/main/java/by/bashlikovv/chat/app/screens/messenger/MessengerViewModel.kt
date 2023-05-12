@@ -23,6 +23,8 @@ import by.bashlikovv.chat.app.model.chats.ChatRoomsRepository
 import by.bashlikovv.chat.app.model.chats.RoomsRepository
 import by.bashlikovv.chat.app.model.messages.ChatMessagesRepository
 import by.bashlikovv.chat.app.model.messages.MessagesRepository
+import by.bashlikovv.chat.app.model.users.ChatUsersRepository
+import by.bashlikovv.chat.app.model.users.UsersRepository
 import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
@@ -50,7 +52,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class MessengerViewModel(
     private val accountsRepository: AccountsRepository,
     private val roomsRepository: RoomsRepository = ChatRoomsRepository(),
-    private val messagesRepository: MessagesRepository = ChatMessagesRepository()
+    private val messagesRepository: MessagesRepository = ChatMessagesRepository(),
+    private val usersRepository: UsersRepository = ChatUsersRepository()
 ) : ViewModel() {
 
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
@@ -267,7 +270,7 @@ class MessengerViewModel(
         if (_messengerUiState.value.newChat) {
             var users = listOf<by.bashlikovv.chat.sources.structs.User>()
             try {
-                users = usersSource.getAllUsers(_me.value.userToken)
+                users = usersRepository.getUsers(_me.value.userToken)
             } catch (e: Exception) {
                 _searchedItems.update {
                     listOf(Chat(
@@ -281,10 +284,7 @@ class MessengerViewModel(
                     val tmp = Chat(
                         user = User(
                             userName = it.username, userToken = SecurityUtilsImpl().bytesToString(it.token),
-                            userImage = UserImage(
-                                userImageBitmap = messagesSource.getImage(it.image.decodeToString()),
-                                userImageUri = Uri.parse(it.image.decodeToString())
-                            )
+                            userImage = usersRepository.getUserImage(it.image.decodeToString())
                         ),
                         messages = listOf(Message(value = "")), time = ""
                     )
@@ -301,10 +301,7 @@ class MessengerViewModel(
                                 user = User(
                                     userName = it.username,
                                     userToken = SecurityUtilsImpl().bytesToString(it.token),
-                                    userImage = UserImage(
-                                        userImageBitmap = messagesSource.getImage(it.image.decodeToString()),
-                                        userImageUri = Uri.parse(it.image.decodeToString())
-                                    )
+                                    userImage = usersRepository.getUserImage(it.image.decodeToString())
                                 ),
                                 messages = listOf(Message(value = "")),
                                 time = ""
@@ -359,7 +356,7 @@ class MessengerViewModel(
                 val data: Account? = accountsRepository.getAccount().first()
                 val user = usersSource.getUser(data?.token ?: "")
                 val userBitmapImageUrl = user.image.decodeToString()
-                val userBitmapImage = messagesSource.getImage(userBitmapImageUrl)
+                val userImage = usersRepository.getUserImage(userBitmapImageUrl)
                 it.resumeWith(
                     Result.success(
                         User(
@@ -367,10 +364,7 @@ class MessengerViewModel(
                             userName = data?.username ?: "unknown user",
                             userEmail = data?.email ?: "unknown email",
                             userToken = data?.token ?: "token error",
-                            userImage = UserImage(
-                                userImageBitmap = userBitmapImage,
-                                userImageUrl = userBitmapImageUrl
-                            )
+                            userImage = userImage
                         )
                     )
                 )
@@ -495,9 +489,6 @@ class MessengerViewModel(
             )
             chat
         }
-        /*.stream().sorted { o1, o2 ->
-            f.parse(o1.time)?.compareTo(f.parse(o2.time)) ?: -1
-        }.toList()*/
     }
 
     private fun Int.getBitmapFromImage(context: Context): Bitmap {
