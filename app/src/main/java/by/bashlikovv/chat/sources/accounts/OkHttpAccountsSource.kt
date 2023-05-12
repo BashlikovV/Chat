@@ -32,6 +32,7 @@ class OkHttpAccountsSource(
             val response = client.newCall(request).suspendEnqueue()
             response.parseJsonResponse<SignInResponseBody>().token
         } catch (e: Exception) {
+            e.printStackTrace()
             "500 ERROR"
         }
     }
@@ -40,7 +41,7 @@ class OkHttpAccountsSource(
     suspend fun signUp(email: String, password: String, username: String, image: Bitmap) {
         withContext(Dispatchers.IO) {
             val imageUri = messagesSource.sendImage(image, email, email, true)
-            if (!imageUri.contains("/home")) {
+            if (imageUri.contains("no image") || imageUri.isEmpty()) {
                 return@withContext
             }
             val signUpRequestBody = SignUpRequestBody(
@@ -68,6 +69,7 @@ class OkHttpAccountsSource(
             val response = client.newCall(request).suspendEnqueue()
             response.parseJsonResponse<GetUsernameResponseBody>().username
         } catch (e: Exception) {
+            e.printStackTrace()
             "500 ERROR"
         }
     }
@@ -81,7 +83,8 @@ class OkHttpAccountsSource(
         return try {
             val response = client.newCall(request).suspendEnqueue()
             response.parseJsonResponse<GetUsernameResponseBody>().username
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            e.printStackTrace()
             "500 ERROR"
         }
     }
