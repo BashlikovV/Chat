@@ -77,7 +77,7 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel()) {
                                 .padding(15.dp),
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            InputField(value = logInUiState.userName, text = "User name") {
+                            InputField(value = logInUiState.userName, type = "User name") {
                                 logInViewModel.onUserNameChange(it)
                             }
                         }
@@ -89,7 +89,7 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel()) {
                         .padding(top = 15.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    InputField(value = logInUiState.identifier, text = "Email") {
+                    InputField(value = logInUiState.identifier, type = "Email") {
                         logInViewModel.onIdentifierChange(it)
                     }
                 }
@@ -99,7 +99,7 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel()) {
                         .padding(top = 15.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    InputField(value = logInUiState.password, text = "Password") {
+                    InputField(value = logInUiState.password, type = "Password") {
                         logInViewModel.onPasswordChange(it)
                     }
                 }
@@ -126,7 +126,7 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel()) {
 fun InputField(
     logInViewModel: LogInViewModel = viewModel(),
     value: String,
-    text: String,
+    type: String,
     onTextChange: (String) -> Unit
 ) {
     val logInUiState by logInViewModel.logInUiState.collectAsState()
@@ -140,20 +140,20 @@ fun InputField(
             }
             onTextChange(it)
         },
-        isError = when(text) {
+        isError = when(type) {
             "Password" -> !logInUiState.isPasswordCorrect
             "Email" -> !logInUiState.isIdentifierCorrect
             else -> false
         },
-        placeholder = { Text(text) },
+        placeholder = { Text(type) },
         colors = TextFieldDefaults.textFieldColors(
             textColor = MaterialTheme.colors.primaryVariant,
             backgroundColor = MaterialTheme.colors.primary,
             cursorColor = MaterialTheme.colors.secondary
         ),
         keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = if (text != "Password") ImeAction.Next else ImeAction.Done,
-            keyboardType = when(text) {
+            imeAction = if (type != "Password") ImeAction.Next else ImeAction.Done,
+            keyboardType = when(type) {
                 "Password" -> KeyboardType.Password
                 "Email" -> KeyboardType.Email
                 else -> KeyboardType.Text
@@ -162,7 +162,6 @@ fun InputField(
         keyboardActions = KeyboardActions(onDone = {
             logInViewModel.onCreateAccountButtonPressed(context)
         })
-
     )
 }
 
