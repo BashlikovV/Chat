@@ -16,6 +16,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
+import by.bashlikovv.chat.app.model.chats.ChatRoomsRepository
+import by.bashlikovv.chat.app.model.chats.RoomsRepository
 import by.bashlikovv.chat.app.model.messages.ChatMessagesRepository
 import by.bashlikovv.chat.app.model.messages.MessagesRepository
 import by.bashlikovv.chat.app.model.users.ChatUsersRepository
@@ -41,7 +43,8 @@ import kotlin.concurrent.thread
 class ChatViewModel(
     accountsRepository: AccountsRepository,
     private val messagesRepository: MessagesRepository = ChatMessagesRepository(),
-    private val usersRepository: UsersRepository = ChatUsersRepository()
+    private val usersRepository: UsersRepository = ChatUsersRepository(),
+    private val roomsRepository: RoomsRepository = ChatRoomsRepository()
 ) : ViewModel() {
 
     private val _chatUiState = MutableStateFlow(ChatUiState())
@@ -346,7 +349,7 @@ class ChatViewModel(
         val user1 = _chatUiState.value.usersData.first().userToken
         val user2 = _chatUiState.value.usersData.last().userToken
         viewModelScope.launch(Dispatchers.IO) {
-            roomsSource.deleteRoom(user1, user2)
+            roomsRepository.onDeleteChat(user1, user2)
         }
     }
 
