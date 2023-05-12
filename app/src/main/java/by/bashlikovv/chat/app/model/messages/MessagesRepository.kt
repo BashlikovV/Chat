@@ -3,8 +3,15 @@ package by.bashlikovv.chat.app.model.messages
 import by.bashlikovv.chat.app.screens.chat.ChatUiState
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
+import by.bashlikovv.chat.app.struct.Pagination
+import by.bashlikovv.chat.sources.structs.Room
 
 interface MessagesRepository {
+
+    data class GetMessagesResult(
+        val messages: List<Message> = listOf(),
+        val unreadMessageCount: Int = 0
+    )
 
     suspend fun getMessagesFromDb(chatUiState: ChatUiState): Chat
 
@@ -19,4 +26,10 @@ interface MessagesRepository {
         chatUiState: ChatUiState,
         me: by.bashlikovv.chat.sources.structs.User
     ): List<Message>
+
+    suspend fun getMessagesByRoom(
+        room: Room,
+        pagination: Pagination,
+        firstUserName: String
+    ): GetMessagesResult
 }
