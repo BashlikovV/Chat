@@ -128,7 +128,7 @@ fun RightItems(messengerViewModel: MessengerViewModel = viewModel()) {
                                 }
                             }
                         }
-            }
+            }, label = ""
         ) { targetState ->
             if (targetState) {
                 Expanded()

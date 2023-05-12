@@ -171,7 +171,7 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
     val me by messengerViewModel.me.collectAsState()
     var imageSize by remember { mutableStateOf(75.dp) }
-    val size by animateDpAsState(targetValue = imageSize)
+    val size by animateDpAsState(targetValue = imageSize, label = "")
 
     Image(
         bitmap = me.userImage.userImageBitmap.asImageBitmap(),
@@ -221,7 +221,10 @@ fun BottomContent(messengerViewModel: MessengerViewModel = viewModel()) {
     var settingsVisibility by rememberSaveable { mutableStateOf(false) }
 
     val topText = if (settingsVisibility) "Close settings" else "Settings"
-    val topIcon by animateIntAsState(targetValue = if (settingsVisibility) R.drawable.arrow_back else R.drawable.settings)
+    val topIcon by animateIntAsState(
+        targetValue = if (settingsVisibility) R.drawable.arrow_back else R.drawable.settings,
+        label = ""
+    )
     var inputVisibility by rememberSaveable { mutableStateOf(false) }
 
     BottomContentItem(text = topText, layoutId = "settingsBtn", leadingIcon = topIcon) {
