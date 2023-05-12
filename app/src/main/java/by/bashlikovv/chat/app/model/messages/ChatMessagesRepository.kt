@@ -5,7 +5,6 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.app.screens.chat.ChatUiState
-import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Pagination
 import by.bashlikovv.chat.app.struct.User
@@ -33,10 +32,6 @@ class ChatMessagesRepository : MessagesRepository {
     ): Chat {
         var chatData = chatUiState.chat
         try {
-            val userImage = UserImage(messagesSource.getImage(
-                chatUiState.chat.user.userImage.userImageUri.encodedPath.toString()
-            ))
-            chatData = chatData.copy(user = chatData.user.copy(userImage = userImage))
             val getMessagesResult = messagesSource.getRoomMessages(
                 chatUiState.chat.token,
                 Pagination().getRange()

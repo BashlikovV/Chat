@@ -18,6 +18,8 @@ import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.messages.ChatMessagesRepository
 import by.bashlikovv.chat.app.model.messages.MessagesRepository
+import by.bashlikovv.chat.app.model.users.ChatUsersRepository
+import by.bashlikovv.chat.app.model.users.UsersRepository
 import by.bashlikovv.chat.app.struct.*
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.StatusNotification
@@ -38,7 +40,8 @@ import kotlin.concurrent.thread
 @RequiresApi(Build.VERSION_CODES.O)
 class ChatViewModel(
     accountsRepository: AccountsRepository,
-    private val messagesRepository: MessagesRepository = ChatMessagesRepository()
+    private val messagesRepository: MessagesRepository = ChatMessagesRepository(),
+    private val usersRepository: UsersRepository = ChatUsersRepository()
 ) : ViewModel() {
 
     private val _chatUiState = MutableStateFlow(ChatUiState())
@@ -137,6 +140,13 @@ class ChatViewModel(
     }
 
     suspend fun getMessagesFromDb() {
+        _chatUiState.update {
+            it.copy(chat = it.chat.copy(user = it.chat.user.copy(
+                userImage = usersRepository.getUserImage(
+                    uri = _chatUiState.value.chat.user.userImage.userImageUri.encodedPath.toString()
+                )
+            )))
+        }
         val chatData = messagesRepository.getMessagesFromDb(_chatUiState.value)
         applyChatData(chatData)
         _lazyListState.update { LazyListState(chatData.messages.size) }
