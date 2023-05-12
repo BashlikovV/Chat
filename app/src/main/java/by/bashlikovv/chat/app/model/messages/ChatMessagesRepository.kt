@@ -13,6 +13,7 @@ import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import by.bashlikovv.chat.sources.structs.Message
+import by.bashlikovv.chat.sources.structs.Room
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -115,6 +116,59 @@ class ChatMessagesRepository : MessagesRepository {
         }
 
         return newValue
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override suspend fun getMessagesByRoom(
+        room: Room,
+        pagination: Pagination,
+        firstUserName: String
+    ): MessagesRepository.GetMessagesResult {
+        val result: MutableList<by.bashlikovv.chat.app.struct.Message> = mutableListOf()
+        var count = 0
+
+        try {
+            val getMessagesResult = messagesSource.getRoomMessages(
+                room = SecurityUtilsImpl().bytesToString(room.token),
+                pagination = pagination.getRange()
+            )
+            count = getMessagesResult.unreadMessagesCount
+            val user = if (room.user2.username == firstUserName) {
+                room.user1
+            } else {
+                room.user2
+            }
+            result.add(
+                by.bashlikovv.chat.app.struct.Message(
+                    value = getMessagesResult.messages.last().value.decodeToString(),
+                    user = User(
+                        userName = user.username,
+                        userToken = SecurityUtilsImpl().bytesToString(user.token),
+                        userEmail = user.email
+                    ),
+                    time = getMessagesResult.messages.last().time,
+                    from = SecurityUtilsImpl().bytesToString(user.token)
+                )
+            )
+        } catch (e: Exception) {
+            result.add(
+                by.bashlikovv.chat.app.struct.Message(
+                    value = "You do not have messages now.",
+                    time = ""
+                )
+            )
+        } finally {
+            if (result.isEmpty()) {
+                result.add(
+                    by.bashlikovv.chat.app.struct.Message(
+                        value = "You do not have messages now.",
+                        time = ""
+                    )
+                )
+            }
+        }
+
+        return MessagesRepository.GetMessagesResult(messages = result, unreadMessageCount = count)
     }
 
 }
