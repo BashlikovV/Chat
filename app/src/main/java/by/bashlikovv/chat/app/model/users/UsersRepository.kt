@@ -10,4 +10,6 @@ interface UsersRepository {
     suspend fun getUsers(token: String): List<User>
 
     suspend fun getUser(token: String): User
+
+    suspend fun updateUsername(token: String, newName: String)
 }

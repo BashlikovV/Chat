@@ -1,10 +1,12 @@
 package by.bashlikovv.chat.app.model.messages
 
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.app.screens.chat.ChatUiState
+import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Pagination
 import by.bashlikovv.chat.app.struct.User
@@ -169,6 +171,17 @@ class ChatMessagesRepository : MessagesRepository {
         }
 
         return MessagesRepository.GetMessagesResult(messages = result, unreadMessageCount = count)
+    }
+
+    override suspend fun readRoomMessages(token: String) {
+        messagesSource.readRoomMessages(token)
+    }
+
+    override suspend fun getImage(uri: String): UserImage {
+        return UserImage(
+            messagesSource.getImage(uri),
+            userImageUri = Uri.parse(uri)
+        )
     }
 
 }
