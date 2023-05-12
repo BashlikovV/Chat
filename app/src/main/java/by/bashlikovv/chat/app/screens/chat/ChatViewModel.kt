@@ -25,9 +25,6 @@ import by.bashlikovv.chat.app.model.users.UsersRepository
 import by.bashlikovv.chat.app.struct.*
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.StatusNotification
-import by.bashlikovv.chat.sources.SourceProviderHolder
-import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
-import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -64,10 +61,6 @@ class ChatViewModel(
     private val _chatInputState = MutableStateFlow("")
     var chatInputState = _chatInputState.asStateFlow()
 
-    private val sourceProvider = SourceProviderHolder().sourcesProvider
-    private val roomsSource = OkHttpRoomsSource(sourceProvider)
-    private val messagesSource = OkHttpMessagesSource(sourceProvider)
-
     private var me = by.bashlikovv.chat.sources.structs.User()
 
     private val pagination = Pagination()
@@ -100,7 +93,8 @@ class ChatViewModel(
         var chatData: Chat
         GlobalScope.launch {
             try {
-                val getMessagesResult = messagesSource.getRoomMessages(
+
+                val getMessagesResult = messagesRepository.getRoomMessages(
                     _chatUiState.value.chat.token,
                     Pagination().getRange()
                 )
@@ -159,7 +153,7 @@ class ChatViewModel(
         return this.map {
             var image: Bitmap? = null
             if (!it.image.contains("no image") && it.image.isNotEmpty()) {
-                image = messagesSource.getImage(it.image)
+                image = messagesRepository.getImage(it.image).userImageBitmap
             }
 
             Message(
@@ -243,7 +237,7 @@ class ChatViewModel(
             }
         } else {
             GlobalScope.launch {
-                val room = roomsSource.getRoom(
+                val room = roomsRepository.getRoom(
                     _chatUiState.value.usersData.first().userToken,
                     _chatUiState.value.usersData.last().userToken
                 )
@@ -252,7 +246,7 @@ class ChatViewModel(
                 } else {
                     room.user2
                 }
-                messagesSource.deleteMessage(by.bashlikovv.chat.sources.structs.Message(
+                messagesRepository.deleteMessage(by.bashlikovv.chat.sources.structs.Message(
                     room = room,
                     image = if (message.isImage) message.value else "no image",
                     value = message.value.encodeToByteArray(),
@@ -319,7 +313,7 @@ class ChatViewModel(
                 }
             }
             viewModelScope.launch(Dispatchers.IO) {
-                messagesSource.sendImage(
+                messagesRepository.sendImage(
                     bitmap,
                     _chatUiState.value.chat.token,
                     SecurityUtilsImpl().bytesToString(me.token),
@@ -373,7 +367,7 @@ class ChatViewModel(
     private suspend fun processRefresh() {
         val chatData: Chat
         try {
-            val getMessagesResult = messagesSource.getRoomMessages(
+            val getMessagesResult = messagesRepository.getRoomMessages(
                 _chatUiState.value.chat.token,
                 pagination = pagination.getRange()
             )
