@@ -53,6 +53,12 @@ class MessengerViewModel(
     private val _updateVisibility = MutableStateFlow(false)
     var updateVisibility = _updateVisibility.asStateFlow()
 
+    private val _drawerState = MutableStateFlow(DrawerState(DrawerValue.Closed))
+    var drawerState = _drawerState.asStateFlow()
+
+    private val _searchedItems = MutableStateFlow(listOf<Chat>())
+    var searchedItems = _searchedItems.asStateFlow()
+
     private val _me = MutableStateFlow(User())
     var me = _me.asStateFlow()
 
@@ -144,13 +150,12 @@ class MessengerViewModel(
      * [onExpandModalDrawer] - function that implements logic of [onActionMenu] function
      * */
     private fun onExpandModalDrawer() {
-        _messengerUiState.update {
-            it.copy(
-                drawerState = if (it.drawerState.isClosed)
-                    DrawerState(DrawerValue.Open)
-                else
-                    DrawerState(DrawerValue.Closed)
-            )
+        _drawerState.update {
+            if (it.isClosed) {
+                DrawerState(DrawerValue.Open)
+            } else {
+                DrawerState(DrawerValue.Closed)
+            }
         }
     }
 
@@ -240,7 +245,7 @@ class MessengerViewModel(
         setUpdateVisibility(true)
         val result = suspendCancellableCoroutine {
             viewModelScope.launch(Dispatchers.IO) {
-                _messengerUiState.update { it.copy(searchedItems = listOf()) }
+                _searchedItems.update { listOf() }
                 getSearchOutput(newValue)
                 it.resumeWith(Result.success(false))
             }
@@ -258,12 +263,10 @@ class MessengerViewModel(
             try {
                 users = usersSource.getAllUsers(_me.value.userToken)
             } catch (e: Exception) {
-                _messengerUiState.update { state ->
-                    state.copy(
-                        searchedItems = listOf(Chat(
-                            user = User(userName = "Network error."),
-                            messages = listOf(Message(value = "")))
-                        )
+                _searchedItems.update {
+                    listOf(Chat(
+                        user = User(userName = "Network error."),
+                        messages = listOf(Message(value = "")))
                     )
                 }
             }
@@ -279,8 +282,8 @@ class MessengerViewModel(
                         ),
                         messages = listOf(Message(value = "")), time = ""
                     )
-                    _messengerUiState.update { state ->
-                        state.copy(searchedItems = state.searchedItems + tmp)
+                    _searchedItems.update { state ->
+                        state + tmp
                     }
                 }
             } else {
@@ -300,8 +303,8 @@ class MessengerViewModel(
                                 messages = listOf(Message(value = "")),
                                 time = ""
                             )
-                            _messengerUiState.update { state ->
-                                state.copy(searchedItems = state.searchedItems + tmp)
+                            _searchedItems.update { state ->
+                                state + tmp
                             }
                         }
                     }
@@ -310,16 +313,14 @@ class MessengerViewModel(
         } else {
             if (input.isEmpty()) {
                 val tmp = _messengerUiState.value.chats.toMutableList()
-                _messengerUiState.update {
-                    it.copy(searchedItems = tmp)
-                }
+                _searchedItems.update { tmp }
             } else {
                 _messengerUiState.value.chats.forEach {
                     if (input.length <= it.user.userName.length) {
                         val subStr = it.user.userName.subSequence(0, input.length).toString().lowercase()
                         if (subStr == input.lowercase()) {
-                            _messengerUiState.update { state ->
-                                state.copy(searchedItems = state.searchedItems + it)
+                            _searchedItems.update { state ->
+                                state + it
                             }
                         }
                     }

@@ -45,7 +45,7 @@ fun MessengerView(
     messengerViewModel: MessengerViewModel = viewModel(),
     onOpenChat: (Chat) -> Unit
 ) {
-    val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+    val drawerState by messengerViewModel.drawerState.collectAsState()
 
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
@@ -62,7 +62,7 @@ fun MessengerView(
         drawerContent = { MessengerDrawerContent() },
         floatingActionButton = { MessengerFABContent() },
         scaffoldState = ScaffoldState(
-            drawerState = messengerUiState.drawerState,
+            drawerState = drawerState,
             snackbarHostState = SnackbarHostState()
         ),
         modifier = modifier
@@ -88,6 +88,7 @@ fun MessengerContent(
     onOpenChat: (Chat) -> Unit
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+    val searchedItems by messengerViewModel.searchedItems.collectAsState()
 
     LazyColumn(
         modifier = modifier.background(MaterialTheme.colors.primary),
@@ -97,7 +98,7 @@ fun MessengerContent(
             if (!messengerUiState.expanded) {
                 items(messengerUiState.chats) { chat -> MessengerItem(chat) { onOpenChat(it) } }
             } else {
-                items(messengerUiState.searchedItems) { chat -> MessengerItem(chat) { onOpenChat(it) } }
+                items(searchedItems) { chat -> MessengerItem(chat) { onOpenChat(it) } }
             }
         }
     }
