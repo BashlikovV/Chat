@@ -354,7 +354,7 @@ class MessengerViewModel(
         val result: User = suspendCancellableCoroutine {
             viewModelScope.launch(Dispatchers.IO) {
                 val data: Account? = accountsRepository.getAccount().first()
-                val user = usersSource.getUser(data?.token ?: "")
+                val user = usersRepository.getUser(data?.token ?: "")
                 val userBitmapImageUrl = user.image.decodeToString()
                 val userImage = usersRepository.getUserImage(userBitmapImageUrl)
                 it.resumeWith(
@@ -378,7 +378,7 @@ class MessengerViewModel(
     }
 
     fun onSignOut() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             accountsRepository.logout()
         }
     }
