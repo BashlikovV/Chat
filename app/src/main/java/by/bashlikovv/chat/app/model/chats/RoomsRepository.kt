@@ -9,4 +9,6 @@ interface RoomsRepository {
     suspend fun onCreateChat(user1: String, user2: String)
 
     suspend fun getRooms(userToken: String): List<Room>
+
+    suspend fun getRoom(user1: String, user2: String): Room
 }

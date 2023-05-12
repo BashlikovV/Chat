@@ -21,4 +21,8 @@ class ChatRoomsRepository : RoomsRepository {
     override suspend fun getRooms(userToken: String): List<Room> {
         return roomsSource.getRooms(userToken)
     }
+
+    override suspend fun getRoom(user1: String, user2: String): Room {
+        return roomsSource.getRoom(user1, user2)
+    }
 }

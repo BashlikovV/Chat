@@ -1,6 +1,8 @@
 package by.bashlikovv.chat.app.model.messages
 
+import android.graphics.Bitmap
 import by.bashlikovv.chat.app.screens.chat.ChatUiState
+import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.Pagination
@@ -32,4 +34,17 @@ interface MessagesRepository {
         pagination: Pagination,
         firstUserName: String
     ): GetMessagesResult
+
+    suspend fun readRoomMessages(token: String)
+
+    suspend fun getImage(uri: String): UserImage
+
+    suspend fun getRoomMessages(
+        room: String,
+        pagination: IntRange
+    ): by.bashlikovv.chat.sources.messages.entities.GetMessagesResult
+
+    suspend fun deleteMessage(message: by.bashlikovv.chat.sources.structs.Message)
+
+    suspend fun sendImage(image: Bitmap, room: String, owner: String, isSignUp: Boolean): String
 }

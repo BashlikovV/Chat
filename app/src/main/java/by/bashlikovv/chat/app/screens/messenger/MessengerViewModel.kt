@@ -31,12 +31,7 @@ import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.Pagination
 import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
-import by.bashlikovv.chat.sources.SourceProviderHolder
-import by.bashlikovv.chat.sources.accounts.OkHttpAccountsSource
-import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
-import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import by.bashlikovv.chat.sources.structs.Room
-import by.bashlikovv.chat.sources.users.OkHttpUsersSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -71,13 +66,6 @@ class MessengerViewModel(
     private val _me = MutableStateFlow(User())
     var me = _me.asStateFlow()
 
-    private val sourceProvider = SourceProviderHolder().sourcesProvider
-
-    private val usersSource = OkHttpUsersSource(sourceProvider)
-    private val roomsSource = OkHttpRoomsSource(sourceProvider)
-    private val messagesSource = OkHttpMessagesSource(sourceProvider)
-    private val accountsSource = OkHttpAccountsSource(sourceProvider)
-
     private val selectedItem
         get() = _messengerUiState.value.selectedItem
 
@@ -108,7 +96,7 @@ class MessengerViewModel(
             currentState.copy(chats = currentState.chats.map { if (it == chat) it.copy(count = 0) else it })
         }
         viewModelScope.launch(Dispatchers.IO) {
-            messagesSource.readRoomMessages(chat.token)
+            messagesRepository.readRoomMessages(chat.token)
         }
     }
 
@@ -393,7 +381,7 @@ class MessengerViewModel(
         tmp.add(Chat(user, messages = listOf(Message(value = "You do not have messages now."))))
         _messengerUiState.update { it.copy(chats = tmp) }
         viewModelScope.launch {
-            roomsSource.addRoom(
+            roomsRepository.onCreateChat(
                 getUser().userToken,
                 _messengerUiState.value.chats.last().user.userToken
             )
@@ -405,7 +393,7 @@ class MessengerViewModel(
     }
 
     private suspend fun getImage(imageUri: String): Bitmap {
-        return messagesSource.getImage(imageUri)
+        return messagesRepository.getImage(imageUri).userImageBitmap
     }
 
     private fun setUpdateVisibility(newValue: Boolean) {
@@ -505,7 +493,7 @@ class MessengerViewModel(
 
     fun updateUsername(newName: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            accountsSource.updateUsername(
+            usersRepository.updateUsername(
                 token = accountsRepository.getAccount().first()?.token ?: "",
                 newName = newName
             )

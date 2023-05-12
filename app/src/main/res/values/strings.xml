@@ -1,7 +1,4 @@
 <resources>
     <string name="app_name">Chat</string>
-    <string name="read_chat">Read messages</string>
-    <string name="unread_chat">Make as not read</string>
     <string name="title_activity_chat">ChatActivity</string>
-    <string name="title_activity_log_in">LogInActivity</string>
 </resources>

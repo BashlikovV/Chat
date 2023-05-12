@@ -1,16 +1,19 @@
 package by.bashlikovv.chat.app.model.messages
 
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.app.screens.chat.ChatUiState
+import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Pagination
 import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
+import by.bashlikovv.chat.sources.messages.entities.GetMessagesResult
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
 import by.bashlikovv.chat.sources.structs.Message
 import by.bashlikovv.chat.sources.structs.Room
@@ -169,6 +172,38 @@ class ChatMessagesRepository : MessagesRepository {
         }
 
         return MessagesRepository.GetMessagesResult(messages = result, unreadMessageCount = count)
+    }
+
+    override suspend fun readRoomMessages(token: String) {
+        messagesSource.readRoomMessages(token)
+    }
+
+    override suspend fun getImage(uri: String): UserImage {
+        return UserImage(
+            messagesSource.getImage(uri),
+            userImageUri = Uri.parse(uri)
+        )
+    }
+
+    override suspend fun getRoomMessages(
+        room: String,
+        pagination: IntRange
+    ): GetMessagesResult {
+        return messagesSource.getRoomMessages(room, pagination)
+    }
+
+    override suspend fun deleteMessage(message: Message) {
+        messagesSource.deleteMessage(message)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override suspend fun sendImage(
+        image: Bitmap,
+        room: String,
+        owner: String,
+        isSignUp: Boolean
+    ): String {
+        return messagesSource.sendImage(image, room, owner, isSignUp)
     }
 
 }
