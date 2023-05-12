@@ -16,8 +16,8 @@ import by.bashlikovv.chat.app.model.PasswordMismatchException
 import by.bashlikovv.chat.app.model.StorageException
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.SignUpData
-import by.bashlikovv.chat.sources.SourceProviderHolder
-import by.bashlikovv.chat.sources.accounts.OkHttpAccountsSource
+import by.bashlikovv.chat.app.model.users.ChatUsersRepository
+import by.bashlikovv.chat.app.model.users.UsersRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,16 +27,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.*
 
 class LogInViewModel(
-    private val accountsRepository: AccountsRepository
+    private val accountsRepository: AccountsRepository,
+    private val usersRepository: UsersRepository = ChatUsersRepository()
 ) : ViewModel() {
 
     private val _logInUiState = MutableStateFlow(LogInUiState(progressBarVisibility = true))
     val logInUiState = _logInUiState.asStateFlow()
-
-    private val sourceProvider = SourceProviderHolder().sourcesProvider
-
-    private val accountsSource = OkHttpAccountsSource(sourceProvider)
-
 
     fun onIdentifierChange(newValue: String) {
         _logInUiState.update { it.copy(identifier = newValue) }
@@ -81,7 +77,7 @@ class LogInViewModel(
                     val token: String
                     try {
                         if (_logInUiState.value.isHaveAccount) {
-                            token = accountsSource.signIn(
+                            token = usersRepository.signIn(
                                 _logInUiState.value.identifier,
                                 _logInUiState.value.password
                             )
@@ -93,7 +89,7 @@ class LogInViewModel(
                                 if (!accountsRepository.isSignedIn()) {
                                     val signUpData = SignUpData(
                                         email = _logInUiState.value.identifier,
-                                        username = accountsSource.getUsername(token),
+                                        username = usersRepository.getUsername(token),
                                         password = _logInUiState.value.password,
                                     )
                                     signUp(signUpData, context)
@@ -103,7 +99,6 @@ class LogInViewModel(
                                     _logInUiState.value.password
                                 )
                             } else {
-                                processAccountAlreadyExistsException(context)
                                 processPasswordMismatchException(context)
                                 showToast(context, "Authentication error.")
                             }
@@ -116,7 +111,6 @@ class LogInViewModel(
                             signUp(signUpData, context)
                         }
                     } catch (e: Exception) {
-                        processAccountAlreadyExistsException(context)
                         processPasswordMismatchException(context)
                         showToast(context, "Authentication error ${e.message}")
                     } finally {
@@ -137,13 +131,15 @@ class LogInViewModel(
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun signUp(signUpData: SignUpData, context: Context) {
         try {
-            accountsSource.signUp(
+            usersRepository.signUp(
                 email = signUpData.email,
                 password = signUpData.password,
                 username = signUpData.username,
                 image = _logInUiState.value.userImageBitmap.userImageBitmap
             )
-            val token: String = accountsSource.signIn(email = signUpData.email, password = signUpData.password)
+            val token: String = usersRepository.signIn(
+                email = signUpData.email, password = signUpData.password
+            )
             _logInUiState.update { it.copy(token = token) }
             if (!_logInUiState.value.token.contains("500")) {
                 accountsRepository.signUp(signUpData, _logInUiState.value.token)
@@ -160,9 +156,6 @@ class LogInViewModel(
             processAccountAlreadyExistsException(context)
         } catch (e: StorageException) {
             processStorageException(context)
-        } catch (e: Exception) {
-            processAccountAlreadyExistsException(context)
-            processPasswordMismatchException(context)
         }
     }
 
