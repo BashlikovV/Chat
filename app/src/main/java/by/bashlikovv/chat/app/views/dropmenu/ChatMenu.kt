@@ -29,11 +29,11 @@ import by.bashlikovv.chat.app.screens.chat.ChatViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ChatMenu(chatViewModel: ChatViewModel = viewModel()) {
-    val chatUiState by chatViewModel.chatUiState.collectAsState()
+    val dMenuState by chatViewModel.dMenuExpanded.collectAsState()
     val screenWidth = LocalConfiguration.current.screenWidthDp
 
     DropdownMenu(
-        expanded = chatUiState.dMenuExpanded,
+        expanded = dMenuState,
         onDismissRequest = { chatViewModel.onDMenuAction(false) },
         properties = PopupProperties(
             dismissOnBackPress = true,

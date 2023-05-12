@@ -187,7 +187,7 @@ fun MessageView(
             (LocalConfiguration.current.screenWidthDp * 2.15).toFloat() + 10f
         } else {
             (LocalConfiguration.current.screenWidthDp * 2.15).toFloat()
-        }
+        }, label = ""
     )
 
     val measuredText = textMeasurer.measure(

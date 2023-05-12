@@ -51,6 +51,12 @@ class ChatViewModel(
     private val _updateVisibility = MutableStateFlow(false)
     var updateVisibility = _updateVisibility.asStateFlow()
 
+    private val _dMenuExpanded = MutableStateFlow(false)
+    var dMenuExpanded = _dMenuExpanded.asStateFlow()
+
+    private val _chatInputState = MutableStateFlow("")
+    var chatInputState = _chatInputState.asStateFlow()
+
     private val sourceProvider = SourceProviderHolder().sourcesProvider
     private val roomsSource = OkHttpRoomsSource(sourceProvider)
     private val messagesSource = OkHttpMessagesSource(sourceProvider)
@@ -195,16 +201,15 @@ class ChatViewModel(
     }
 
     fun onTextInputChange(newValue: String) {
+        _chatInputState.update { newValue }
         _chatUiState.update {
-            it.copy(
-                textInputState = newValue,
-                isCanSend = newValue.isNotEmpty()
-            )
+            it.copy(isCanSend = newValue.isNotEmpty())
         }
     }
 
     private fun clearInput() {
-        _chatUiState.update { it.copy(textInputState = "", isCanSend = false) }
+        _chatInputState.update { "" }
+        _chatUiState.update { it.copy(isCanSend = false) }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -212,7 +217,7 @@ class ChatViewModel(
     fun onActionSend() {
         val newValue = _chatUiState.value.chat.messages.toMutableList()
         val msg = Message(
-            value = _chatUiState.value.textInputState,
+            value = chatInputState.value,
             user = _chatUiState.value.usersData.last(),
             time = Calendar.getInstance().time.toString(),
             isRead = true
@@ -356,7 +361,7 @@ class ChatViewModel(
     }
 
     fun onDMenuAction(value: Boolean) {
-        _chatUiState.update { it.copy(dMenuExpanded = value) }
+        _dMenuExpanded.update { value }
     }
 
     private suspend fun onDeleteBookmark(bookmark: Message) {
