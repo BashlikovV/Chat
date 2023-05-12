@@ -4,6 +4,7 @@ import android.net.Uri
 import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
+import by.bashlikovv.chat.sources.users.OkHttpUsersSource
 
 class ChatUsersRepository : UsersRepository {
 
@@ -11,12 +12,16 @@ class ChatUsersRepository : UsersRepository {
 
     private val messagesSource = OkHttpMessagesSource(sourceProvider)
 
+    private val usersSource = OkHttpUsersSource(sourceProvider)
+
     override suspend fun getUserImage(uri: String): UserImage {
         return UserImage(
-            messagesSource.getImage(
-                uri
-            ),
+            messagesSource.getImage(uri),
             userImageUri = Uri.parse(uri)
         )
+    }
+
+    override suspend fun getUsers(token: String): List<by.bashlikovv.chat.sources.structs.User> {
+        return usersSource.getAllUsers(token)
     }
 }
