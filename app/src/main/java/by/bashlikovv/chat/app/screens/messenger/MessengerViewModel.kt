@@ -19,6 +19,10 @@ import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.Account
+import by.bashlikovv.chat.app.model.chats.ChatRoomsRepository
+import by.bashlikovv.chat.app.model.chats.RoomsRepository
+import by.bashlikovv.chat.app.model.messages.ChatMessagesRepository
+import by.bashlikovv.chat.app.model.messages.MessagesRepository
 import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
@@ -44,7 +48,9 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  * */
 
 class MessengerViewModel(
-    private val accountsRepository: AccountsRepository
+    private val accountsRepository: AccountsRepository,
+    private val roomsRepository: RoomsRepository = ChatRoomsRepository(),
+    private val messagesRepository: MessagesRepository = ChatMessagesRepository()
 ) : ViewModel() {
 
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
@@ -108,14 +114,14 @@ class MessengerViewModel(
      * */
     fun onActionDelete(chat: Chat) {
         onActionCloseItems()
-        _messengerUiState.update { currentState ->
-            currentState.copy(chats = currentState.chats.toMutableList().apply { remove(chat) })
-        }
-        viewModelScope.launch {
-            roomsSource.deleteRoom(
+        viewModelScope.launch(Dispatchers.IO) {
+            roomsRepository.onDeleteChat(
                 user1 = getUser().userToken,
                 user2 = chat.user.userToken
             )
+        }
+        _messengerUiState.update { currentState ->
+            currentState.copy(chats = currentState.chats.toMutableList().apply { remove(chat) })
         }
     }
 
@@ -393,65 +399,15 @@ class MessengerViewModel(
         tmp.add(Chat(user, messages = listOf(Message(value = "You do not have messages now."))))
         _messengerUiState.update { it.copy(chats = tmp) }
         viewModelScope.launch {
-            addRoom(
+            roomsSource.addRoom(
                 getUser().userToken,
                 _messengerUiState.value.chats.last().user.userToken
             )
         }
     }
 
-    private suspend fun addRoom(user1: String, user2: String): String {
-        return roomsSource.addRoom(user1, user2)
-    }
-
     private suspend fun getRooms(): List<Room> {
-        return roomsSource.getRooms(
-            getUser().userToken
-        )
-    }
-
-    data class GetMessagesResult(
-        val messages: List<Message> = listOf(),
-        val unreadMessageCount: Int = 0
-    )
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun getMessagesByRoom(room: Room, pagination: Pagination = Pagination(0, 1)): GetMessagesResult {
-        val result: MutableList<Message> = mutableListOf()
-        var count = 0
-
-        try {
-            val getMessagesResult = messagesSource.getRoomMessages(
-                room = SecurityUtilsImpl().bytesToString(room.token),
-                pagination = pagination.getRange()
-            )
-            count = getMessagesResult.unreadMessagesCount
-            val user = if (room.user2.username == getUser().userName) {
-                room.user1
-            } else {
-                room.user2
-            }
-            result.add(
-                Message(
-                    value = getMessagesResult.messages.last().value.decodeToString(),
-                    user = User(
-                        userName = user.username,
-                        userToken = SecurityUtilsImpl().bytesToString(user.token),
-                        userEmail = user.email
-                    ),
-                    time = getMessagesResult.messages.last().time,
-                    from = SecurityUtilsImpl().bytesToString(user.token)
-                )
-            )
-        } catch (e: Exception) {
-            result.add(Message(value = "You do not have messages now.", time = ""))
-        } finally {
-            if (result.isEmpty()) {
-                result.add(Message(value = "You do not have messages now.", time = ""))
-            }
-        }
-
-        return GetMessagesResult(messages = result, unreadMessageCount = count)
+        return roomsRepository.getRooms(getUser().userToken)
     }
 
     private suspend fun getImage(imageUri: String): Bitmap {
@@ -513,7 +469,11 @@ class MessengerViewModel(
             } else {
                 it.user2
             }
-            val tmp = getMessagesByRoom(room = it)
+            val tmp = messagesRepository.getMessagesByRoom(
+                room = it,
+                pagination = Pagination(0, 1),
+                firstUserName = getUser().userName
+            )
             val messages = tmp.messages
             val image = UserImage(
                 userImageBitmap = getImage(user.image.decodeToString()),
