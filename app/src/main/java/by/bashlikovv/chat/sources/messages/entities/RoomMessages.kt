@@ -1,6 +1,6 @@
 package by.bashlikovv.chat.sources.messages.entities
 
-import by.bashlikovv.chat.sources.structs.Message
+import by.bashlikovv.chat.sources.structs.ServerMessage
 
 data class RoomMessagesRequestBody(
     val room: String,
@@ -8,11 +8,6 @@ data class RoomMessagesRequestBody(
 )
 
 data class RoomMessagesResponseBody(
-    val messages: List<Message>,
+    val messages: List<ServerMessage>,
     val unreadMessagesCount: Int
-)
-
-data class GetMessagesResult(
-    val messages: List<Message> = listOf(),
-    val unreadMessagesCount: Int = 0
 )

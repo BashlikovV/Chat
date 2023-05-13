@@ -1,6 +1,6 @@
 package by.bashlikovv.chat.sources.rooms.entities
 
-import by.bashlikovv.chat.sources.structs.Room
+import by.bashlikovv.chat.sources.structs.ServerRoom
 
 data class GetRoomRequestBody(
     val user1: String,
@@ -8,5 +8,5 @@ data class GetRoomRequestBody(
 )
 
 data class GetRoomResponseBody(
-    val room: Room
+    val room: ServerRoom
 )
