@@ -3,7 +3,7 @@ package by.bashlikovv.chat.sources.users
 import by.bashlikovv.chat.sources.HttpContract
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
-import by.bashlikovv.chat.sources.structs.User
+import by.bashlikovv.chat.sources.structs.ServerUser
 import by.bashlikovv.chat.sources.users.entities.GetUserRequestBody
 import by.bashlikovv.chat.sources.users.entities.GetUserResponseBody
 import by.bashlikovv.chat.sources.users.entities.GetUsersRequestBody
@@ -14,7 +14,7 @@ class OkHttpUsersSource(
     config: OkHttpConfig
 ) : BaseOkHttpSource(config) {
 
-    suspend fun getAllUsers(token: String): List<User> {
+    suspend fun getAllUsers(token: String): List<ServerUser> {
         return try {
             val getUsersRequestBody = GetUsersRequestBody(
                 token = token
@@ -27,11 +27,11 @@ class OkHttpUsersSource(
             response.parseJsonResponse<GetUsersResponseBody>().users
         } catch (e: Exception) {
             e.printStackTrace()
-            return listOf(User())
+            return listOf(ServerUser())
         }
     }
 
-    suspend fun getUser(token: String): User {
+    suspend fun getUser(token: String): ServerUser {
         return try {
             val getUserRequestBody = GetUserRequestBody(token)
             val request = Request.Builder()
@@ -42,7 +42,7 @@ class OkHttpUsersSource(
             response.parseJsonResponse<GetUserResponseBody>().user
         } catch (e: Exception) {
             e.printStackTrace()
-            User()
+            ServerUser()
         }
     }
 }
