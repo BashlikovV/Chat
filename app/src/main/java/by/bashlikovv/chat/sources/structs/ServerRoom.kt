@@ -1,15 +1,15 @@
 package by.bashlikovv.chat.sources.structs
 
-data class Room(
-    val user1: User = User(),
-    val user2: User = User(),
+data class ServerRoom(
+    val user1: ServerUser = ServerUser(),
+    val user2: ServerUser = ServerUser(),
     val token: ByteArray = byteArrayOf()
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Room
+        other as ServerRoom
 
         if (user1 != other.user1) return false
         if (user2 != other.user2) return false
