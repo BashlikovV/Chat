@@ -2,15 +2,15 @@ package by.bashlikovv.chat.app.model.users
 
 import android.graphics.Bitmap
 import by.bashlikovv.chat.app.screens.login.UserImage
-import by.bashlikovv.chat.sources.structs.User
+import by.bashlikovv.chat.sources.structs.ServerUser
 
 interface UsersRepository {
 
     suspend fun getUserImage(uri: String): UserImage
 
-    suspend fun getUsers(token: String): List<User>
+    suspend fun getUsers(token: String): List<ServerUser>
 
-    suspend fun getUser(token: String): User
+    suspend fun getUser(token: String): ServerUser
 
     suspend fun updateUsername(token: String, newName: String)
 
