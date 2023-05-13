@@ -5,24 +5,27 @@ import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import by.bashlikovv.chat.Repositories
+import by.bashlikovv.chat.app.model.messages.entities.GetMessagesResult
 import by.bashlikovv.chat.app.screens.chat.ChatUiState
 import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
+import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.Pagination
 import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
-import by.bashlikovv.chat.sources.messages.entities.GetMessagesResult
+import by.bashlikovv.chat.sources.messages.entities.GetServerMessagesResult
 import by.bashlikovv.chat.sources.rooms.OkHttpRoomsSource
-import by.bashlikovv.chat.sources.structs.Message
-import by.bashlikovv.chat.sources.structs.Room
+import by.bashlikovv.chat.sources.structs.ServerMessage
+import by.bashlikovv.chat.sources.structs.ServerRoom
+import by.bashlikovv.chat.sources.structs.ServerUser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-class ChatMessagesRepository : MessagesRepository {
+class OkHTTPMessagesRepository : MessagesRepository {
 
     private val sourceProvider = SourceProviderHolder().sourcesProvider
 
@@ -40,7 +43,7 @@ class ChatMessagesRepository : MessagesRepository {
                 chatUiState.chat.token,
                 Pagination().getRange()
             )
-            val  newValue = getMessagesResult.messages.castListOfMessages()
+            val  newValue = getMessagesResult.serverMessages.castListOfMessages()
             chatData = chatData.copy(messages = newValue)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -50,14 +53,14 @@ class ChatMessagesRepository : MessagesRepository {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override suspend fun List<Message>.castListOfMessages(): List<by.bashlikovv.chat.app.struct.Message> {
+    override suspend fun List<ServerMessage>.castListOfMessages(): List<Message> {
         return this.map {
             var image: Bitmap? = null
             if (!it.image.contains("no image") && it.image.isNotEmpty()) {
                 image = messagesSource.getImage(it.image)
             }
 
-            by.bashlikovv.chat.app.struct.Message(
+            Message(
                 value = it.value.decodeToString(),
                 time = it.time,
                 user = User(
@@ -73,22 +76,22 @@ class ChatMessagesRepository : MessagesRepository {
         }
     }
 
-    override suspend fun onSendBookmark(bookmark: by.bashlikovv.chat.app.struct.Message) {
+    override suspend fun onSendBookmark(bookmark: Message) {
         Repositories.accountsRepository.addBookmark(bookmark = bookmark)
     }
 
-    override suspend fun onDeleteBookmark(bookmark: by.bashlikovv.chat.app.struct.Message) {
+    override suspend fun onDeleteBookmark(bookmark: Message) {
         Repositories.accountsRepository.deleteBookmark(bookmark = bookmark)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onSend(
-        message: by.bashlikovv.chat.app.struct.Message,
+        message: Message,
         chatUiState: ChatUiState,
-        me: by.bashlikovv.chat.sources.structs.User
-    ): List<by.bashlikovv.chat.app.struct.Message> {
+        me: ServerUser
+    ): List<Message> {
         val newValue = chatUiState.chat.messages.toMutableList()
-        val msg = by.bashlikovv.chat.app.struct.Message(
+        val msg = Message(
             value = message.value,
             user = message.user,
             time = Calendar.getInstance().time.toString(),
@@ -106,7 +109,7 @@ class ChatMessagesRepository : MessagesRepository {
                     chatUiState.chat.user.userToken
                 )
                 messagesSource.sendMessage(
-                    Message(
+                    ServerMessage(
                         room = room,
                         value = msg.value.encodeToByteArray(),
                         owner = me,
@@ -123,39 +126,39 @@ class ChatMessagesRepository : MessagesRepository {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun getMessagesByRoom(
-        room: Room,
+        serverRoom: ServerRoom,
         pagination: Pagination,
         firstUserName: String
-    ): MessagesRepository.GetMessagesResult {
-        val result: MutableList<by.bashlikovv.chat.app.struct.Message> = mutableListOf()
+    ): GetMessagesResult {
+        val result: MutableList<Message> = mutableListOf()
         var count = 0
 
         try {
             val getMessagesResult = messagesSource.getRoomMessages(
-                room = SecurityUtilsImpl().bytesToString(room.token),
+                room = SecurityUtilsImpl().bytesToString(serverRoom.token),
                 pagination = pagination.getRange()
             )
             count = getMessagesResult.unreadMessagesCount
-            val user = if (room.user2.username == firstUserName) {
-                room.user1
+            val user = if (serverRoom.user2.username == firstUserName) {
+                serverRoom.user1
             } else {
-                room.user2
+                serverRoom.user2
             }
             result.add(
-                by.bashlikovv.chat.app.struct.Message(
-                    value = getMessagesResult.messages.last().value.decodeToString(),
+                Message(
+                    value = getMessagesResult.serverMessages.last().value.decodeToString(),
                     user = User(
                         userName = user.username,
                         userToken = SecurityUtilsImpl().bytesToString(user.token),
                         userEmail = user.email
                     ),
-                    time = getMessagesResult.messages.last().time,
+                    time = getMessagesResult.serverMessages.last().time,
                     from = SecurityUtilsImpl().bytesToString(user.token)
                 )
             )
         } catch (e: Exception) {
             result.add(
-                by.bashlikovv.chat.app.struct.Message(
+                Message(
                     value = "You do not have messages now.",
                     time = ""
                 )
@@ -163,7 +166,7 @@ class ChatMessagesRepository : MessagesRepository {
         } finally {
             if (result.isEmpty()) {
                 result.add(
-                    by.bashlikovv.chat.app.struct.Message(
+                    Message(
                         value = "You do not have messages now.",
                         time = ""
                     )
@@ -171,7 +174,7 @@ class ChatMessagesRepository : MessagesRepository {
             }
         }
 
-        return MessagesRepository.GetMessagesResult(messages = result, unreadMessageCount = count)
+        return GetMessagesResult(messages = result, unreadMessageCount = count)
     }
 
     override suspend fun readRoomMessages(token: String) {
@@ -188,12 +191,12 @@ class ChatMessagesRepository : MessagesRepository {
     override suspend fun getRoomMessages(
         room: String,
         pagination: IntRange
-    ): GetMessagesResult {
+    ): GetServerMessagesResult {
         return messagesSource.getRoomMessages(room, pagination)
     }
 
-    override suspend fun deleteMessage(message: Message) {
-        messagesSource.deleteMessage(message)
+    override suspend fun deleteMessage(serverMessage: ServerMessage) {
+        messagesSource.deleteMessage(serverMessage)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
