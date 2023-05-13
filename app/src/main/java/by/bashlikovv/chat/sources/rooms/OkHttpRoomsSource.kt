@@ -4,14 +4,14 @@ import by.bashlikovv.chat.sources.HttpContract
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.rooms.entities.*
-import by.bashlikovv.chat.sources.structs.Room
+import by.bashlikovv.chat.sources.structs.ServerRoom
 import okhttp3.Request
 
 class OkHttpRoomsSource(
     config: OkHttpConfig
 ) : BaseOkHttpSource(config) {
 
-    suspend fun getRooms(user: String): List<Room> {
+    suspend fun getRooms(user: String): List<ServerRoom> {
         val getRoomsRequestBody = GetRoomsRequestBody(user = user)
         val request = Request.Builder()
             .post(getRoomsRequestBody.toJsonRequestBody())
@@ -41,7 +41,7 @@ class OkHttpRoomsSource(
         return response.parseJsonResponse<DeleteRoomResponseBody>().result
     }
 
-    suspend fun getRoom(user1: String, user2: String): Room {
+    suspend fun getRoom(user1: String, user2: String): ServerRoom {
         val getRoomRequestBody = GetRoomRequestBody(user1, user2)
         val request = Request.Builder()
             .post(getRoomRequestBody.toJsonRequestBody())
