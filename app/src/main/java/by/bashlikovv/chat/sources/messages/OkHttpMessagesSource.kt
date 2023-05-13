@@ -10,7 +10,7 @@ import by.bashlikovv.chat.sources.HttpContract
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
 import by.bashlikovv.chat.sources.messages.entities.*
-import by.bashlikovv.chat.sources.structs.Message
+import by.bashlikovv.chat.sources.structs.ServerMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
@@ -27,7 +27,7 @@ class OkHttpMessagesSource(
     config: OkHttpConfig
 ) : BaseOkHttpSource(config) {
 
-    suspend fun getRoomMessages(room: String, pagination: IntRange): GetMessagesResult {
+    suspend fun getRoomMessages(room: String, pagination: IntRange): GetServerMessagesResult {
         return try {
             val getRoomMessagesRequestBody = RoomMessagesRequestBody(
                 room = room,
@@ -39,27 +39,27 @@ class OkHttpMessagesSource(
                 .build()
             val response = client.newCall(request).suspendEnqueue()
             val result = response.parseJsonResponse<RoomMessagesResponseBody>()
-            GetMessagesResult(
-                messages = result.messages,
+            GetServerMessagesResult(
+                serverMessages = result.messages,
                 unreadMessagesCount = result.unreadMessagesCount
             )
         } catch (e: Exception) {
             e.printStackTrace()
-            GetMessagesResult()
+            GetServerMessagesResult()
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun sendMessage(message: Message, me: String): String {
+    suspend fun sendMessage(serverMessage: ServerMessage, me: String): String {
         return try {
             val securityUtilsImpl = SecurityUtilsImpl()
             val addMessagesRequestBody = AddMessageRequestBody(
-                image = message.image,
-                file = message.file,
-                value = message.value.decodeToString(),
-                time = message.time,
-                owner = securityUtilsImpl.bytesToString(message.room.user1.token),
-                receiver = securityUtilsImpl.bytesToString(message.room.user2.token),
+                image = serverMessage.image,
+                file = serverMessage.file,
+                value = serverMessage.value.decodeToString(),
+                time = serverMessage.time,
+                owner = securityUtilsImpl.bytesToString(serverMessage.room.user1.token),
+                receiver = securityUtilsImpl.bytesToString(serverMessage.room.user2.token),
                 from = me
             )
             val request = Request.Builder()
@@ -74,10 +74,10 @@ class OkHttpMessagesSource(
         }
     }
 
-    suspend fun deleteMessage(message: Message): String {
+    suspend fun deleteMessage(serverMessage: ServerMessage): String {
         return try {
             val deleteMessageRequestBody = DeleteMessageRequestBody(
-                message = message
+                message = serverMessage
             )
             val request = Request.Builder()
                 .post(deleteMessageRequestBody.toJsonRequestBody())

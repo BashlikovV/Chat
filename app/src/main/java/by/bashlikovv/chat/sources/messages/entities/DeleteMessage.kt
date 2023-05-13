@@ -1,11 +1,7 @@
 package by.bashlikovv.chat.sources.messages.entities
 
-import by.bashlikovv.chat.sources.structs.Message
+import by.bashlikovv.chat.sources.structs.ServerMessage
 
 data class DeleteMessageRequestBody(
-    val message: Message
-)
-
-data class DeleteMessageResponseBody(
-    val result: String
+    val message: ServerMessage
 )

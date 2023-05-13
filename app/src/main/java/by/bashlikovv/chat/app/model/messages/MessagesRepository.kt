@@ -1,23 +1,21 @@
 package by.bashlikovv.chat.app.model.messages
 
 import android.graphics.Bitmap
+import by.bashlikovv.chat.app.model.messages.entities.GetMessagesResult
 import by.bashlikovv.chat.app.screens.chat.ChatUiState
 import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.Pagination
-import by.bashlikovv.chat.sources.structs.Room
+import by.bashlikovv.chat.sources.structs.ServerMessage
+import by.bashlikovv.chat.sources.structs.ServerRoom
+import by.bashlikovv.chat.sources.structs.ServerUser
 
 interface MessagesRepository {
 
-    data class GetMessagesResult(
-        val messages: List<Message> = listOf(),
-        val unreadMessageCount: Int = 0
-    )
-
     suspend fun getMessagesFromDb(chatUiState: ChatUiState): Chat
 
-    suspend fun List<by.bashlikovv.chat.sources.structs.Message>.castListOfMessages(): List<Message>
+    suspend fun List<ServerMessage>.castListOfMessages(): List<Message>
 
     suspend fun onSendBookmark(bookmark: Message)
 
@@ -26,11 +24,11 @@ interface MessagesRepository {
     fun onSend(
         message: Message,
         chatUiState: ChatUiState,
-        me: by.bashlikovv.chat.sources.structs.User
+        me: ServerUser
     ): List<Message>
 
     suspend fun getMessagesByRoom(
-        room: Room,
+        serverRoom: ServerRoom,
         pagination: Pagination,
         firstUserName: String
     ): GetMessagesResult
@@ -42,9 +40,9 @@ interface MessagesRepository {
     suspend fun getRoomMessages(
         room: String,
         pagination: IntRange
-    ): by.bashlikovv.chat.sources.messages.entities.GetMessagesResult
+    ): by.bashlikovv.chat.sources.messages.entities.GetServerMessagesResult
 
-    suspend fun deleteMessage(message: by.bashlikovv.chat.sources.structs.Message)
+    suspend fun deleteMessage(serverMessage: ServerMessage)
 
     suspend fun sendImage(image: Bitmap, room: String, owner: String, isSignUp: Boolean): String
 }

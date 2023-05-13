@@ -8,9 +8,6 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
-import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,11 +16,11 @@ import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.Account
-import by.bashlikovv.chat.app.model.chats.ChatRoomsRepository
+import by.bashlikovv.chat.app.model.chats.OkHTTPRoomsRepository
 import by.bashlikovv.chat.app.model.chats.RoomsRepository
-import by.bashlikovv.chat.app.model.messages.ChatMessagesRepository
 import by.bashlikovv.chat.app.model.messages.MessagesRepository
-import by.bashlikovv.chat.app.model.users.ChatUsersRepository
+import by.bashlikovv.chat.app.model.messages.OkHTTPMessagesRepository
+import by.bashlikovv.chat.app.model.users.OkHTTPUsersRepository
 import by.bashlikovv.chat.app.model.users.UsersRepository
 import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.Chat
@@ -31,7 +28,8 @@ import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.struct.Pagination
 import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
-import by.bashlikovv.chat.sources.structs.Room
+import by.bashlikovv.chat.sources.structs.ServerRoom
+import by.bashlikovv.chat.sources.structs.ServerUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,9 +44,9 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 class MessengerViewModel(
     private val accountsRepository: AccountsRepository,
-    private val roomsRepository: RoomsRepository = ChatRoomsRepository(),
-    private val messagesRepository: MessagesRepository = ChatMessagesRepository(),
-    private val usersRepository: UsersRepository = ChatUsersRepository()
+    private val roomsRepository: RoomsRepository = OkHTTPRoomsRepository(),
+    private val messagesRepository: MessagesRepository = OkHTTPMessagesRepository(),
+    private val usersRepository: UsersRepository = OkHTTPUsersRepository()
 ) : ViewModel() {
 
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
@@ -65,9 +63,6 @@ class MessengerViewModel(
 
     private val _me = MutableStateFlow(User())
     var me = _me.asStateFlow()
-
-    private val selectedItem
-        get() = _messengerUiState.value.selectedItem
 
     private fun applyMessengerUiState(state: MessengerUiState) {
         _messengerUiState.update { state }
@@ -169,53 +164,8 @@ class MessengerViewModel(
      * */
     fun onThemeChange() {
         _messengerUiState.update { it.copy(darkTheme = !it.darkTheme) }
-    }
-
-    /**
-     * [getTextColor] - function that return text color for item from list of [Chat]
-     * */
-    @Composable
-    fun getTextColor(chat: Chat): Color {
-        return if (chat == selectedItem) {
-            MaterialTheme.colors.primary
-        } else {
-            MaterialTheme.colors.secondary
-        }
-    }
-
-    /**
-     * [getTintColor] - function that return tint color for images from list of [Chat]
-     * */
-    @Composable
-    fun getTintColor(chat: Chat): Color {
-        return if (chat == selectedItem) {
-            MaterialTheme.colors.primary
-        } else {
-            MaterialTheme.colors.background
-        }
-    }
-
-    /**
-     * [getCountColor] - function that return count background color for item from list of [Chat]
-     * */
-    @Composable
-    fun getCountColor(chat: Chat): Color {
-        return if (chat == selectedItem) {
-            MaterialTheme.colors.primary
-        } else {
-            MaterialTheme.colors.secondary
-        }
-    }
-
-    /**
-     * [getChatBackground] - function that return background color for item from list of [Chat]
-     * */
-    @Composable
-    fun getChatBackground(chat: Chat): Color {
-        return if (chat == selectedItem) {
-            MaterialTheme.colors.background
-        } else {
-            MaterialTheme.colors.primary
+        viewModelScope.launch(Dispatchers.IO) {
+            accountsRepository.setDarkTheme()
         }
     }
 
@@ -256,19 +206,20 @@ class MessengerViewModel(
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun getSearchOutput(input: String) {
         if (_messengerUiState.value.newChat) {
-            var users = listOf<by.bashlikovv.chat.sources.structs.User>()
+            val serverUsers: List<ServerUser>
             try {
-                users = usersRepository.getUsers(_me.value.userToken)
+                serverUsers = usersRepository.getUsers(_me.value.userToken)
             } catch (e: Exception) {
                 _searchedItems.update {
                     listOf(Chat(
-                        user = User(userName = "Network error."),
+                        user = User(userName = e.message ?: "Network error"),
                         messages = listOf(Message(value = "")))
                     )
                 }
+                return
             }
             if (input.isEmpty()) {
-                users.forEach {
+                serverUsers.forEach {
                     val tmp = Chat(
                         user = User(
                             userName = it.username, userToken = SecurityUtilsImpl().bytesToString(it.token),
@@ -281,7 +232,7 @@ class MessengerViewModel(
                     }
                 }
             } else {
-                users.forEach {
+                serverUsers.forEach {
                     if (input.length <= it.username.length) {
                         val subStr = it.username.subSequence(0, input.length).toString().lowercase()
                         if (subStr == input.lowercase() && subStr != "") {
@@ -380,16 +331,12 @@ class MessengerViewModel(
         val tmp = _messengerUiState.value.chats.toMutableList()
         tmp.add(Chat(user, messages = listOf(Message(value = "You do not have messages now."))))
         _messengerUiState.update { it.copy(chats = tmp) }
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             roomsRepository.onCreateChat(
                 getUser().userToken,
                 _messengerUiState.value.chats.last().user.userToken
             )
         }
-    }
-
-    private suspend fun getRooms(): List<Room> {
-        return roomsRepository.getRooms(getUser().userToken)
     }
 
     private suspend fun getImage(imageUri: String): Bitmap {
@@ -436,23 +383,23 @@ class MessengerViewModel(
 
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun loadChatsFromServer() {
-        var rooms: List<Room> = listOf()
+        var serverRooms: List<ServerRoom> = listOf()
         try {
-            rooms = getRooms()
+            serverRooms = roomsRepository.getRooms(getUser().userToken)
         } catch (e: Exception) {
             val  result = listOf(Chat(messages = listOf(Message(value = "${e.message}")), time = ""))
             applyMessengerUiState(
                 MessengerUiState(chats = _messengerUiState.value.chats + result)
             )
         }
-        rooms.map {
+        serverRooms.map {
             val user = if (it.user2.username == getUser().userName) {
                 it.user1
             } else {
                 it.user2
             }
             val tmp = messagesRepository.getMessagesByRoom(
-                room = it,
+                serverRoom = it,
                 pagination = Pagination(0, 1),
                 firstUserName = getUser().userName
             )

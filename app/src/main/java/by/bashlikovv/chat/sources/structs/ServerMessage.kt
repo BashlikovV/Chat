@@ -1,11 +1,11 @@
 package by.bashlikovv.chat.sources.structs
 
-data class Message(
-    val room: Room = Room(),
+data class ServerMessage(
+    val room: ServerRoom = ServerRoom(),
     val image: String = "",
     val value: ByteArray = byteArrayOf(),
     val file: ByteArray = byteArrayOf(),
-    val owner: User = User(),
+    val owner: ServerUser = ServerUser(),
     val time: String = "",
     val from: String = "",
     val isRead: Boolean = true
@@ -14,7 +14,7 @@ data class Message(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Message
+        other as ServerMessage
 
         if (room != other.room) return false
         if (image != other.image) return false

@@ -146,12 +146,14 @@ fun MessengerItem(
     messengerViewModel: MessengerViewModel = viewModel(),
     onOpenChat: (Chat) -> Unit
 ) {
+    val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
+
     BoxWithConstraints {
         ConstraintLayout(
             constraintSet = getMessengerItemConstraints(),
             modifier = modifier
                 .fillMaxWidth()
-                .background(messengerViewModel.getChatBackground(chat))
+                .background(getChatBackground(chat, messengerUiState.selectedItem))
                 .pointerInput(chat) {
                     detectTapGestures(
                         onLongPress = { messengerViewModel.onActionSelect(chat) },
@@ -176,7 +178,7 @@ fun MessengerItem(
                 fontWeight = FontWeight.Bold,
                 fontSize = 16,
                 layoutId = "name",
-                textColor = messengerViewModel.getTextColor(chat)
+                textColor = getTextColor(chat, messengerUiState.selectedItem)
             )
             MessengerItemText(
                 text = if (chat.messages.last().value.isNotEmpty()) {
@@ -187,18 +189,20 @@ fun MessengerItem(
                 fontWeight = FontWeight.Light,
                 fontSize = 14,
                 layoutId = "message",
-                textColor = messengerViewModel.getTextColor(chat)
+                textColor = getTextColor(chat, messengerUiState.selectedItem)
             )
             MessengerItemText(
                 text = buildTime(chat.messages.last().time),
                 fontWeight = FontWeight.Thin,
                 fontSize = 13,
                 layoutId = "time",
-                textColor = messengerViewModel.getTextColor(chat)
+                textColor = getTextColor(chat, messengerUiState.selectedItem)
             )
             MessagesCount(
-                count = chat.count, color = messengerViewModel.getTintColor(chat),
-                countColor = messengerViewModel.getCountColor(chat), modifier = Modifier.layoutId("count")
+                count = chat.count,
+                color = getTintColor(chat, messengerUiState.selectedItem),
+                countColor = getCountColor(chat, messengerUiState.selectedItem),
+                modifier = Modifier.layoutId("count")
             )
         }
     }
@@ -245,5 +249,41 @@ fun MessagesCount(
                 ),
             color = countColor
         )
+    }
+}
+
+@Composable
+fun getTextColor(chat: Chat, selectedItem: Chat): Color {
+    return if (chat == selectedItem) {
+        MaterialTheme.colors.primary
+    } else {
+        MaterialTheme.colors.secondary
+    }
+}
+
+@Composable
+fun getTintColor(chat: Chat, selectedItem: Chat): Color {
+    return if (chat == selectedItem) {
+        MaterialTheme.colors.primary
+    } else {
+        MaterialTheme.colors.background
+    }
+}
+
+@Composable
+fun getCountColor(chat: Chat, selectedItem: Chat): Color {
+    return if (chat == selectedItem) {
+        MaterialTheme.colors.primary
+    } else {
+        MaterialTheme.colors.secondary
+    }
+}
+
+@Composable
+fun getChatBackground(chat: Chat, selectedItem: Chat): Color {
+    return if (chat == selectedItem) {
+        MaterialTheme.colors.background
+    } else {
+        MaterialTheme.colors.primary
     }
 }

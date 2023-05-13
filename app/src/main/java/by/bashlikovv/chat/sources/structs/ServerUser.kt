@@ -1,6 +1,6 @@
 package by.bashlikovv.chat.sources.structs
 
-data class User(
+data class ServerUser(
     val id: Int = 0,
     val username: String = "",
     val email: String = "",
@@ -13,7 +13,7 @@ data class User(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as User
+        other as ServerUser
 
         if (id != other.id) return false
         if (username != other.username) return false

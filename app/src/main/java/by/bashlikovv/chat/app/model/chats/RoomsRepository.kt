@@ -1,6 +1,6 @@
 package by.bashlikovv.chat.app.model.chats
 
-import by.bashlikovv.chat.sources.structs.Room
+import by.bashlikovv.chat.sources.structs.ServerRoom
 
 interface RoomsRepository {
 
@@ -8,7 +8,7 @@ interface RoomsRepository {
 
     suspend fun onCreateChat(user1: String, user2: String)
 
-    suspend fun getRooms(userToken: String): List<Room>
+    suspend fun getRooms(userToken: String): List<ServerRoom>
 
-    suspend fun getRoom(user1: String, user2: String): Room
+    suspend fun getRoom(user1: String, user2: String): ServerRoom
 }

@@ -1,7 +1,6 @@
 package by.bashlikovv.chat.app.utils
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.annotation.SuppressLint
 import java.security.SecureRandom
 import java.util.Base64
 import javax.crypto.SecretKeyFactory
@@ -25,12 +24,12 @@ class SecurityUtilsImpl : SecurityUtils {
         return keyFactory.generateSecret(keySpec).encoded
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("NewApi")
     override fun bytesToString(bytes: ByteArray): String {
         return Base64.getEncoder().encodeToString(bytes)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("NewApi")
     override fun stringToBytes(string: String): ByteArray {
         return Base64.getDecoder().decode(string)
     }

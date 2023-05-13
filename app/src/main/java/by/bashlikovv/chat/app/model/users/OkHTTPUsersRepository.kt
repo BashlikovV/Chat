@@ -8,10 +8,10 @@ import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.sources.SourceProviderHolder
 import by.bashlikovv.chat.sources.accounts.OkHttpAccountsSource
 import by.bashlikovv.chat.sources.messages.OkHttpMessagesSource
-import by.bashlikovv.chat.sources.structs.User
+import by.bashlikovv.chat.sources.structs.ServerUser
 import by.bashlikovv.chat.sources.users.OkHttpUsersSource
 
-class ChatUsersRepository : UsersRepository {
+class OkHTTPUsersRepository : UsersRepository {
 
     private val sourceProvider = SourceProviderHolder().sourcesProvider
 
@@ -28,11 +28,11 @@ class ChatUsersRepository : UsersRepository {
         )
     }
 
-    override suspend fun getUsers(token: String): List<User> {
+    override suspend fun getUsers(token: String): List<ServerUser> {
         return usersSource.getAllUsers(token)
     }
 
-    override suspend fun getUser(token: String): User {
+    override suspend fun getUser(token: String): ServerUser {
         return usersSource.getUser(token)
     }
 

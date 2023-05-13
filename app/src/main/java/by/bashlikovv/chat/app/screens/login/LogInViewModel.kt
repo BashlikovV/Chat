@@ -16,7 +16,7 @@ import by.bashlikovv.chat.app.model.PasswordMismatchException
 import by.bashlikovv.chat.app.model.StorageException
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.accounts.entities.SignUpData
-import by.bashlikovv.chat.app.model.users.ChatUsersRepository
+import by.bashlikovv.chat.app.model.users.OkHTTPUsersRepository
 import by.bashlikovv.chat.app.model.users.UsersRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +28,7 @@ import java.util.*
 
 class LogInViewModel(
     private val accountsRepository: AccountsRepository,
-    private val usersRepository: UsersRepository = ChatUsersRepository()
+    private val usersRepository: UsersRepository = OkHTTPUsersRepository()
 ) : ViewModel() {
 
     private val _logInUiState = MutableStateFlow(LogInUiState(progressBarVisibility = true))
