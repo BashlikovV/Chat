@@ -16,15 +16,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
-import by.bashlikovv.chat.app.model.chats.ChatRoomsRepository
+import by.bashlikovv.chat.app.model.chats.OkHTTPRoomsRepository
 import by.bashlikovv.chat.app.model.chats.RoomsRepository
-import by.bashlikovv.chat.app.model.messages.ChatMessagesRepository
+import by.bashlikovv.chat.app.model.messages.OkHTTPMessagesRepository
 import by.bashlikovv.chat.app.model.messages.MessagesRepository
-import by.bashlikovv.chat.app.model.users.ChatUsersRepository
+import by.bashlikovv.chat.app.model.users.OkHTTPUsersRepository
 import by.bashlikovv.chat.app.model.users.UsersRepository
 import by.bashlikovv.chat.app.struct.*
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.StatusNotification
+import by.bashlikovv.chat.sources.structs.ServerMessage
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -36,12 +37,11 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.concurrent.thread
 
-@RequiresApi(Build.VERSION_CODES.O)
 class ChatViewModel(
     accountsRepository: AccountsRepository,
-    private val messagesRepository: MessagesRepository = ChatMessagesRepository(),
-    private val usersRepository: UsersRepository = ChatUsersRepository(),
-    private val roomsRepository: RoomsRepository = ChatRoomsRepository()
+    private val messagesRepository: MessagesRepository = OkHTTPMessagesRepository(),
+    private val usersRepository: UsersRepository = OkHTTPUsersRepository(),
+    private val roomsRepository: RoomsRepository = OkHTTPRoomsRepository()
 ) : ViewModel() {
 
     private val _chatUiState = MutableStateFlow(ChatUiState())
@@ -61,7 +61,7 @@ class ChatViewModel(
     private val _chatInputState = MutableStateFlow("")
     var chatInputState = _chatInputState.asStateFlow()
 
-    private var me = by.bashlikovv.chat.sources.structs.User()
+    private var me = by.bashlikovv.chat.sources.structs.ServerUser()
 
     private val pagination = Pagination()
 
@@ -98,7 +98,7 @@ class ChatViewModel(
                     _chatUiState.value.chat.token,
                     Pagination().getRange()
                 )
-                val  newValue = getMessagesResult.messages.castListOfMessages()
+                val  newValue = getMessagesResult.serverMessages.castListOfMessages()
                 val tmp = _chatUiState.value.chat.messages.takeLast(newValue.size)
                 if (tmp.map { it.value } == newValue.map { it.value }) {
                     return@launch
@@ -149,7 +149,7 @@ class ChatViewModel(
         _lazyListState.update { LazyListState(chatData.messages.size) }
     }
 
-    private suspend fun List<by.bashlikovv.chat.sources.structs.Message>.castListOfMessages(): List<Message> {
+    private suspend fun List<ServerMessage>.castListOfMessages(): List<Message> {
         return this.map {
             var image: Bitmap? = null
             if (!it.image.contains("no image") && it.image.isNotEmpty()) {
@@ -246,7 +246,7 @@ class ChatViewModel(
                 } else {
                     room.user2
                 }
-                messagesRepository.deleteMessage(by.bashlikovv.chat.sources.structs.Message(
+                messagesRepository.deleteMessage(ServerMessage(
                     room = room,
                     image = if (message.isImage) message.value else "no image",
                     value = message.value.encodeToByteArray(),
@@ -371,7 +371,7 @@ class ChatViewModel(
                 _chatUiState.value.chat.token,
                 pagination = pagination.getRange()
             )
-            val  newValue = getMessagesResult.messages.castListOfMessages() + _chatUiState.value.chat.messages
+            val  newValue = getMessagesResult.serverMessages.castListOfMessages() + _chatUiState.value.chat.messages
             chatData = _chatUiState.value.chat.copy(messages = newValue)
             val size = chatData.messages.size - _chatUiState.value.chat.messages.size
             _chatUiState.update { it.copy(chat = chatData) }
