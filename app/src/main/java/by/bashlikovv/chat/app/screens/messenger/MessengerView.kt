@@ -273,7 +273,7 @@ fun getTintColor(chat: Chat, selectedItem: Chat): Color {
 @Composable
 fun getCountColor(chat: Chat, selectedItem: Chat): Color {
     return if (chat == selectedItem) {
-        MaterialTheme.colors.primary
+        MaterialTheme.colors.background
     } else {
         MaterialTheme.colors.secondary
     }

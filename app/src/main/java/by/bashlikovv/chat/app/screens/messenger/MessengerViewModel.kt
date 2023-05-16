@@ -361,23 +361,22 @@ class MessengerViewModel(
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun updateViewData() {
+        if (_messengerUiState.value.darkTheme != Repositories.accountsRepository.isDarkTheme()) {
+            _messengerUiState.update { it.copy(darkTheme = !it.darkTheme) }
+        }
         applyMe(getStartUser())
         var chats = getBookmarks()
         if (chats.isNullOrEmpty()) {
             chats = listOf(Message(value = "You do not have bookmarks"))
         }
         val data = listOf(
-            Chat(
-                user = User(userName = "Bookmarks", userImage = UserImage(
+            Chat(user = User(userName = "Bookmarks", userImage = UserImage(
                     userImageBitmap = R.drawable.bookmark.getBitmapFromImage(applicationContext)
                 )),
                 messages = chats
             )
         )
-        applyMessengerUiState(MessengerUiState(chats = data))
-        if (_messengerUiState.value.darkTheme != Repositories.accountsRepository.isDarkTheme()) {
-            onThemeChange()
-        }
+        applyMessengerUiState(_messengerUiState.value.copy(chats = data))
         loadChatsFromServer()
     }
 
@@ -389,7 +388,7 @@ class MessengerViewModel(
         } catch (e: Exception) {
             val  result = listOf(Chat(messages = listOf(Message(value = "${e.message}")), time = ""))
             applyMessengerUiState(
-                MessengerUiState(chats = _messengerUiState.value.chats + result)
+                _messengerUiState.value.copy(chats = _messengerUiState.value.chats + result)
             )
         }
         serverRooms.map {
@@ -420,7 +419,7 @@ class MessengerViewModel(
                 count = tmp.unreadMessageCount
             )
             applyMessengerUiState(
-                MessengerUiState(chats = _messengerUiState.value.chats + listOf(chat))
+                _messengerUiState.value.copy(chats = _messengerUiState.value.chats + listOf(chat))
             )
             chat
         }
