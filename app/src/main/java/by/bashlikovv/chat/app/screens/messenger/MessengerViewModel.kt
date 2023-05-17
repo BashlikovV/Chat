@@ -330,7 +330,7 @@ class MessengerViewModel(
     fun onCreateNewChat(user: User) {
         val tmp = _messengerUiState.value.chats.toMutableList()
         tmp.add(Chat(user, messages = listOf(Message(value = "You do not have messages now."))))
-        _messengerUiState.update { it.copy(chats = tmp) }
+        _messengerUiState.update { it.copy(chats = tmp, newChat = false) }
         viewModelScope.launch(Dispatchers.IO) {
             roomsRepository.onCreateChat(
                 getUser().userToken,

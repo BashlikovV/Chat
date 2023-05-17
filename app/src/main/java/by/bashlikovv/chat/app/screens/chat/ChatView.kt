@@ -170,7 +170,6 @@ fun DateSeparator(it: Message) {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalTextApi::class)
 @Composable
 fun MessageView(

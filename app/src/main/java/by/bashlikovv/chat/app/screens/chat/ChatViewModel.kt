@@ -12,16 +12,18 @@ import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.chat.Repositories.applicationContext
 import by.bashlikovv.chat.app.model.accounts.AccountsRepository
 import by.bashlikovv.chat.app.model.chats.OkHTTPRoomsRepository
 import by.bashlikovv.chat.app.model.chats.RoomsRepository
-import by.bashlikovv.chat.app.model.messages.OkHTTPMessagesRepository
 import by.bashlikovv.chat.app.model.messages.MessagesRepository
+import by.bashlikovv.chat.app.model.messages.OkHTTPMessagesRepository
 import by.bashlikovv.chat.app.model.users.OkHTTPUsersRepository
 import by.bashlikovv.chat.app.model.users.UsersRepository
+import by.bashlikovv.chat.app.screens.login.UserImage
 import by.bashlikovv.chat.app.struct.*
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.StatusNotification
@@ -121,7 +123,9 @@ class ChatViewModel(
 
     fun applyChatData(chat: Chat) {
         _chatUiState.update { it.copy(chat = chat) }
-        getUniqueUsers()
+        if (chat.messages.size > 1) {
+            getUniqueUsers()
+        }
     }
 
     fun applyMe(token: String) {
@@ -209,7 +213,16 @@ class ChatViewModel(
         val newValue = messagesRepository.onSend(
             message = Message(
                 value = chatInputState.value,
-                user = _chatUiState.value.usersData.last(),
+                user = User(
+                    userId = me.id.toLong(),
+                    userName = me.username,
+                    userEmail = me.email,
+                    userToken = SecurityUtilsImpl().bytesToString(me.token),
+                    userImage = UserImage(
+                        userImageUri = me.image.decodeToString().toUri(),
+                        userImageUrl = me.image.decodeToString()
+                    )
+                ),
                 time = Calendar.getInstance().time.toString(),
                 isRead = true
             ),
@@ -227,7 +240,6 @@ class ChatViewModel(
         _lazyListState.update { LazyListState(_chatUiState.value.chat.messages.size) }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun onActionDelete(message: Message) {
         val tmp = _chatUiState.value.chat.messages.toMutableList()
         tmp.remove(message)
@@ -236,10 +248,10 @@ class ChatViewModel(
                 onDeleteBookmark(message)
             }
         } else {
-            GlobalScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 val room = roomsRepository.getRoom(
-                    _chatUiState.value.usersData.first().userToken,
-                    _chatUiState.value.usersData.last().userToken
+                    SecurityUtilsImpl().bytesToString(me.token),
+                    _chatUiState.value.chat.user.userToken
                 )
                 val owner = if (message.from == SecurityUtilsImpl().bytesToString(room.user1.token)) {
                     room.user1

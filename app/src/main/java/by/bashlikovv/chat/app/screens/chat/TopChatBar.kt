@@ -82,9 +82,7 @@ fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> U
                 colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
                 modifier = Modifier
                     .size(40.dp)
-                    .clickable {
-                        onBackAction()
-                    }
+                    .clickable { onBackAction() }
                     .layoutId("closeChat")
             )
             Image(
