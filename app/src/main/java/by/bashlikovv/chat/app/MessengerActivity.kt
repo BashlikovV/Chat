@@ -28,7 +28,6 @@ import by.bashlikovv.chat.app.screens.messenger.MessengerView
 import by.bashlikovv.chat.app.screens.messenger.MessengerViewModel
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
-import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.theme.MessengerTheme
 import by.bashlikovv.chat.app.utils.viewModelCreator
 import kotlinx.coroutines.launch
@@ -78,7 +77,7 @@ class MessengerActivity : ComponentActivity() {
     private fun onOpenChat(messengerUiState: MessengerUiState, it: Chat): Intent {
         chatIntent = Intent(applicationContext, ChatActivity::class.java)
         if (messengerUiState.newChat) {
-            messengerViewModel.onCreateNewChat(User(userToken = it.user.userToken))
+            messengerViewModel.onCreateNewChat(it.user)
         }
         chatIntent.apply {
             putExtra(DARK_THEME, messengerUiState.darkTheme)
@@ -99,7 +98,8 @@ class MessengerActivity : ComponentActivity() {
                                 1, 1, Bitmap.Config.ARGB_8888
                             )
                         )
-                    )
+                    ),
+                    messages = listOf()
                 )
             )
             messengerViewModel.viewModelScope.launch {
