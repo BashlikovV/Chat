@@ -179,7 +179,7 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
         contentScale = ContentScale.Crop,
         modifier = Modifier
             .clip(RoundedCornerShape(size = size - 60.dp))
-            .background(MaterialTheme.colors.secondary)
+            .background(MaterialTheme.colors.primary)
             .size(size = size)
             .layoutId("userImage")
             .clickable {
@@ -199,7 +199,7 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
         ),
         contentDescription = "theme",
         contentScale = ContentScale.Crop,
-        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
+        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onError),
         modifier = Modifier
             .size(40.dp)
             .clickable { messengerViewModel.onThemeChange() }
@@ -210,7 +210,7 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
         fontSize = 24.sp,
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier.layoutId("username"),
-        color = MaterialTheme.colors.secondary
+        color = MaterialTheme.colors.surface
     )
 }
 
@@ -236,7 +236,7 @@ fun BottomContent(messengerViewModel: MessengerViewModel = viewModel()) {
             modifier = Modifier
                 .height(1.dp)
                 .fillMaxWidth()
-                .background(MaterialTheme.colors.secondary)
+                .background(MaterialTheme.colors.surface)
                 .layoutId("spacer")
         )
         BottomContentItem(text = "Sign out", layoutId = "signOutBtn", leadingIcon = R.drawable.exit) {
@@ -250,7 +250,7 @@ fun BottomContent(messengerViewModel: MessengerViewModel = viewModel()) {
             modifier = Modifier
                 .height(1.dp)
                 .fillMaxWidth()
-                .background(MaterialTheme.colors.secondary)
+                .background(MaterialTheme.colors.surface)
                 .layoutId("spacer")
         )
         BottomContentItem(text = "Change username", layoutId = "editUsername", leadingIcon = R.drawable.edit) {
@@ -284,10 +284,13 @@ fun BottomContentItem(
             contentDescription = text,
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(35.dp),
-            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary)
+            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.surface)
         )
         Text(
-            text = text, fontSize = 20.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colors.secondary,
+            text = text,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colors.surface,
             modifier = Modifier
                 .background(Color.Transparent)
                 .fillMaxWidth()
@@ -317,7 +320,7 @@ fun BottomInputField(
             value = inputState,
             onValueChange = { inputState = it},
             colors = TextFieldDefaults.textFieldColors(
-                textColor = MaterialTheme.colors.secondary,
+                textColor = MaterialTheme.colors.surface,
                 focusedIndicatorColor = MaterialTheme.colors.primary,
                 unfocusedIndicatorColor = MaterialTheme.colors.primary
             ),

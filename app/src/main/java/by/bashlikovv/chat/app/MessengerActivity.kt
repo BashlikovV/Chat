@@ -21,19 +21,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewModelScope
+import androidx.navigation.compose.rememberNavController
 import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.app.screens.messenger.MessengerUiState
 import by.bashlikovv.chat.app.screens.messenger.MessengerView
 import by.bashlikovv.chat.app.screens.messenger.MessengerViewModel
+import by.bashlikovv.chat.app.screens.messenger.Screens
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.struct.Message
 import by.bashlikovv.chat.app.theme.MessengerTheme
 import by.bashlikovv.chat.app.utils.viewModelCreator
-import kotlinx.coroutines.launch
 
 class MessengerActivity : ComponentActivity() {
-    private lateinit var chatIntent: Intent
     private val messengerViewModel: MessengerViewModel by viewModelCreator {
         MessengerViewModel(Repositories.accountsRepository)
     }
@@ -52,19 +51,23 @@ class MessengerActivity : ComponentActivity() {
             val updateVisibility by messengerViewModel.updateVisibility.collectAsState()
             LaunchedEffect(Unit) { messengerViewModel.loadViewData() }
 
+            val navHostController  = rememberNavController()
+
             val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
             onBackPressedDispatcher.addCallback {
                 if (messengerUiState.expanded) {
                     messengerViewModel.onSearchClick(false)
+                    navHostController.navigate(Screens.CHATS.name)
                     return@addCallback
                 } else {
                     finish()
                 }
             }
+
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.primary) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        MessengerView {
+                        MessengerView(navHostController = navHostController) {
                             startActivity(onOpenChat(messengerUiState, it))
                         }
                         if (updateVisibility) { ProgressIndicator() }
@@ -75,10 +78,8 @@ class MessengerActivity : ComponentActivity() {
     }
 
     private fun onOpenChat(messengerUiState: MessengerUiState, it: Chat): Intent {
-        chatIntent = Intent(applicationContext, ChatActivity::class.java)
-        if (messengerUiState.newChat) {
-            messengerViewModel.onCreateNewChat(it.user)
-        }
+        val chatIntent = Intent(applicationContext, ChatActivity::class.java)
+        if (messengerUiState.newChat) { messengerViewModel.onCreateNewChat(it.user) }
         chatIntent.apply {
             putExtra(DARK_THEME, messengerUiState.darkTheme)
             var chat = if (messengerUiState.newChat) {
@@ -102,9 +103,7 @@ class MessengerActivity : ComponentActivity() {
                     messages = listOf()
                 )
             )
-            messengerViewModel.viewModelScope.launch {
-                putExtra(TOKEN, messengerViewModel.me.value.userToken)
-            }
+            putExtra(TOKEN, messengerViewModel.me.value.userToken)
         }
         return chatIntent
     }
