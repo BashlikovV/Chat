@@ -89,7 +89,7 @@ fun LeftItem(messengerViewModel: MessengerViewModel = viewModel()) {
             painter = painterResource(if (messengerUiState.expanded) R.drawable.arrow_back else R.drawable.menu),
             contentDescription = if (messengerUiState.expanded) "Close search" else "Menu",
             contentScale = ContentScale.Crop,
-            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
+            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onError),
             modifier = Modifier
                 .size(40.dp)
                 .clickable {
@@ -164,7 +164,7 @@ fun RightItem(image: Int, contentDescription: String, chat: Chat, actionListener
         painter = painterResource(image),
         contentDescription = contentDescription,
         contentScale = ContentScale.Crop,
-        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
+        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onError),
         modifier = Modifier.size(40.dp).clickable {
             actionListener(chat)
         }
@@ -202,9 +202,9 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
         colors = TextFieldDefaults.textFieldColors(
             backgroundColor = Color.Transparent,
             textColor = MaterialTheme.colors.secondary,
-            focusedIndicatorColor = MaterialTheme.colors.secondary,
-            unfocusedIndicatorColor = MaterialTheme.colors.secondary,
-            cursorColor = MaterialTheme.colors.secondary
+            focusedIndicatorColor = MaterialTheme.colors.onError,
+            unfocusedIndicatorColor = MaterialTheme.colors.onError,
+            cursorColor = MaterialTheme.colors.onError
         )
     )
 }
@@ -219,7 +219,7 @@ fun ContentIcon(messengerViewModel: MessengerViewModel = viewModel()) {
             painter = painterResource(R.drawable.search),
             contentDescription = "Search",
             contentScale = ContentScale.Crop,
-            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
+            colorFilter = ColorFilter.tint(color = MaterialTheme.colors.onError),
             modifier = Modifier
                 .size(50.dp)
                 .clip(RoundedCornerShape(25.dp))
