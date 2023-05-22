@@ -43,11 +43,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  * */
 
 class MessengerViewModel(
-    private val accountsRepository: AccountsRepository,
-    private val roomsRepository: RoomsRepository = OkHTTPRoomsRepository(),
-    private val messagesRepository: MessagesRepository = OkHTTPMessagesRepository(),
-    private val usersRepository: UsersRepository = OkHTTPUsersRepository()
+    private val accountsRepository: AccountsRepository
 ) : ViewModel() {
+
+    private val roomsRepository: RoomsRepository = OkHTTPRoomsRepository()
+    private val messagesRepository: MessagesRepository = OkHTTPMessagesRepository()
+    private val usersRepository: UsersRepository = OkHTTPUsersRepository()
 
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
     val messengerUiState = _messengerUiState.asStateFlow()
