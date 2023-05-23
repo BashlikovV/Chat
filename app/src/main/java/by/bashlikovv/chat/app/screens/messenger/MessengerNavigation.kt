@@ -47,23 +47,29 @@ fun MessengerBottomNavigationBar(
     val currentDestination = navBackStackEntry?.destination
 
     NavigationBar(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(55.dp),
+        modifier = Modifier.fillMaxWidth().height(55.dp),
         containerColor = MaterialTheme.colors.primary
     ) {
         ContactsItem(
             selected = currentDestination?.hierarchy?.any { it.route == Screens.CONTACTS.name } == true,
             modifier = Modifier.padding(5.dp)
         ) {
-            messengerViewModel.onAddChatClicked(!messengerUiState.newChat)
-            messengerViewModel.onSearchInputChange("")
-            navHostController.navigate(it)
+            if (messengerUiState.newChat) {
+                messengerViewModel.onSearchClick(false)
+                navHostController.navigate(Screens.CHATS.name)
+            } else {
+                messengerViewModel.onAddChatClicked(true)
+                messengerViewModel.onSearchInputChange("")
+                navHostController.navigate(it)
+            }
         }
         ChatsItem(
             selected = currentDestination?.hierarchy?.any { it.route == Screens.CHATS.name } == true,
             modifier = Modifier.padding(5.dp)
         ) {
+            if (messengerUiState.newChat) {
+                messengerViewModel.onSearchClick(false)
+            }
             navHostController.navigate(it)
         }
         SettingsItem(
