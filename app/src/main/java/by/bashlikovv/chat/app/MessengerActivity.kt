@@ -115,9 +115,7 @@ class MessengerActivity : ComponentActivity() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colors.secondary
-            )
+            CircularProgressIndicator(color = MaterialTheme.colors.onError)
         }
     }
 
