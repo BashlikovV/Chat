@@ -30,7 +30,9 @@ import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.structs.ServerRoom
 import by.bashlikovv.chat.sources.structs.ServerUser
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -191,11 +193,13 @@ class MessengerViewModel(
     @RequiresApi(Build.VERSION_CODES.O)
     fun updateSearchData(newValue: String) = viewModelScope.launch(Dispatchers.IO) {
         setUpdateVisibility(true)
-        val result = suspendCancellableCoroutine {
+        val result = suspendCancellableCoroutine { continuation ->
+            continuation.invokeOnCancellation { cancel() }
+
             viewModelScope.launch(Dispatchers.IO) {
                 _searchedItems.update { listOf() }
                 getSearchOutput(newValue)
-                it.resumeWith(Result.success(false))
+                continuation.resumeWith(Result.success(false))
             }
         }
         setUpdateVisibility(result)
@@ -220,16 +224,18 @@ class MessengerViewModel(
                 return
             }
             if (input.isEmpty()) {
-                serverUsers.forEach {
+                serverUsers.forEach { serverUser ->
                     val tmp = Chat(
                         user = User(
-                            userName = it.username, userToken = SecurityUtilsImpl().bytesToString(it.token),
-                            userImage = usersRepository.getUserImage(it.image.decodeToString())
+                            userName = serverUser.username, userToken = SecurityUtilsImpl().bytesToString(serverUser.token),
+                            userImage = usersRepository.getUserImage(serverUser.image.decodeToString())
                         ),
                         messages = listOf(Message(value = "")), time = ""
                     )
-                    _searchedItems.update { state ->
-                        state + tmp
+                    if (!_messengerUiState.value.chats.map { it.user.userName }.contains(tmp.user.userName)) {
+                        _searchedItems.update { state ->
+                            state + tmp
+                        }
                     }
                 }
             } else {
@@ -246,8 +252,10 @@ class MessengerViewModel(
                                 messages = listOf(Message(value = "")),
                                 time = ""
                             )
-                            _searchedItems.update { state ->
-                                state + tmp
+                            if (!_messengerUiState.value.chats.map { it.user.userName }.contains(tmp.user.userName)) {
+                                _searchedItems.update { state ->
+                                    state + tmp
+                                }
                             }
                         }
                     }
@@ -291,13 +299,15 @@ class MessengerViewModel(
     }
 
     private suspend fun getStartUser(): User {
-        val result: User = suspendCancellableCoroutine {
+        val result: User = suspendCancellableCoroutine { continuation ->
             viewModelScope.launch(Dispatchers.IO) {
+                continuation.invokeOnCancellation { cancel() }
+
                 val data: Account? = accountsRepository.getAccount().first()
                 val user = usersRepository.getUser(data?.token ?: "")
                 val userBitmapImageUrl = user.image.decodeToString()
                 val userImage = usersRepository.getUserImage(userBitmapImageUrl)
-                it.resumeWith(
+                continuation.resumeWith(
                     Result.success(
                         User(
                             userId = data?.id ?: 0,
@@ -351,10 +361,12 @@ class MessengerViewModel(
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadViewData() = viewModelScope.launch(Dispatchers.IO) {
         setUpdateVisibility(true)
-        val result = suspendCancellableCoroutine {
+        val result = suspendCancellableCoroutine { continuation ->
+            continuation.invokeOnCancellation { cancel() }
+
             viewModelScope.launch(Dispatchers.IO) {
                 updateViewData()
-                it.resumeWith(Result.success(false))
+                continuation.resumeWith(Result.success(false))
             }
         }
         setUpdateVisibility(result)
