@@ -91,9 +91,9 @@ class OkHttpMessagesSource(
         }
     }
 
-    private fun Socket.connect(baseUrl: String) {
-        val ip = baseUrl.substringAfter("://").substringBefore(":")
-        val port = baseUrl.substringAfter("$ip:").toInt()
+    private fun Socket.connect() {
+        val ip = Const.BASE_URL.substringAfter("://").substringBefore(":")
+        val port = Const.BASE_URL.substringAfter("$ip:").toInt()
         try {
             this.connect(InetSocketAddress(ip, port), 1000)
         } catch (e: Exception) {
@@ -106,7 +106,7 @@ class OkHttpMessagesSource(
         val socket = Socket()
         val input: DataInputStream
         try {
-            socket.connect(Const.BASE_URL)
+            socket.connect()
 
             val request = "GET /${HttpContract.UrlMethods.GET_IMAGE}?$uri\r\nContent-Type:image/jpg \r\n\r\n"
 
