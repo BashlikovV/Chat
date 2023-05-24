@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,7 +42,7 @@ import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.utils.buildTime
 
 @Composable
-fun MessengerContent(
+fun ChatsView(
     modifier: Modifier = Modifier,
     messengerViewModel: MessengerViewModel = viewModel(LocalContext.current as ComponentActivity),
     onOpenChat: (Chat) -> Unit
@@ -54,9 +56,9 @@ fun MessengerContent(
     ) {
         if (messengerUiState.chats.isNotEmpty()) {
             if (!messengerUiState.expanded) {
-                items(messengerUiState.chats) { chat -> MessengerItem(chat) { onOpenChat(it) } }
+                items(messengerUiState.chats) { chat -> ChatItem(chat) { onOpenChat(it) } }
             } else {
-                items(searchedItems) { chat -> MessengerItem(chat) { onOpenChat(it) } }
+                items(searchedItems) { chat -> ChatItem(chat) { onOpenChat(it) } }
             }
         }
     }
@@ -76,7 +78,7 @@ fun UserImageView(image: Bitmap, username: String) {
 
 @Composable
 fun UserNameView(username: String, modifier: Modifier = Modifier) {
-    androidx.compose.material3.Text(
+    Text(
         text = username,
         color = MaterialTheme.colors.onSurface,
         fontWeight = FontWeight.Medium,
@@ -87,7 +89,7 @@ fun UserNameView(username: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun LastMessageView(lastMessage: String, modifier: Modifier = Modifier) {
-    androidx.compose.material3.Text(
+    Text(
         text = lastMessage,
         color = MaterialTheme.colors.surface,
         fontWeight = FontWeight.Medium,
@@ -100,7 +102,7 @@ fun LastMessageView(lastMessage: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun LastMessageTimeView(time: String, modifier: Modifier = Modifier) {
-    androidx.compose.material3.Text(
+    Text(
         text = time,
         color = MaterialTheme.colors.onSurface,
         fontWeight = FontWeight.Normal,
@@ -112,7 +114,7 @@ fun LastMessageTimeView(time: String, modifier: Modifier = Modifier) {
 @Composable
 fun MessagesCountView(count: Int, modifier: Modifier = Modifier) {
     if (count > 0) {
-        androidx.compose.material3.Text(
+        Text(
             text = count.toString(),
             color = MaterialTheme.colors.onSurface,
             fontWeight = FontWeight.SemiBold,
@@ -134,7 +136,7 @@ fun MessagesCountView(count: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun MessengerItem(
+fun ChatItem(
     chat: Chat,
     modifier: Modifier = Modifier,
     messengerViewModel: MessengerViewModel = viewModel(LocalContext.current as ComponentActivity),
@@ -174,11 +176,7 @@ fun MessengerItem(
                 username = chat.user.userName
             )
         }
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth()
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 UserNameView(
                     username = chat.user.userName,

@@ -5,17 +5,18 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.PullRefreshState
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import by.bashlikovv.chat.app.screens.messenger.chats.MessengerContent
+import by.bashlikovv.chat.app.screens.messenger.chats.ChatsView
 import by.bashlikovv.chat.app.screens.messenger.settings.SettingsView
+import by.bashlikovv.chat.app.screens.messenger.users.UsersView
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.views.drawer.MessengerDrawerContent
 import kotlinx.coroutines.Dispatchers
@@ -53,35 +54,44 @@ fun MessengerView(
         ),
         modifier = modifier
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            NavHost(navController = navHostController, startDestination = Screens.CHATS.name) {
-                composable(Screens.CHATS.name) {
-                    MessengerContent(
-                        modifier = Modifier
-                            .padding(paddingValues)
-                            .fillMaxSize()
-                            .pullRefresh(state, true)
-                    ) { onOpenChat(it) }
-                }
-                composable(Screens.CONTACTS.name) {
-                    MessengerContent(
-                        modifier = Modifier
-                            .padding(paddingValues)
-                            .fillMaxSize()
-                            .pullRefresh(state, true)
-                    ) { onOpenChat(it) }
-                }
-                composable(Screens.SETTINGS.name) {
-                    SettingsView()
-                }
-            }
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            MessengerNavHost(navHostController, state, onOpenChat)
             PullRefreshIndicator(
                 refreshing,
                 state,
-                Modifier.align(Alignment.TopCenter),
+                Modifier.align(androidx.compose.ui.Alignment.Companion.TopCenter),
                 contentColor = MaterialTheme.colors.onError,
                 backgroundColor = MaterialTheme.colors.primary
             )
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+@OptIn(ExperimentalMaterialApi::class)
+private fun MessengerNavHost(
+    navHostController: NavHostController,
+    state: PullRefreshState,
+    onOpenChat: (Chat) -> Unit
+) {
+    NavHost(navController = navHostController, startDestination = Screens.CHATS.name) {
+        composable(Screens.CHATS.name) {
+            ChatsView(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pullRefresh(state, true)
+            ) { onOpenChat(it) }
+        }
+        composable(Screens.CONTACTS.name) {
+            UsersView(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pullRefresh(state, true)
+            ) { onOpenChat(it) }
+        }
+        composable(Screens.SETTINGS.name) {
+            SettingsView()
         }
     }
 }

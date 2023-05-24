@@ -29,8 +29,6 @@ import by.bashlikovv.chat.app.struct.Pagination
 import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.structs.ServerRoom
-import by.bashlikovv.chat.sources.structs.ServerUser
-import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,17 +65,6 @@ class MessengerViewModel(
     private val _me = MutableStateFlow(User())
     var me = _me.asStateFlow()
 
-    private fun applyMessengerUiState(state: MessengerUiState) {
-        _messengerUiState.update { state }
-    }
-
-    /**
-     * [onLongPress] - function that opening items in top bar when messenger item selected
-     * */
-    private fun onLongPress() {
-        _messengerUiState.update { it.copy(visible = true) }
-    }
-
     /**
      * [onActionCloseItems] - function that closing items in top bar when some action activated
      * */
@@ -90,11 +77,11 @@ class MessengerViewModel(
      */
     fun onActionRead(chat: Chat) {
         onActionCloseItems()
-        _messengerUiState.update { currentState ->
-            currentState.copy(chats = currentState.chats.map { if (it == chat) it.copy(count = 0) else it })
-        }
         viewModelScope.launch(Dispatchers.IO) {
             messagesRepository.readRoomMessages(chat.token)
+        }
+        _messengerUiState.update { currentState ->
+            currentState.copy(chats = currentState.chats.map { if (it == chat) it.copy(count = 0) else it })
         }
     }
 
@@ -137,8 +124,7 @@ class MessengerViewModel(
      * [onActionSelect] - function that changes current state of [MessengerUiState.selectedItem]
      * */
     fun onActionSelect(chat: Chat) {
-        onLongPress()
-        _messengerUiState.update { it.copy(selectedItem = chat, expanded = false) }
+        _messengerUiState.update { it.copy(visible = true, selectedItem = chat, expanded = false) }
     }
 
     /**
@@ -173,13 +159,6 @@ class MessengerViewModel(
     }
 
     /**
-     * [onSearchClick] - function that opens and closes input field used for search. [MessengerUiState.expanded]
-     * */
-    fun onSearchClick(newChat: Boolean) {
-        _messengerUiState.update { it.copy(expanded = !it.expanded, newChat = newChat) }
-    }
-
-    /**
      * [onSearchInputChange] - function that updates search input state in [MessengerUiState.searchInput]
      * */
     @RequiresApi(Build.VERSION_CODES.O)
@@ -187,104 +166,28 @@ class MessengerViewModel(
         _messengerUiState.update {
             it.copy(searchInput = newValue)
         }
-        updateSearchData(newValue)
+        updateSearchData()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun updateSearchData(newValue: String) = viewModelScope.launch(Dispatchers.IO) {
-        setUpdateVisibility(true)
-        val result = suspendCancellableCoroutine { continuation ->
-            continuation.invokeOnCancellation { cancel() }
-
-            viewModelScope.launch(Dispatchers.IO) {
-                _searchedItems.update { listOf() }
-                getSearchOutput(newValue)
-                continuation.resumeWith(Result.success(false))
-            }
-        }
-        setUpdateVisibility(result)
-    }
-
-    /**
-     * [getSearchOutput] - function for getting searched elements
-     * */
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun getSearchOutput(input: String) {
-        if (_messengerUiState.value.newChat) {
-            val serverUsers: List<ServerUser>
-            try {
-                serverUsers = usersRepository.getUsers(_me.value.userToken)
-            } catch (e: Exception) {
-                _searchedItems.update {
-                    listOf(Chat(
-                        user = User(userName = e.message ?: "Network error"),
-                        messages = listOf(Message(value = "")))
-                    )
-                }
-                return
-            }
-            if (input.isEmpty()) {
-                serverUsers.forEach { serverUser ->
-                    val tmp = Chat(
-                        user = User(
-                            userName = serverUser.username, userToken = SecurityUtilsImpl().bytesToString(serverUser.token),
-                            userImage = usersRepository.getUserImage(serverUser.image.decodeToString())
-                        ),
-                        messages = listOf(Message(value = "")), time = ""
-                    )
-                    if (!_messengerUiState.value.chats.map { it.user.userName }.contains(tmp.user.userName)) {
-                        _searchedItems.update { state ->
-                            state + tmp
-                        }
-                    }
-                }
-            } else {
-                serverUsers.forEach {
-                    if (input.length <= it.username.length) {
-                        val subStr = it.username.subSequence(0, input.length).toString().lowercase()
-                        if (subStr == input.lowercase() && subStr != "") {
-                            val tmp = Chat(
-                                user = User(
-                                    userName = it.username,
-                                    userToken = SecurityUtilsImpl().bytesToString(it.token),
-                                    userImage = usersRepository.getUserImage(it.image.decodeToString())
-                                ),
-                                messages = listOf(Message(value = "")),
-                                time = ""
-                            )
-                            if (!_messengerUiState.value.chats.map { it.user.userName }.contains(tmp.user.userName)) {
-                                _searchedItems.update { state ->
-                                    state + tmp
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+    fun updateSearchData() {
+        val input = _messengerUiState.value.searchInput
+        _searchedItems.update { listOf() }
+        if (input.isEmpty()) {
+            val tmp = _messengerUiState.value.chats.toMutableList()
+            _searchedItems.update { tmp }
         } else {
-            if (input.isEmpty()) {
-                val tmp = _messengerUiState.value.chats.toMutableList()
-                _searchedItems.update { tmp }
-            } else {
-                _messengerUiState.value.chats.forEach {
-                    if (input.length <= it.user.userName.length) {
-                        val subStr = it.user.userName.subSequence(0, input.length).toString().lowercase()
-                        if (subStr == input.lowercase()) {
-                            _searchedItems.update { state ->
-                                state + it
-                            }
+            _messengerUiState.value.chats.forEach {
+                if (input.length <= it.user.userName.length) {
+                    val subStr = it.user.userName.subSequence(0, input.length).toString().lowercase()
+                    if (subStr == input.lowercase()) {
+                        _searchedItems.update { state ->
+                            state + it
                         }
                     }
                 }
             }
         }
-    }
-
-    /**
-     * [applyMe] - function for applying current user data after registration
-     * */
-    private fun applyMe(me: User) {
-        _me.update { me }
     }
 
     private suspend fun getUser(): User {
@@ -323,19 +226,18 @@ class MessengerViewModel(
         return result
     }
 
-    private suspend fun getBookmarks(): List<Message>? {
-        return accountsRepository.getBookmarks().first()
-    }
-
     fun onSignOut() {
         viewModelScope.launch(Dispatchers.IO) {
             accountsRepository.logout()
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onAddChatClicked(value: Boolean) {
-        _messengerUiState.update { it.copy(newChat = value) }
-        onSearchClick(true)
+        _messengerUiState.update {
+            it.copy(newChat = value, expanded = !it.expanded)
+        }
+        onSearchInputChange("")
     }
 
     fun onCreateNewChat(user: User) {
@@ -354,7 +256,7 @@ class MessengerViewModel(
         return messagesRepository.getImage(imageUri).userImageBitmap
     }
 
-    private fun setUpdateVisibility(newValue: Boolean) {
+    fun setUpdateVisibility(newValue: Boolean) {
         _updateVisibility.update { newValue }
     }
 
@@ -377,8 +279,8 @@ class MessengerViewModel(
         if (_messengerUiState.value.darkTheme != Repositories.accountsRepository.isDarkTheme()) {
             _messengerUiState.update { it.copy(darkTheme = !it.darkTheme) }
         }
-        applyMe(getStartUser())
-        var chats = getBookmarks()
+        _me.update { getStartUser() }
+        var chats = accountsRepository.getBookmarks().first()
         if (chats.isNullOrEmpty()) {
             chats = listOf(Message(value = "You do not have bookmarks"))
         }
@@ -389,7 +291,7 @@ class MessengerViewModel(
                 messages = chats
             )
         )
-        applyMessengerUiState(_messengerUiState.value.copy(chats = data))
+        _messengerUiState.update { it.copy(chats = data) }
         loadChatsFromServer()
     }
 
@@ -400,42 +302,44 @@ class MessengerViewModel(
             serverRooms = roomsRepository.getRooms(getUser().userToken)
         } catch (e: Exception) {
             val  result = listOf(Chat(messages = listOf(Message(value = "${e.message}")), time = ""))
-            applyMessengerUiState(
-                _messengerUiState.value.copy(chats = _messengerUiState.value.chats + result)
-            )
-        }
-        serverRooms.map {
-            val user = if (it.user2.username == getUser().userName) {
-                it.user1
-            } else {
-                it.user2
+            _messengerUiState.update {
+                it.copy(chats = it.chats + result)
             }
-            val tmp = messagesRepository.getMessagesByRoom(
-                serverRoom = it,
-                pagination = Pagination(0, 1),
-                firstUserName = getUser().userName
-            )
-            val messages = tmp.messages
-            val image = UserImage(
-                userImageBitmap = getImage(user.image.decodeToString()),
-                userImageUri = Uri.parse(user.image.decodeToString())
-            )
-            val chat = Chat(
-                user = User(
-                    userName = user.username,
-                    userToken = SecurityUtilsImpl().bytesToString(user.token),
-                    userImage = image
-                ),
-                messages = messages,
-                token = SecurityUtilsImpl().bytesToString(it.token),
-                time = messages.last().time,
-                count = tmp.unreadMessageCount
-            )
-            applyMessengerUiState(
-                _messengerUiState.value.copy(chats = _messengerUiState.value.chats + listOf(chat))
-            )
-            chat
         }
+        serverRooms.map { serverRoom ->
+            _messengerUiState.update {
+                it.copy(chats = it.chats + listOf(serverRoom.castServerRoom()))
+            }
+        }
+    }
+
+    private suspend fun ServerRoom.castServerRoom(): Chat {
+        val user = if (this.user2.username == getUser().userName) {
+            this.user1
+        } else {
+            this.user2
+        }
+        val tmp = messagesRepository.getMessagesByRoom(
+            serverRoom = this,
+            pagination = Pagination(0, 1),
+            firstUserName = getUser().userName
+        )
+        val messages = tmp.messages
+        val image = UserImage(
+            userImageBitmap = getImage(user.image.decodeToString()),
+            userImageUri = Uri.parse(user.image.decodeToString())
+        )
+        return Chat(
+            user = User(
+                userName = user.username,
+                userToken = SecurityUtilsImpl().bytesToString(user.token),
+                userImage = image
+            ),
+            messages = messages,
+            token = SecurityUtilsImpl().bytesToString(this.token),
+            time = messages.last().time,
+            count = tmp.unreadMessageCount
+        )
     }
 
     private fun Int.getBitmapFromImage(context: Context): Bitmap {

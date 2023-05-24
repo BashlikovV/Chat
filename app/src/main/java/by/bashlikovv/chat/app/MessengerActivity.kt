@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.app.screens.messenger.MessengerUiState
@@ -48,21 +49,11 @@ class MessengerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Repositories.init(this)
         setContent {
-            val updateVisibility by messengerViewModel.updateVisibility.collectAsState()
             LaunchedEffect(Unit) { messengerViewModel.loadViewData() }
-
             val navHostController  = rememberNavController()
-
+            val updateVisibility by messengerViewModel.updateVisibility.collectAsState()
             val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
-            onBackPressedDispatcher.addCallback {
-                if (messengerUiState.expanded) {
-                    messengerViewModel.onSearchClick(false)
-                    navHostController.navigate(Screens.CHATS.name)
-                    return@addCallback
-                } else {
-                    finish()
-                }
-            }
+            backPressListener(messengerUiState, navHostController)
 
             MessengerTheme(darkTheme = messengerUiState.darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.primary) {
@@ -73,6 +64,22 @@ class MessengerActivity : ComponentActivity() {
                         if (updateVisibility) { ProgressIndicator() }
                     }
                 }
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun backPressListener(
+        messengerUiState: MessengerUiState,
+        navHostController: NavHostController
+    ) {
+        onBackPressedDispatcher.addCallback {
+            if (messengerUiState.expanded) {
+                navHostController.navigate(Screens.CHATS.name)
+                messengerViewModel.onAddChatClicked(false)
+                return@addCallback
+            } else {
+                finish()
             }
         }
     }

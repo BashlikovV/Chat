@@ -80,6 +80,7 @@ fun TopAppBar(messengerViewModel: MessengerViewModel = viewModel()) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun LeftItem(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
@@ -94,7 +95,7 @@ fun LeftItem(messengerViewModel: MessengerViewModel = viewModel()) {
                 .size(40.dp)
                 .clickable {
                     if (messengerUiState.expanded) {
-                        messengerViewModel.onSearchClick(false)
+                        messengerViewModel.onAddChatClicked(false)
                     } else {
                         messengerViewModel.onActionMenu()
                     }
@@ -186,7 +187,7 @@ fun Expanded(messengerViewModel: MessengerViewModel = viewModel()) {
         ),
         keyboardActions = KeyboardActions(
             onSearch = {
-                messengerViewModel.onSearchClick(false)
+                messengerViewModel.onAddChatClicked(false)
             }
         ),
         maxLines = 1,
@@ -224,7 +225,7 @@ fun ContentIcon(messengerViewModel: MessengerViewModel = viewModel()) {
                 .size(50.dp)
                 .clip(RoundedCornerShape(25.dp))
                 .clickable {
-                    messengerViewModel.onSearchClick(false)
+                    messengerViewModel.onAddChatClicked(false)
                     messengerViewModel.onSearchInputChange("")
                 }
         )

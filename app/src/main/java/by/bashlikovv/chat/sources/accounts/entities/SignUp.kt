@@ -6,7 +6,3 @@ data class SignUpRequestBody(
     val password: String,
     val image: String
 )
-
-data class SignUpResponseBody(
-    val result: String
-)
