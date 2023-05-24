@@ -55,7 +55,7 @@ fun MessengerBottomNavigationBar(
             modifier = Modifier.padding(5.dp)
         ) {
             if (messengerUiState.newChat) {
-                messengerViewModel.onSearchClick(false)
+                messengerViewModel.onAddChatClicked(false)
                 navHostController.navigate(Screens.CHATS.name)
             } else {
                 messengerViewModel.onAddChatClicked(true)
@@ -68,7 +68,7 @@ fun MessengerBottomNavigationBar(
             modifier = Modifier.padding(5.dp)
         ) {
             if (messengerUiState.newChat) {
-                messengerViewModel.onSearchClick(false)
+                messengerViewModel.onAddChatClicked(false)
             }
             navHostController.navigate(it)
         }
