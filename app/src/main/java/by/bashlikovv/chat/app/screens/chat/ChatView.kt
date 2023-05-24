@@ -18,7 +18,6 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.ElevatedAssistChip
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -51,16 +50,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun ChatView(modifier: Modifier = Modifier, onBackAction: () -> Unit) {
+fun ChatView(onBackAction: () -> Unit) {
     Scaffold(
         topBar = { TopChatBar { onBackAction() } },
         bottomBar = { BottomInputFiled() }
     ) {
-        ChatContent(
-            modifier = modifier
-                .padding(it)
-                .fillMaxSize()
-        )
+        ChatContent(modifier = Modifier.padding(it).fillMaxSize())
     }
 }
 
@@ -315,7 +310,6 @@ fun MessageView(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClipDelete(
     modifier: Modifier = Modifier,
