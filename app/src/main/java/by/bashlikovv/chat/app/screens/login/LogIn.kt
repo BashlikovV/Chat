@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +34,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogInView(logInViewModel: LogInViewModel = viewModel()) {
     val logInUiState by logInViewModel.logInUiState.collectAsState()
@@ -113,7 +111,7 @@ fun LogInView(logInViewModel: LogInViewModel = viewModel()) {
                         onClick = {
                             logInViewModel.onCreateAccountButtonPressed(context)
                         },
-                        content = { Text("LogIn") }
+                        content = { Text("LogIn", color = MaterialTheme.colors.surface) }
                     )
                 }
             }
@@ -145,11 +143,12 @@ fun InputField(
             "Email" -> !logInUiState.isIdentifierCorrect
             else -> false
         },
-        placeholder = { Text(type) },
+        placeholder = { Text(type, color = MaterialTheme.colors.surface) },
         colors = TextFieldDefaults.textFieldColors(
-            textColor = MaterialTheme.colors.primaryVariant,
+            textColor = MaterialTheme.colors.surface,
             backgroundColor = MaterialTheme.colors.primary,
-            cursorColor = MaterialTheme.colors.secondary
+            cursorColor = MaterialTheme.colors.secondary,
+            errorIndicatorColor = MaterialTheme.colors.onError
         ),
         keyboardOptions = KeyboardOptions.Default.copy(
             imeAction = if (type != "Password") ImeAction.Next else ImeAction.Done,
@@ -177,7 +176,7 @@ fun DefaultImage(res: ManagedActivityResultLauncher<String, Uri?>) {
             .clickable {
                 res.launch("image/")
             },
-        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary)
+        colorFilter = ColorFilter.tint(color = MaterialTheme.colors.surface)
     )
 }
 
@@ -192,9 +191,7 @@ fun UserImage(logInViewModel: LogInViewModel = viewModel(), res: ManagedActivity
         modifier = Modifier
             .size(100.dp)
             .clip(RoundedCornerShape(50.dp))
-            .clickable {
-                res.launch("image/")
-            }
+            .clickable { res.launch("image/") }
     )
 }
 
@@ -205,24 +202,24 @@ fun TopAppContent(logInViewModel: LogInViewModel = viewModel()) {
     Row(modifier = Modifier.fillMaxWidth()) {
         Button(
             onClick = { logInViewModel.onButtonClk(false) },
-            content = { Text("Do not have account") },
+            content = { Text("Do not have account", color = MaterialTheme.colors.surface) },
             modifier = Modifier.weight(0.5f),
             border = BorderStroke(
                 1.dp,
                 if (logInUiState.isHaveAccount)
                     MaterialTheme.colors.primary
                 else
-                    MaterialTheme.colors.secondary
+                    MaterialTheme.colors.surface
             )
         )
         Button(
             onClick = { logInViewModel.onButtonClk(true) },
-            content = { Text("Have account") },
+            content = { Text("Have account", color = MaterialTheme.colors.surface) },
             modifier = Modifier.weight(0.5f),
             border = BorderStroke(
                 1.dp,
                 if (logInUiState.isHaveAccount)
-                    MaterialTheme.colors.secondary
+                    MaterialTheme.colors.surface
                 else
                     MaterialTheme.colors.primary
             )
