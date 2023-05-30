@@ -24,7 +24,7 @@ class Pagination(
         } else if (value > PAGE_HEIGHT) {
             (top - 30)..top
         } else {
-            bottom..(bottom + 30)
+            bottom..top
         }
     }
 }
