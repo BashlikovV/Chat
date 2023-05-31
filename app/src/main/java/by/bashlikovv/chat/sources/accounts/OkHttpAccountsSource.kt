@@ -27,6 +27,7 @@ class OkHttpAccountsSource(
         val request = Request.Builder()
             .post(signInRequestBody.toJsonRequestBody())
             .endpoint("/${HttpContract.UrlMethods.SIGN_IN}")
+            .header("SignIn", "true")
             .build()
         return try {
             val response = client.newCall(request).suspendEnqueue()
@@ -50,6 +51,7 @@ class OkHttpAccountsSource(
             val request = Request.Builder()
                 .post(signUpRequestBody.toJsonRequestBody())
                 .endpoint("/${HttpContract.UrlMethods.SIGN_UP}")
+                .header("SignIn", "true")
                 .build()
             try {
                 client.newCall(request).suspendEnqueue()
