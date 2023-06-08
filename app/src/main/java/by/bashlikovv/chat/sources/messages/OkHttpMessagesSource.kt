@@ -14,14 +14,12 @@ import by.bashlikovv.chat.sources.structs.ServerMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.nio.ByteBuffer
-import java.util.concurrent.TimeUnit
 
 class OkHttpMessagesSource(
     config: OkHttpConfig
@@ -143,14 +141,6 @@ class OkHttpMessagesSource(
         isSignUp: Boolean
     ): String {
         try {
-            val client = OkHttpClient.Builder()
-                .connectTimeout(20000, TimeUnit.MILLISECONDS)
-                .callTimeout(20000, TimeUnit.MILLISECONDS)
-                .writeTimeout(20000, TimeUnit.MILLISECONDS)
-                .callTimeout(20000, TimeUnit.MILLISECONDS)
-                .readTimeout(20000, TimeUnit.MILLISECONDS)
-                .retryOnConnectionFailure(true)
-                .build()
             val stream = ByteArrayOutputStream()
             image.compress(Bitmap.CompressFormat.JPEG, 50, stream)
 
