@@ -25,7 +25,6 @@ class SourceProviderHolder {
             .writeTimeout(1000, TimeUnit.MILLISECONDS)
             .callTimeout(1000, TimeUnit.MILLISECONDS)
             .readTimeout(1000, TimeUnit.MILLISECONDS)
-            .retryOnConnectionFailure(true)
             .addInterceptor { chain ->
                 val builder = chain.request().newBuilder()
                 builder.header("User-Token", Repositories.myToken)
