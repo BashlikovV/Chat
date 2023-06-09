@@ -18,8 +18,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import by.bashlikovv.chat.app.views.bottombar.Utils.lerp
-import by.bashlikovv.chat.app.views.bottombar.Utils.toPxf
+import by.bashlikovv.chat.app.views.bottombar.utils.lerp
+import by.bashlikovv.chat.app.views.bottombar.utils.toPxf
 import by.bashlikovv.chat.app.views.bottombar.ballSize
 import by.bashlikovv.chat.app.views.bottombar.shape.IndentRectShape
 import by.bashlikovv.chat.app.views.bottombar.shape.IndentShapeData
