@@ -29,7 +29,11 @@ class OkHTTPUsersRepository : UsersRepository {
     }
 
     override suspend fun getUsers(token: String): List<ServerUser> {
-        return usersSource.getAllUsers(token)
+        val result = usersSource.getAllUsers(token)
+
+        if (result.isEmpty()) { throw Exception() }
+
+        return result
     }
 
     override suspend fun getUser(token: String): ServerUser {
