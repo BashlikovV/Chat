@@ -12,6 +12,7 @@ import by.bashlikovv.chat.app.struct.User
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.structs.ServerUser
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,25 +62,27 @@ class UsersViewModel(
     }
 
     private suspend fun getSearchOutput(input: String) {
-        val names = messengerViewModel.messengerUiState.value.chats.map { it.user.userName }
         val serverUsers: List<ServerUser>
         try {
-            serverUsers = usersRepository.getUsers(_me.value.userToken)
+            val account = viewModelScope.async {
+                val tmp = accountsRepository.getAccount()
+                return@async tmp.first()?.token ?: ""
+            }
+            serverUsers = usersRepository.getUsers(account.await())
         } catch (e: Exception) {
             processSearchException(e)
             return
         }
         if (input.isEmpty()) {
-            processEmptyInput(serverUsers, names)
+            processEmptyInput(serverUsers)
         } else {
-            processCorrectInput(serverUsers, input, names)
+            processCorrectInput(serverUsers, input)
         }
     }
 
     private suspend fun processCorrectInput(
         serverUsers: List<ServerUser>,
-        input: String,
-        names: List<String>
+        input: String
     ) {
         serverUsers.forEach { serverUser ->
             if (input.length <= serverUser.username.length) {
@@ -94,10 +97,8 @@ class UsersViewModel(
                         messages = listOf(Message(value = "")),
                         time = ""
                     )
-                    if (!names.contains(tmp.user.userName)) {
-                        _usersUiState.update { state ->
-                            state.copy(chats = state.chats + tmp)
-                        }
+                    _usersUiState.update { state ->
+                        state.copy(chats = state.chats + tmp)
                     }
                 }
             }
@@ -105,8 +106,7 @@ class UsersViewModel(
     }
 
     private suspend fun processEmptyInput(
-        serverUsers: List<ServerUser>,
-        names: List<String>
+        serverUsers: List<ServerUser>
     ) {
         serverUsers.forEach { serverUser ->
             val tmp = Chat(
@@ -118,10 +118,8 @@ class UsersViewModel(
                 messages = listOf(Message(value = "")),
                 time = ""
             )
-            if (!names.contains(tmp.user.userName)) {
-                _usersUiState.update { state ->
-                    state.copy(chats = state.chats + tmp)
-                }
+            _usersUiState.update { state ->
+                state.copy(chats = state.chats + tmp)
             }
         }
     }
