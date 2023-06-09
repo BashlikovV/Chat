@@ -16,9 +16,7 @@ class OkHttpUsersSource(
 
     suspend fun getAllUsers(token: String): List<ServerUser> {
         return try {
-            val getUsersRequestBody = GetUsersRequestBody(
-                token = token
-            )
+            val getUsersRequestBody = GetUsersRequestBody(token = token)
             val request = Request.Builder()
                 .post(getUsersRequestBody.toJsonRequestBody())
                 .endpoint("/${HttpContract.UrlMethods.GET_USERS}")
