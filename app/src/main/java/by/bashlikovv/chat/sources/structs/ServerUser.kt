@@ -1,13 +1,15 @@
 package by.bashlikovv.chat.sources.structs
 
+import com.google.gson.annotations.SerializedName
+
 data class ServerUser(
-    val id: Int = 0,
-    val username: String = "",
-    val email: String = "",
-    val token: ByteArray = byteArrayOf(),
-    val salt: ByteArray = byteArrayOf(),
-    val image: ByteArray = byteArrayOf(),
-    val createdAt: String = ""
+    @SerializedName("id") val id: Int = 0,
+    @SerializedName("username") val username: String = "",
+    @SerializedName("email") val email: String = "",
+    @SerializedName("token") val token: ByteArray = byteArrayOf(),
+    @SerializedName("salt") val salt: ByteArray = byteArrayOf(),
+    @SerializedName("image") val image: ByteArray = byteArrayOf(),
+    @SerializedName("createdAt") val createdAt: String = ""
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
