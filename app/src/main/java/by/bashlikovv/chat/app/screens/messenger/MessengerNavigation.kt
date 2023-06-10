@@ -65,8 +65,7 @@ fun MessengerBottomNavigationBar(
         Row {
             ContactsItem(
                 selected = navBackStackEntry?.destination?.route == Screens.CONTACTS.name,
-                modifier = Modifier
-                    .padding(5.dp)
+                modifier = Modifier.padding(5.dp)
             ) {
                 if (messengerUiState.newChat) {
                     messengerViewModel.onAddChatClicked(false)
