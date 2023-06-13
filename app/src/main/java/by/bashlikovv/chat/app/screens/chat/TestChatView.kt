@@ -180,11 +180,14 @@ fun BottomChatBar() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        Row(modifier = Modifier.weight(0.1f)) {
+        Row(modifier = Modifier.padding(start = 5.dp).weight(0.1f)) {
             BottomBarIcon(R.drawable.emoji, "choose emoji") {  }
         }
         BottomBarInputField(modifier = Modifier.weight(0.7f))
-        Row(modifier = Modifier.weight(0.2f)) {
+        Row(
+            modifier = Modifier.padding(end = 5.dp).weight(0.2f),
+            horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.End)
+        ) {
             BottomBarIcon(R.drawable.folder_open, "add file") {  }
             BottomBarIcon(R.drawable.micro, "send voice message") {  }
         }
