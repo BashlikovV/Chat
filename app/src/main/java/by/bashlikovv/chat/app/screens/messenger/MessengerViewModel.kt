@@ -1,6 +1,5 @@
 package by.bashlikovv.chat.app.screens.messenger
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -38,7 +37,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.text.SimpleDateFormat
 import java.util.Date
 
 /**
@@ -316,7 +314,6 @@ class MessengerViewModel(
         }
     }
 
-    @SuppressLint("SimpleDateFormat")
     private suspend fun ServerRoom.castServerRoom(): Chat {
         val user = if (this.user2.username == getUser().userName) {
             this.user1
@@ -333,11 +330,11 @@ class MessengerViewModel(
             userImageBitmap = getImage(user.image.decodeToString()),
             userImageUri = Uri.parse(user.image.decodeToString())
         )
-        val sdf = SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy")
         val time = try {
-            sdf.parse(user.createdAt)
+            Date(user.createdAt.toLong())
         } catch (e: Exception) {
-            Date(0)
+            e.printStackTrace()
+            Date(300000)
         }
         return Chat(
             user = User(

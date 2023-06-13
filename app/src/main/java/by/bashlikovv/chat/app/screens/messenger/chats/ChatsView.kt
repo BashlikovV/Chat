@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,10 +20,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
@@ -40,6 +43,7 @@ import by.bashlikovv.chat.R
 import by.bashlikovv.chat.app.screens.messenger.MessengerViewModel
 import by.bashlikovv.chat.app.struct.Chat
 import by.bashlikovv.chat.app.utils.buildTime
+import java.util.Calendar
 
 @Composable
 fun ChatsView(
@@ -136,6 +140,25 @@ fun MessagesCountView(count: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun AvatarBadge(chat: Chat) {
+    if (Calendar.getInstance().time.time - chat.user.lastConnectionTime.time < 300000) {
+        Icon(
+            painter = painterResource(id = R.drawable.avatarbadge),
+            contentDescription = "Alive",
+            tint = MaterialTheme.colors.onError,
+            modifier = Modifier.size(10.dp)
+        )
+    } else {
+        Icon(
+            painter = painterResource(id = R.drawable.avatarunfilledbadge),
+            contentDescription = "Alive",
+            tint = MaterialTheme.colors.onError,
+            modifier = Modifier.size(10.dp)
+        )
+    }
+}
+
+@Composable
 fun ChatItem(
     chat: Chat,
     modifier: Modifier = Modifier,
@@ -171,10 +194,16 @@ fun ChatItem(
                 .fillMaxHeight()
                 .padding(end = 12.dp)
         ) {
-            UserImageView(
-                chat.user.userImage.userImageBitmap,
-                username = chat.user.userName
-            )
+            Box(
+                modifier = Modifier.fillMaxHeight(),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                UserImageView(
+                    chat.user.userImage.userImageBitmap,
+                    username = chat.user.userName
+                )
+                AvatarBadge(chat)
+            }
         }
         Column(modifier = Modifier.fillMaxSize()) {
             Row(modifier = Modifier.fillMaxWidth()) {
