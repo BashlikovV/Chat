@@ -74,6 +74,7 @@ class SQLiteAccountsRepository(
     }
 
     override suspend fun logout() {
+        deleteCurrentUser()
         messengerSettings.setCurrentAccountId(MessengerSettings.NO_ACCOUNT_ID)
         currentAccountIdFlow.get().value = AccountId(MessengerSettings.NO_ACCOUNT_ID)
     }
@@ -268,6 +269,14 @@ class SQLiteAccountsRepository(
             ),
             "${MessengerSQLiteContract.CurrentUserTable.COLUMN_ID} = ?",
             arrayOf(accountId.toString())
+        )
+    }
+
+    private fun deleteCurrentUser() {
+        db.delete(
+            MessengerSQLiteContract.CurrentUserTable.TABLE_NAME,
+            "${MessengerSQLiteContract.CurrentUserTable.COLUMN_ID} = ?",
+            arrayOf(messengerSettings.getCurrentAccountId().toString())
         )
     }
 
