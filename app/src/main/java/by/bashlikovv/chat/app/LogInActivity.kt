@@ -50,7 +50,6 @@ class LogInActivity : ComponentActivity() {
                 logInViewModel.setProgressVisibility(true)
                 val result = suspendCancellableCoroutine {
                     logInViewModel.viewModelScope.launch(Dispatchers.IO) {
-                        kotlinx.coroutines.delay(1000)
                         if (Repositories.accountsRepository.isSignedIn()) {
                             logInViewModel.applySuccess()
                         }

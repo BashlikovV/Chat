@@ -130,5 +130,6 @@ class MessengerActivity : ComponentActivity() {
     override fun onRestart() {
         super.onRestart()
         messengerViewModel.loadViewData()
+        Repositories.init(this)
     }
 }

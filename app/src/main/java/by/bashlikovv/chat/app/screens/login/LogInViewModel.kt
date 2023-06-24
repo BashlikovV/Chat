@@ -6,10 +6,13 @@ import android.os.Build
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import by.bashlikovv.chat.R
+import by.bashlikovv.chat.Repositories
 import by.bashlikovv.chat.app.model.AccountAlreadyExistsException
 import by.bashlikovv.chat.app.model.EmptyFieldException
 import by.bashlikovv.chat.app.model.PasswordMismatchException
@@ -64,7 +67,7 @@ class LogInViewModel(
             )
             _logInUiState.update { it.copy(userImageBitmap = value) }
         } catch (e: Exception) {
-            showToast(context, "Image not found")
+            showToast(context, R.string.image_not_found_error)
         }
     }
 
@@ -82,14 +85,16 @@ class LogInViewModel(
                                 _logInUiState.value.password
                             )
                             if (token.contains("500")) {
-                                showToast(context, "Network error")
+                                showToast(context, R.string.network_error)
                             }
                             _logInUiState.update { it.copy(token = token) }
                             if (!_logInUiState.value.token.contains("500")) {
                                 if (!accountsRepository.isSignedIn()) {
+                                    Repositories.myToken = token
+                                    val username =  usersRepository.getUsername(token)
                                     val signUpData = SignUpData(
                                         email = _logInUiState.value.identifier,
-                                        username = usersRepository.getUsername(token),
+                                        username = username,
                                         password = _logInUiState.value.password,
                                     )
                                     signUp(signUpData, context)
@@ -100,7 +105,7 @@ class LogInViewModel(
                                 )
                             } else {
                                 processPasswordMismatchException(context)
-                                showToast(context, "Authentication error.")
+                                showToast(context, R.string.authentication_error)
                             }
                         } else {
                             val signUpData = SignUpData(
@@ -112,13 +117,19 @@ class LogInViewModel(
                         }
                     } catch (e: Exception) {
                         processPasswordMismatchException(context)
-                        showToast(context, "Authentication error ${e.message}")
+                        showToast(
+                            context,
+                            R.string.authentication_with_message_error, e.message ?: "null"
+                        )
                     } finally {
                         if (accountsRepository.isSignedIn() && !_logInUiState.value.token.contains("500")) {
                             applySuccess()
-                            showToast(context, "token: ${_logInUiState.value.token}")
+                            showToast(
+                                context,
+                                R.string.token_value, _logInUiState.value.token
+                            )
                         } else {
-                            showToast(context, "Authentication error.")
+                            showToast(context, R.string.authentication_error)
                         }
                     }
                     it.resumeWith(Result.success(false))
@@ -137,15 +148,17 @@ class LogInViewModel(
                 username = signUpData.username,
                 image = _logInUiState.value.userImageBitmap.userImageBitmap
             )
-            val token: String = usersRepository.signIn(
-                email = signUpData.email, password = signUpData.password
-            )
-            _logInUiState.update { it.copy(token = token) }
+            _logInUiState.update { it.copy(token = Repositories.myToken) }
             if (!_logInUiState.value.token.contains("500")) {
-                accountsRepository.signUp(signUpData, _logInUiState.value.token)
+                try {
+                    accountsRepository.signUp(signUpData, _logInUiState.value.token)
+                } catch (_: AccountAlreadyExistsException) {
+                } catch (e: Exception) {
+                    throw e
+                }
                 showSuccessSignUpMessage(context)
             } else {
-                showToast(context, "Authentication error.")
+                showToast(context, R.string.authentication_error)
                 throw Exception()
             }
         } catch (e: EmptyFieldException) {
@@ -159,22 +172,22 @@ class LogInViewModel(
         }
     }
 
-    private fun showToast(context: Context, text: String) {
-        Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+    private fun showToast(context: Context, @StringRes text: Int, vararg data: String) {
+        Toast.makeText(context, context.getString(text, *data), Toast.LENGTH_LONG).show()
     }
 
     private fun processStorageException(context: Context) {
-        showToast(context, "Storage process exception")
+        showToast(context, R.string.storage_process_error)
     }
 
     private fun processAccountAlreadyExistsException(context: Context) {
         _logInUiState.update { it.copy(isIdentifierCorrect = false) }
-        showToast(context, "Account already exists")
+        showToast(context, R.string.account_already_exists_error)
     }
 
     private fun processPasswordMismatchException(context: Context) {
         _logInUiState.update { it.copy(isPasswordCorrect = false) }
-        showToast(context, "Error. Incorrect password")
+        showToast(context, R.string.authentication_error)
     }
 
     private fun processEmptyFieldException() {
@@ -182,7 +195,7 @@ class LogInViewModel(
     }
 
     private fun showSuccessSignUpMessage(context: Context) {
-        showToast(context, "Success!")
+        showToast(context, R.string.success_message)
     }
 
     fun setProgressVisibility(newValue: Boolean) {
