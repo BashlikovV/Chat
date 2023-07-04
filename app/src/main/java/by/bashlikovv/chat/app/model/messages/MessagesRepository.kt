@@ -42,7 +42,7 @@ interface MessagesRepository {
         pagination: IntRange
     ): by.bashlikovv.chat.sources.messages.entities.GetServerMessagesResult
 
-    suspend fun deleteMessage(serverMessage: ServerMessage)
+    suspend fun deleteMessage(vararg serverMessage: ServerMessage)
 
     suspend fun sendImage(image: Bitmap, room: String, owner: String, isSignUp: Boolean): String
 }

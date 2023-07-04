@@ -72,10 +72,10 @@ class OkHttpMessagesSource(
         }
     }
 
-    suspend fun deleteMessage(serverMessage: ServerMessage): String {
+    suspend fun deleteMessage(vararg serverMessages: ServerMessage): String {
         return try {
             val deleteMessageRequestBody = DeleteMessageRequestBody(
-                message = serverMessage
+                messages = serverMessages.toList()
             )
             val request = Request.Builder()
                 .post(deleteMessageRequestBody.toJsonRequestBody())

@@ -18,7 +18,6 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,9 +49,7 @@ fun ChatView(onBackAction: () -> Unit) {
         topBar = { TopChatBar { onBackAction() } },
         bottomBar = { BottomChatBar() }
     ) {
-        ChatContent(modifier = Modifier
-            .padding(it)
-            .fillMaxSize())
+        ChatContent(modifier = Modifier.padding(it).fillMaxSize())
     }
 }
 
@@ -62,23 +59,17 @@ fun ChatView(onBackAction: () -> Unit) {
 fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
     val lazyListState by chatViewModel.lazyListState.collectAsState()
-
-    if (chatUiState.chat.user.userName != "Bookmarks") {
-        LaunchedEffect(Unit) {
-            chatViewModel.startWork()
-        }
-        DisposableEffect(Unit) {
-            DisposableEffectScope().onDispose {
-                chatViewModel.cancelWork()
-            }
-        }
+    val scope = rememberCoroutineScope()
+    var selectedItemsState by remember {
+        mutableStateOf(mapOf(Pair(Message(), false)))
     }
+
+    WorkStarter(chatUiState, chatViewModel)
     var prevDate = try {
         chatUiState.chat.messages.first().time.subSequence(0, 9)
     } catch (_: Exception) {
         ""
     }
-    val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
     fun refresh() = scope.launch(Dispatchers.IO) {
         refreshing = true
@@ -109,7 +100,9 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
                         prevDate = it.time.subSequence(0, 9)
                         DateSeparator(it)
                     }
-                    ChatItem(message = it)
+                    ChatItem(message = it, selected = selectedItemsState[it] ?: false) { selectedMessage ->
+                        selectedItemsState = selectMessage(selectedItemsState, selectedMessage)
+                    }
                 }
             }
         }
@@ -118,6 +111,36 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
             contentColor = MaterialTheme.colors.secondary
         )
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@Composable
+private fun WorkStarter(
+    chatUiState: ChatUiState,
+    chatViewModel: ChatViewModel
+) {
+    if (chatUiState.chat.user.userName != "Bookmarks") {
+        LaunchedEffect(Unit) {
+            chatViewModel.startWork()
+        }
+        DisposableEffect(Unit) {
+            DisposableEffectScope().onDispose {
+                chatViewModel.cancelWork()
+            }
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.N)
+private fun selectMessage(
+    selectedItemsState: Map<Message, Boolean>,
+    selectedMessage: Message
+): Map<Message, Boolean> {
+    val tmp = selectedItemsState.toMutableMap()
+    tmp.merge(selectedMessage, tmp[selectedMessage] ?: true) { _, _ ->
+        tmp[selectedMessage]?.not() ?: true
+    }
+    return tmp
 }
 
 @Composable
@@ -164,8 +187,9 @@ fun DateSeparator(it: Message) {
 @Composable
 private fun ChatItem(
     message: Message,
-    modifier: Modifier = Modifier,
-    chatViewModel: ChatViewModel = viewModel()
+    chatViewModel: ChatViewModel = viewModel(),
+    selected: Boolean,
+    onSelect: (message: Message) -> Unit
 ) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
     val horizontalArrangement = if (message.from == chatUiState.chat.user.userToken) {
@@ -173,18 +197,15 @@ private fun ChatItem(
     } else {
         Arrangement.Start
     }
-    var selected by rememberSaveable {
-        mutableStateOf(false)
-    }
 
     Row(
         horizontalArrangement = horizontalArrangement,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .pointerInput(message) {
                 detectTapGestures(
-                    onLongPress = { selected = !selected }
+                    onLongPress = { onSelect(message) }
                 )
             }
     ) {

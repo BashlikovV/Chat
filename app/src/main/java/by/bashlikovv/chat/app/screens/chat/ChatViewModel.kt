@@ -240,34 +240,40 @@ class ChatViewModel(
         _lazyListState.update { LazyListState(_chatUiState.value.chat.messages.size) }
     }
 
-    fun onActionDelete(message: Message) {
+    fun onActionDelete(vararg messages: Message) {
         val tmp = _chatUiState.value.chat.messages.toMutableList()
-        tmp.remove(message)
-        if (message.user.userName == "Bookmark") {
-            viewModelScope.launch {
-                onDeleteBookmark(message)
-            }
-        } else {
-            viewModelScope.launch(Dispatchers.IO) {
-                val room = roomsRepository.getRoom(
-                    SecurityUtilsImpl().bytesToString(me.token),
-                    _chatUiState.value.chat.user.userToken
-                )
-                val owner = if (message.from == SecurityUtilsImpl().bytesToString(room.user1.token)) {
-                    room.user1
-                } else {
-                    room.user2
+        val list = mutableListOf<ServerMessage>()
+        messages.forEach { message ->
+            tmp.remove(message)
+            if (message.user.userName == "Bookmark") {
+                viewModelScope.launch {
+                    onDeleteBookmark(message)
                 }
-                messagesRepository.deleteMessage(ServerMessage(
-                    room = room,
-                    image = if (message.isImage) message.value else "no image",
-                    value = message.value.encodeToByteArray(),
-                    file = "no file".encodeToByteArray(),
-                    owner = owner,
-                    time = message.time,
-                    from = SecurityUtilsImpl().bytesToString(owner.token)
-                ))
+            } else {
+                viewModelScope.launch(Dispatchers.IO) {
+                    val room = roomsRepository.getRoom(
+                        SecurityUtilsImpl().bytesToString(me.token),
+                        _chatUiState.value.chat.user.userToken
+                    )
+                    val owner = if (message.from == SecurityUtilsImpl().bytesToString(room.user1.token)) {
+                        room.user1
+                    } else {
+                        room.user2
+                    }
+                    list.add(ServerMessage(
+                        room = room,
+                        image = if (message.isImage) message.value else "no image",
+                        value = message.value.encodeToByteArray(),
+                        file = "no file".encodeToByteArray(),
+                        owner = owner,
+                        time = message.time,
+                        from = SecurityUtilsImpl().bytesToString(owner.token)
+                    ))
+                }
             }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            messagesRepository.deleteMessage(*list.toTypedArray())
         }
         _chatUiState.update {
             it.copy(chat = _chatUiState.value.chat.copy(messages = tmp))
@@ -277,10 +283,6 @@ class ChatViewModel(
 
     fun onActionGallery(res: ManagedActivityResultLauncher<String, Uri?>) {
         res.launch("image/")
-    }
-
-    fun onActionItemClicked(message: Message) {
-        _chatUiState.update { it.copy(selectedMessage = message) }
     }
 
     fun processText(message: String): String {
