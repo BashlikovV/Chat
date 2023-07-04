@@ -60,16 +60,16 @@ fun TopAppBar(messengerViewModel: MessengerViewModel = viewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
 
     NavigationBar(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 1.dp).animateContentSize().height(55.dp)
+        modifier = Modifier.fillMaxWidth().padding(bottom = 1.dp).animateContentSize().height(64.dp)
     ) {
-        BoxWithConstraints(modifier = Modifier.background(MaterialTheme.colors.primary).height(55.dp)
+        BoxWithConstraints(modifier = Modifier.background(MaterialTheme.colors.primary).height(64.dp)
         ) {
             val constraintSet = getNavBarContentConstraints()
 
             ConstraintLayout(
                 constraintSet = constraintSet,
                 modifier = Modifier.fillMaxWidth()
-                    .height(if (messengerUiState.expanded) LocalConfiguration.current.screenHeightDp.dp else 55.dp)
+                    .height(if (messengerUiState.expanded) LocalConfiguration.current.screenHeightDp.dp else 64.dp)
                     .background(MaterialTheme.colors.primary),
                 optimizationLevel = 10
             ) {

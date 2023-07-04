@@ -2,47 +2,42 @@ package by.bashlikovv.chat.app.screens.chat
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.app.struct.Message
+import by.bashlikovv.chat.app.theme.MessageShape
 import by.bashlikovv.chat.app.utils.buildTime
-import by.bashlikovv.chat.app.utils.dpToFloat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -53,9 +48,11 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 fun ChatView(onBackAction: () -> Unit) {
     Scaffold(
         topBar = { TopChatBar { onBackAction() } },
-        bottomBar = { BottomInputFiled() }
+        bottomBar = { BottomChatBar() }
     ) {
-        ChatContent(modifier = Modifier.padding(it).fillMaxSize())
+        ChatContent(modifier = Modifier
+            .padding(it)
+            .fillMaxSize())
     }
 }
 
@@ -100,7 +97,8 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
             modifier = modifier
                 .fillMaxSize()
                 .pullRefresh(state, true),
-            state = lazyListState
+            state = lazyListState,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             if (chatUiState.chat.messages.isEmpty()) {
                 item { RowCenteredText(text = "You do not have messages now") }
@@ -111,9 +109,7 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
                         prevDate = it.time.subSequence(0, 9)
                         DateSeparator(it)
                     }
-                    MessageView(message = it) { message ->
-                        chatViewModel.onActionItemClicked(message)
-                    }
+                    ChatItem(message = it)
                 }
             }
         }
@@ -132,7 +128,7 @@ fun RowCenteredText(text: String) {
     ) {
         Text(
             text = text,
-            style = TextStyle(fontSize = 19.sp, color = MaterialTheme.colors.secondary)
+            style = TextStyle(fontSize = 19.sp, color = MaterialTheme.colors.surface)
         )
     }
 }
@@ -148,191 +144,177 @@ fun DateSeparator(it: Message) {
             modifier = Modifier
                 .weight(0.4f)
                 .height(1.dp)
-                .background(MaterialTheme.colors.secondary)
+                .background(MaterialTheme.colors.surface)
         )
         Text(
             text = it.time.substringBefore(buildTime(it.time)),
             modifier = Modifier.weight(0.2f),
             fontWeight = FontWeight.W100,
-            color = MaterialTheme.colors.secondary
+            color = MaterialTheme.colors.surface
         )
         Spacer(
             modifier = Modifier
                 .weight(0.4f)
                 .height(1.dp)
-                .background(MaterialTheme.colors.secondary)
+                .background(MaterialTheme.colors.surface)
         )
     }
 }
 
-@OptIn(ExperimentalTextApi::class)
 @Composable
-fun MessageView(
+private fun ChatItem(
     message: Message,
-    chatViewModel: ChatViewModel = viewModel(),
-    onItemClicked: (Message) -> Unit
+    modifier: Modifier = Modifier,
+    chatViewModel: ChatViewModel = viewModel()
 ) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
-    val resources = LocalContext.current.resources
-
-    val textMeasurer = rememberTextMeasurer()
-    val boxWidth by animateFloatAsState(
-        if (message == chatUiState.selectedMessage) {
-            (LocalConfiguration.current.screenWidthDp * 2.15).toFloat() + 10f
-        } else {
-            (LocalConfiguration.current.screenWidthDp * 2.15).toFloat()
-        }, label = ""
-    )
-
-    val measuredText = textMeasurer.measure(
-        AnnotatedString(chatViewModel.processText(message.value)),
-        style = TextStyle(fontSize = 19.sp, color = MaterialTheme.colors.secondary),
-        maxLines = 25,
-        overflow = TextOverflow.Ellipsis
-    )
-
-    val timeText = textMeasurer.measure(
-        text = AnnotatedString(buildTime(message.time)),
-        style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.secondary)
-    )
-
-    val rectColor = MaterialTheme.colors.primary
-    val height = (if(measuredText.lineCount == 1) 28.8 else 24.5)
-    var cheapVisibility by rememberSaveable {
+    val horizontalArrangement = if (message.from == chatUiState.chat.user.userToken) {
+        Arrangement.End
+    } else {
+        Arrangement.Start
+    }
+    var selected by rememberSaveable {
         mutableStateOf(false)
     }
 
     Row(
-        horizontalArrangement = if (message.from != chatUiState.chat.user.userToken)
-            Arrangement.End
-        else
-            Arrangement.Start,
-        modifier = Modifier
+        horizontalArrangement = horizontalArrangement,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
             .fillMaxWidth()
-            .height(
-                if (!message.isImage)
-                    ((measuredText.lineCount * 24 + 5f * 2).dp)
-                else
-                    (message.imageBitmap.height / 8).dp
-            )
-            .padding(start = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
-            val (clip, canvas) = createRefs()
-
-            if (cheapVisibility) {
-                ClipDelete(
-                    modifier = Modifier
-                        .constrainAs(clip) {
-                            if (message.from != chatUiState.chat.user.userToken) {
-                                end.linkTo(anchor = canvas.start, margin = 5.dp)
-                            } else {
-                                start.linkTo(anchor = canvas.end, margin = 5.dp)
-                            }
-                        }
-                        .fillMaxWidth(0.1f)
-                        .height(
-                            if (message.isImage)
-                                message.imageBitmap.height.dp
-                            else
-                                (measuredText.lineCount * height).dp
-                        )
-                ) {
-                    chatViewModel.onActionDelete(message)
-                }
-            }
-            if (!message.isImage) {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .width(boxWidth.dp)
-                        .clickable {
-                            onItemClicked(message)
-                            cheapVisibility = !cheapVisibility
-                        }
-                        .height(
-                            if (!message.isImage)
-                                (measuredText.lineCount * height).dp
-                            else
-                                (message.imageBitmap.height / 10).dp
-                        )
-                        .constrainAs(canvas) {
-                            if (message.from != chatUiState.chat.user.userToken) {
-                                end.linkTo(anchor = parent.end)
-                            } else {
-                                start.linkTo(anchor = parent.start)
-                            }
-                        }
-                ) {
-                    drawRoundRect(
-                        rectColor,
-                        size = Size(
-                            width = boxWidth,
-                            height = (measuredText.lineCount * height).toFloat().dpToFloat(resources = resources),
-                        ),
-                        cornerRadius = CornerRadius(30f, 30f),
-                        alpha = 0.9f
-                    )
-                    drawText(
-                        textLayoutResult = measuredText,
-                        topLeft = Offset(10f, 5f)
-                    )
-                    drawText(
-                        textLayoutResult = timeText,
-                        topLeft = Offset(
-                            (boxWidth - 90),
-                            (measuredText.size.height - (12.sp).toPx())
-                        )
-                    )
-                }
-            } else {
-                Image(
-                    bitmap = message.imageBitmap.asImageBitmap(),
-                    contentDescription = "image",
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .clickable {
-                            onItemClicked(message)
-                            cheapVisibility = !cheapVisibility
-                        }
-                        .constrainAs(canvas) {
-                            if (message.from != chatUiState.chat.user.userToken) {
-                                end.linkTo(anchor = parent.end)
-                            } else {
-                                start.linkTo(anchor = parent.start)
-                            }
-                        }
-                        .padding(5.dp)
+            .pointerInput(message) {
+                detectTapGestures(
+                    onLongPress = { selected = !selected }
                 )
+            }
+    ) {
+        MessageView(message, selected, horizontalArrangement)
+    }
+}
+
+@Composable
+private fun MessageView(
+    message: Message,
+    selected: Boolean,
+    arrangement: Arrangement.Horizontal,
+    chatViewModel: ChatViewModel = viewModel()
+) {
+    val pv = if (arrangement == Arrangement.End) {
+        PaddingValues(end = 10.dp)
+    } else {
+        PaddingValues(start = 10.dp)
+    }
+    val backgroundColor = if (selected) {
+        MaterialTheme.colors.secondary
+    } else {
+        MaterialTheme.colors.primary
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(0.8f)
+            .clip(
+                MessageShape(
+                    alignment = arrangement == Arrangement.End,
+                    radius = 35.dp
+                )
+            )
+            .background(backgroundColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(pv),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (message.isImage) {
+                MessageImageView(message)
+            } else {
+                androidx.compose.material3.Text(
+                    text = chatViewModel.processText(message.value),
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.padding(
+                        vertical = 2.dp,
+                        horizontal = 5.dp
+                    ),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = MaterialTheme.colors.surface
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                MessageTimeText(buildTime(message.time))
+                MessageReadIcon(message.isRead)
             }
         }
     }
 }
 
 @Composable
-fun ClipDelete(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    ElevatedAssistChip(
-        onClick = {
-            onClick()
-        },
-        label = {  },
-        leadingIcon = {
-            Image(
-                painter = painterResource(R.drawable.delete_outline),
-                contentDescription = "Delete message",
-                contentScale = ContentScale.Crop,
-                colorFilter = ColorFilter.tint(MaterialTheme.colors.secondary)
+private fun MessageImageView(message: Message) {
+    var scale by remember { mutableStateOf(1f) }
+    var rotationState by remember { mutableStateOf(0f) }
+
+    Image(
+        bitmap = message.imageBitmap.asImageBitmap(),
+        contentDescription = message.value,
+        modifier = Modifier
+            .pointerInput(message) {
+                detectTransformGestures(
+                    onGesture = { _: Offset, _: Offset, zoom: Float, rotation: Float ->
+                        scale *= zoom
+                        rotationState += rotation
+                    },
+                    panZoomLock = true
+                )
+            }
+            .graphicsLayer(
+                scaleX = maxOf(.1f, minOf(3f, scale)),
+                scaleY = maxOf(.1f, minOf(3f, scale)),
+                rotationZ = rotationState
             )
-        },
-        enabled = true,
-        modifier = modifier,
-        colors = androidx.compose.material3.AssistChipDefaults.assistChipColors(
-            containerColor = MaterialTheme.colors.primary,
-            leadingIconContentColor = MaterialTheme.colors.secondary
+    )
+}
+
+@Composable
+private fun MessageReadIcon(isRead: Boolean) {
+    if (isRead) {
+        Icon(
+            painter = painterResource(id = R.drawable.readed),
+            contentDescription = "message is read",
+            modifier = Modifier.size(11.dp),
+            tint = MaterialTheme.colors.onError
         )
+    } else {
+        Icon(
+            painter = painterResource(id = R.drawable.zero),
+            contentDescription = "message is read",
+            modifier = Modifier.size(11.dp),
+            tint = MaterialTheme.colors.onError
+        )
+    }
+}
+
+@Composable
+private fun MessageTimeText(time: String) {
+    val timeTextStyle = TextStyle(
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colors.surface,
+        textAlign = TextAlign.End
+    )
+
+    Text(
+        text = time,
+        modifier = Modifier.padding(
+            vertical = 2.dp,
+            horizontal = 5.dp
+        ),
+        style = timeTextStyle,
+        maxLines = 1
     )
 }
