@@ -1,124 +1,166 @@
 package by.bashlikovv.chat.app.screens.chat
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.ConstraintSet
 import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.chat.R
-import by.bashlikovv.chat.app.views.dropmenu.ChatMenu
+import java.util.Calendar
+import java.util.Date
 
-private fun getTopChatBarConstraints(): ConstraintSet {
-    return ConstraintSet {
-        val closeChat = createRefFor("closeChat")
-        val userImage = createRefFor("userImage")
-        val more = createRefFor("more")
-        val chatName = createRefFor("chatName")
-
-        constrain(closeChat) {
-            start.linkTo(anchor = parent.start, margin = 5.dp)
-            top.linkTo(anchor = parent.top)
-            bottom.linkTo(anchor = parent.bottom)
+@Composable
+fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .background(MaterialTheme.colors.primary)
+    ) {
+        Column(
+            modifier = Modifier.weight(0.7f),
+            verticalArrangement = Arrangement.Center
+        ) {
+            TopBarLeftContent(chatViewModel) { onBackAction() }
         }
-        constrain(userImage) {
-            start.linkTo(anchor = closeChat.end, margin = 5.dp)
-            bottom.linkTo(anchor = parent.bottom, margin = 5.dp)
-            top.linkTo(anchor = parent.top, margin = 5.dp)
-        }
-        constrain(chatName) {
-            start.linkTo(anchor = userImage.end, margin = 5.dp)
-            bottom.linkTo(anchor = parent.bottom, margin = 5.dp)
-            top.linkTo(anchor = parent.top, margin = 5.dp)
-        }
-        constrain(more) {
-            end.linkTo(anchor = parent.end, margin = 5.dp)
-            top.linkTo(anchor = parent.top)
-            bottom.linkTo(anchor = parent.bottom)
+        Column(modifier = Modifier.weight(0.3f)) {
+            TopBarRightContent()
         }
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TopChatBar(chatViewModel: ChatViewModel = viewModel(), onBackAction: () -> Unit) {
+private fun TopBarLeftContent(
+    chatViewModel: ChatViewModel = viewModel(),
+    onBackAction: () -> Unit
+) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
-    val dMenuState by chatViewModel.dMenuExpanded.collectAsState()
+    val time = Calendar.getInstance().time.time - chatUiState.chat.user.lastConnectionTime.time
+    val activityText = if (time < 300000) {
+        "Online"
+    } else {
+        Date(time).toString().substringBefore("GMT")
+    }
 
-    BoxWithConstraints {
-        ConstraintLayout(
-            constraintSet = getTopChatBarConstraints(),
+    Row(
+        modifier = Modifier
+            .padding(start = 20.dp)
+            .fillMaxSize(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.arrow_back),
+            contentDescription = "back",
+            tint = MaterialTheme.colors.onError,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp)
-                .background(MaterialTheme.colors.primary)
+                .size(24.dp)
+                .clickable { onBackAction() }
+        )
+        ChatImageView()
+        Column(
+            modifier = Modifier
+                .padding(start = 12.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(R.drawable.arrow_back),
-                contentDescription = "Close chat",
-                contentScale = ContentScale.Crop,
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-                modifier = Modifier
-                    .size(40.dp)
-                    .clickable { onBackAction() }
-                    .layoutId("closeChat")
-            )
-            Image(
-                bitmap = chatUiState.chat.user.userImage.userImageBitmap.asImageBitmap(),
-                contentDescription = "User image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .layoutId("userImage")
-                    .clip(RoundedCornerShape(25.dp))
-                    .size(50.dp)
-            )
-            Text(
+            androidx.compose.material3.Text(
                 text = chatUiState.chat.user.userName,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                color = MaterialTheme.colors.secondary,
-                modifier = Modifier.layoutId("chatName")
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+                color = MaterialTheme.colors.onSurface
             )
-            Image(
-                painter = painterResource(
-                    if (dMenuState)
-                        R.drawable.more_horiz
-                    else
-                        R.drawable.more_vert
-                ),
-                contentDescription = "More",
-                contentScale = ContentScale.Crop,
-                colorFilter = ColorFilter.tint(color = MaterialTheme.colors.secondary),
-                modifier = Modifier
-                    .size(40.dp)
-                    .clickable {
-                        chatViewModel.onDMenuAction(true)
-                    }
-                    .layoutId("more")
+            androidx.compose.material3.Text(
+                text = activityText,
+                fontWeight = FontWeight.Normal,
+                fontSize = 12.sp,
+                color = MaterialTheme.colors.surface
             )
         }
-        ChatMenu()
     }
+}
+
+@Composable
+private fun ChatImageView(
+    chatViewModel: ChatViewModel = viewModel()
+) {
+    val chatUiState by chatViewModel.chatUiState.collectAsState()
+
+    Box(
+        modifier = Modifier.padding(start = 27.dp),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        Image(
+            bitmap = chatUiState.chat.user.userImage.userImageBitmap.asImageBitmap(),
+            contentDescription = "Icon",
+            modifier = Modifier.size(40.dp)
+        )
+        if (Calendar.getInstance().time.time - chatUiState.chat.user.lastConnectionTime.time < 300000) {
+            ActivityIcon(icon = R.drawable.avatarbadge, isActive = true)
+        } else {
+            ActivityIcon(icon = R.drawable.avatarunfilledbadge, isActive = false)
+        }
+    }
+}
+
+@Composable
+private fun ActivityIcon(@DrawableRes icon: Int, isActive: Boolean) {
+    Icon(
+        painter = painterResource(id = icon),
+        contentDescription = if (isActive) "Online" else "Offline",
+        tint = MaterialTheme.colors.onError,
+        modifier = Modifier.size(10.dp)
+    )
+}
+
+@Composable
+private fun TopBarRightContent() {
+    Row(
+        modifier = Modifier
+            .padding(end = 20.dp)
+            .fillMaxSize(),
+        horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.End),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TopBarRightIcon(R.drawable.call, "call") {  }
+        TopBarRightIcon(R.drawable.video, "video call") {  }
+    }
+}
+
+@Composable
+private fun TopBarRightIcon(
+    @DrawableRes icon: Int,
+    description: String,
+    onClick: () -> Unit
+) {
+    Icon(
+        painter = painterResource(id = icon),
+        contentDescription = description,
+        tint = MaterialTheme.colors.onError,
+        modifier = Modifier
+            .size(24.dp)
+            .clickable { onClick() }
+    )
 }
