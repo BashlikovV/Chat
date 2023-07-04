@@ -195,8 +195,8 @@ class OkHTTPMessagesRepository : MessagesRepository {
         return messagesSource.getRoomMessages(room, pagination)
     }
 
-    override suspend fun deleteMessage(serverMessage: ServerMessage) {
-        messagesSource.deleteMessage(serverMessage)
+    override suspend fun deleteMessage(vararg serverMessage: ServerMessage) {
+        messagesSource.deleteMessage(*serverMessage)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
