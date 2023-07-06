@@ -49,7 +49,9 @@ fun ChatView(onBackAction: () -> Unit) {
         topBar = { TopChatBar { onBackAction() } },
         bottomBar = { BottomChatBar() }
     ) {
-        ChatContent(modifier = Modifier.padding(it).fillMaxSize())
+        ChatContent(modifier = Modifier
+            .padding(it)
+            .fillMaxSize())
     }
 }
 
@@ -59,10 +61,8 @@ fun ChatView(onBackAction: () -> Unit) {
 fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
     val lazyListState by chatViewModel.lazyListState.collectAsState()
+    val selectedItemsState by chatViewModel.selectedItemsState.collectAsState()
     val scope = rememberCoroutineScope()
-    var selectedItemsState by remember {
-        mutableStateOf(mapOf(Pair(Message(), false)))
-    }
 
     WorkStarter(chatUiState, chatViewModel)
     var prevDate = try {
@@ -101,7 +101,7 @@ fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = vi
                         DateSeparator(it)
                     }
                     ChatItem(message = it, selected = selectedItemsState[it] ?: false) { selectedMessage ->
-                        selectedItemsState = selectMessage(selectedItemsState, selectedMessage)
+                        chatViewModel.selectMessage(selectedMessage)
                     }
                 }
             }
@@ -129,18 +129,6 @@ private fun WorkStarter(
             }
         }
     }
-}
-
-@RequiresApi(Build.VERSION_CODES.N)
-private fun selectMessage(
-    selectedItemsState: Map<Message, Boolean>,
-    selectedMessage: Message
-): Map<Message, Boolean> {
-    val tmp = selectedItemsState.toMutableMap()
-    tmp.merge(selectedMessage, tmp[selectedMessage] ?: true) { _, _ ->
-        tmp[selectedMessage]?.not() ?: true
-    }
-    return tmp
 }
 
 @Composable
