@@ -5,7 +5,8 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -240,7 +241,7 @@ private fun MessageView(
             if (message.isImage) {
                 MessageImageView(message)
             } else {
-                androidx.compose.material3.Text(
+                Text(
                     text = chatViewModel.processText(message.value),
                     textAlign = TextAlign.Start,
                     modifier = Modifier.padding(
@@ -265,26 +266,23 @@ private fun MessageView(
 
 @Composable
 private fun MessageImageView(message: Message) {
-    var scale by remember { mutableStateOf(1f) }
-    var rotationState by remember { mutableStateOf(0f) }
+    var scaleState by remember { mutableStateOf(1f) }
+    var translationState by remember { mutableStateOf(Offset(0f, 0f)) }
+    val state = rememberTransformableState { zoomChange, panChange, _ ->
+        scaleState *= zoomChange
+        translationState += panChange
+    }
 
     Image(
         bitmap = message.imageBitmap.asImageBitmap(),
         contentDescription = message.value,
         modifier = Modifier
-            .pointerInput(message) {
-                detectTransformGestures(
-                    onGesture = { _: Offset, _: Offset, zoom: Float, rotation: Float ->
-                        scale *= zoom
-                        rotationState += rotation
-                    },
-                    panZoomLock = true
-                )
-            }
+            .transformable(state)
             .graphicsLayer(
-                scaleX = maxOf(.1f, minOf(3f, scale)),
-                scaleY = maxOf(.1f, minOf(3f, scale)),
-                rotationZ = rotationState
+                scaleX = maxOf(0.9f, minOf(3f, scaleState)),
+                scaleY = maxOf(0.9f, minOf(3f, scaleState)),
+                translationX = translationState.x,
+                translationY = translationState.y
             )
     )
 }
