@@ -3,6 +3,7 @@ package by.bashlikovv.chat.app
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +38,7 @@ class ChatActivity : ComponentActivity() {
         val chatViewModel: ChatViewModel by viewModelCreator {
             ChatViewModel(Repositories.accountsRepository)
         }
+        backPressListener(chatViewModel)
         val darkTheme = intent.extras?.getBoolean(MessengerActivity.DARK_THEME)
         val data = intent.extras?.getParcelable<Chat>(MessengerActivity.CHAT)
         val token = intent.extras?.getString(MessengerActivity.TOKEN) ?: ""
@@ -71,6 +73,17 @@ class ChatActivity : ComponentActivity() {
                         if (updateVisibility) { ProgressIndicator() }
                     }
                 }
+            }
+        }
+    }
+
+    private fun backPressListener(chatViewModel: ChatViewModel) {
+        onBackPressedDispatcher.addCallback {
+            if (chatViewModel.selectedItemsState.value.containsValue(true)) {
+                chatViewModel.clearSelectedMessages()
+                return@addCallback
+            } else {
+                finish()
             }
         }
     }
