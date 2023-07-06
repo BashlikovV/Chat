@@ -63,6 +63,9 @@ class ChatViewModel(
     private val _chatInputState = MutableStateFlow("")
     var chatInputState = _chatInputState.asStateFlow()
 
+    private val _selectedItemsState = MutableStateFlow(mapOf(Message() to false))
+    val selectedItemsState = _selectedItemsState.asStateFlow()
+
     private var me = by.bashlikovv.chat.sources.structs.ServerUser()
 
     private val pagination = Pagination()
@@ -240,9 +243,14 @@ class ChatViewModel(
         _lazyListState.update { LazyListState(_chatUiState.value.chat.messages.size) }
     }
 
-    fun onActionDelete(vararg messages: Message) {
+    fun onActionDelete() = viewModelScope.launch(Dispatchers.IO) {
         val tmp = _chatUiState.value.chat.messages.toMutableList()
         val list = mutableListOf<ServerMessage>()
+        val messages = _selectedItemsState.value.filter { it.value }.map { it.key }
+        val room = roomsRepository.getRoom(
+            SecurityUtilsImpl().bytesToString(me.token),
+            _chatUiState.value.chat.user.userToken
+        )
         messages.forEach { message ->
             tmp.remove(message)
             if (message.user.userName == "Bookmark") {
@@ -250,31 +258,23 @@ class ChatViewModel(
                     onDeleteBookmark(message)
                 }
             } else {
-                viewModelScope.launch(Dispatchers.IO) {
-                    val room = roomsRepository.getRoom(
-                        SecurityUtilsImpl().bytesToString(me.token),
-                        _chatUiState.value.chat.user.userToken
-                    )
-                    val owner = if (message.from == SecurityUtilsImpl().bytesToString(room.user1.token)) {
-                        room.user1
-                    } else {
-                        room.user2
-                    }
-                    list.add(ServerMessage(
-                        room = room,
-                        image = if (message.isImage) message.value else "no image",
-                        value = message.value.encodeToByteArray(),
-                        file = "no file".encodeToByteArray(),
-                        owner = owner,
-                        time = message.time,
-                        from = SecurityUtilsImpl().bytesToString(owner.token)
-                    ))
+                val owner = if (message.from == SecurityUtilsImpl().bytesToString(room.user1.token)) {
+                    room.user1
+                } else {
+                    room.user2
                 }
+                list.add(ServerMessage(
+                    room = room,
+                    image = if (message.isImage) message.value else "no image",
+                    value = message.value.encodeToByteArray(),
+                    file = "no file".encodeToByteArray(),
+                    owner = owner,
+                    time = message.time,
+                    from = SecurityUtilsImpl().bytesToString(owner.token)
+                ))
             }
         }
-        viewModelScope.launch(Dispatchers.IO) {
-            messagesRepository.deleteMessage(*list.toTypedArray())
-        }
+        messagesRepository.deleteMessage(*list.toTypedArray())
         _chatUiState.update {
             it.copy(chat = _chatUiState.value.chat.copy(messages = tmp))
         }
@@ -397,5 +397,18 @@ class ChatViewModel(
 
     fun setUpdateVisibility(newValue: Boolean) {
         _updateVisibility.update { newValue }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun selectMessage(selectedMessage: Message) {
+        val tmp = _selectedItemsState.value.toMutableMap()
+        tmp.merge(selectedMessage, tmp[selectedMessage] ?: true) { _, _ ->
+            tmp[selectedMessage]?.not() ?: true
+        }
+        _selectedItemsState.update { tmp }
+    }
+
+    fun clearSelectedMessages() {
+        _selectedItemsState.update { mapOf(Message() to false) }
     }
 }

@@ -1,6 +1,7 @@
 package by.bashlikovv.chat.app.screens.chat
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -136,7 +137,9 @@ private fun ActivityIcon(@DrawableRes icon: Int, isActive: Boolean) {
 }
 
 @Composable
-private fun TopBarRightContent() {
+private fun TopBarRightContent(chatViewModel: ChatViewModel = viewModel()) {
+    val selectedItems by chatViewModel.selectedItemsState.collectAsState()
+
     Row(
         modifier = Modifier
             .padding(end = 20.dp)
@@ -144,8 +147,22 @@ private fun TopBarRightContent() {
         horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.End),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TopBarRightIcon(R.drawable.call, "call") {  }
-        TopBarRightIcon(R.drawable.video, "video call") {  }
+        AnimatedVisibility(visible = selectedItems.containsValue(true)) {
+            TopBarRightIcon(icon = R.drawable.delete_outline, description = "delete selected messages") {
+                chatViewModel.onActionDelete()
+                chatViewModel.clearSelectedMessages()
+            }
+        }
+        AnimatedVisibility(visible = !selectedItems.containsValue(true)) {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TopBarRightIcon(R.drawable.call, "call") {  }
+                TopBarRightIcon(R.drawable.video, "video call") {  }
+            }
+        }
     }
 }
 
