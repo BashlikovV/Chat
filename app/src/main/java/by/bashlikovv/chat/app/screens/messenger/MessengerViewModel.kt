@@ -44,12 +44,11 @@ import java.util.Date
  * */
 
 class MessengerViewModel(
-    private val accountsRepository: AccountsRepository
-) : ViewModel() {
-
-    private val roomsRepository: RoomsRepository = OkHTTPRoomsRepository()
-    private val messagesRepository: MessagesRepository = OkHTTPMessagesRepository()
+    private val accountsRepository: AccountsRepository,
+    private val roomsRepository: RoomsRepository = OkHTTPRoomsRepository(),
+    private val messagesRepository: MessagesRepository = OkHTTPMessagesRepository(),
     private val usersRepository: UsersRepository = OkHTTPUsersRepository()
+) : ViewModel() {
 
     private val _messengerUiState = MutableStateFlow(MessengerUiState())
     val messengerUiState = _messengerUiState.asStateFlow()
