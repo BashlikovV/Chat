@@ -9,4 +9,6 @@
     <string name="storage_process_error">Storage process exception</string>
     <string name="account_already_exists_error">Account already exists</string>
     <string name="success_message">Success!</string>
+    <string name="is_message_read_description">is_message_read</string>
+    <string name="user_image_description">user image</string>
 </resources>
