@@ -83,8 +83,7 @@ class SQLiteAccountsRepository(
         return currentAccountIdFlow.get()
             .map { accountId ->
                 getAccountById(accountId.value)
-            }
-            .flowOn(ioDispatcher)
+            }.flowOn(ioDispatcher)
     }
 
     override suspend fun isDarkTheme(): Boolean {

@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_700">#FF3700B3</color>
+    <color name="background_dark">#FF131313</color>
+    <color name="primary_dark">#FF1E1E1E</color>
+    <color name="secondary_dark">#FF1C6D78</color>
+    <color name="onSurface_dark">#FFFFFFFF</color>
+    <color name="surface_dark">#FF9D9C9C</color>
+    <color name="onError_dark">#FFE39801</color>
+
+    <color name="background_light">#FFFFFFFF</color>
+    <color name="primary_light">#FFF8F8F8</color>
+    <color name="secondary_light">#FF92D4DD</color>
+    <color name="onSurface_light">#FF000000</color>
+    <color name="surface_light">#FF5E5E5E</color>
+    <color name="onError_light">#FFE39801</color>
+
+    <color name="transparent">#00000000</color>
 </resources>

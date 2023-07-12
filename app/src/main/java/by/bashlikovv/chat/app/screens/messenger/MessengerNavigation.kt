@@ -106,6 +106,7 @@ private fun RowScope.ContactsItem(
 ) {
     var targetValue by remember { mutableStateOf(1f) }
     val animation by animateFloatAsState(targetValue = targetValue, label = "")
+
     NavigationBarItem(
         selected = selected,
         onClick = { onClick(Screens.CONTACTS.name) },
@@ -131,6 +132,7 @@ private fun RowScope.ChatsItem(
 ) {
     var targetValue by remember { mutableStateOf(1f) }
     val animation by animateFloatAsState(targetValue = targetValue, label = "")
+
     NavigationBarItem(
         selected = selected,
         onClick = { onClick(Screens.CHATS.name) },
@@ -156,6 +158,7 @@ private fun RowScope.SettingsItem(
 ) {
     var targetValue by remember { mutableStateOf(1f) }
     val animation by animateFloatAsState(targetValue = targetValue, label = "")
+
     NavigationBarItem(
         selected = selected,
         onClick = { onClick(Screens.SETTINGS.name) },

@@ -24,10 +24,9 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 class UsersViewModel(
     private val accountsRepository: AccountsRepository,
-    private val messengerViewModel: MessengerViewModel
-) : ViewModel() {
-
+    private val messengerViewModel: MessengerViewModel,
     private val usersRepository: UsersRepository = OkHTTPUsersRepository()
+) : ViewModel() {
 
     private val _usersUiState: MutableStateFlow<UsersUiState> = MutableStateFlow(UsersUiState())
     var usersUiState: StateFlow<UsersUiState> = _usersUiState.asStateFlow()
