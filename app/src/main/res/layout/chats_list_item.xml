@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="61dp"
+        android:orientation="horizontal"
+        android:weightSum="10"
+        android:background="@color/background_dark">
+
+    <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="5dp"
+            android:background="@drawable/round_outline"
+            android:contentDescription="@string/user_image_description"
+            android:id="@+id/user_icon"
+            android:layout_gravity="center_vertical" />
+
+    <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical|start"
+            android:layout_weight="9"
+            android:minHeight="56dp"
+            android:background="@color/background_dark">
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/user_name"
+                android:maxLines="1"
+                android:textColor="@color/onSurface_dark"/>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/last_message"
+                android:layout_marginTop="2dp"
+                android:maxLines="1"
+                android:textSize="11sp"
+                android:minHeight="20dp"
+                android:gravity="bottom"
+                android:textColor="@color/surface_dark"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:background="@color/background_dark" >
+
+        <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="end"
+                android:id="@+id/state_icon_indicator"
+                android:visibility="gone"
+                android:contentDescription="@string/is_message_read_description"/>
+
+        <TextView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="end"
+                android:id="@+id/state_text_indicator"
+                android:visibility="gone"
+                android:textColor="@color/surface_dark"/>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/time"
+                android:layout_gravity="end"
+                android:textSize="11sp"
+                android:textColor="@color/surface_dark"/>
+    </LinearLayout>
+
+</LinearLayout>
