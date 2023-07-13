@@ -4,16 +4,34 @@
         android:layout_height="61dp"
         android:orientation="horizontal"
         android:weightSum="10"
-        android:background="@color/background_dark">
+        android:background="@color/background_dark"
+        android:baselineAligned="false">
 
-    <ImageView
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/round_outline"
-            android:contentDescription="@string/user_image_description"
-            android:id="@+id/user_icon"
-            android:layout_gravity="center_vertical" />
+    <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_margin="5dp"
+                android:scaleType="centerCrop"
+                android:background="@drawable/round_outline"
+                android:contentDescription="@string/user_image_description"
+                android:id="@+id/user_icon"
+                android:layout_gravity="center_vertical" />
+
+        <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:scaleType="centerCrop"
+                android:tint="@color/onError_dark"
+                android:contentDescription="@string/user_activity_description"
+                android:id="@+id/user_activity"
+                android:layout_gravity="end|bottom"
+                android:src="@drawable/avatar_unfilled_badge"
+                android:layout_margin="5dp"/>
+    </FrameLayout>
 
     <LinearLayout
             android:layout_width="wrap_content"
@@ -21,8 +39,7 @@
             android:orientation="vertical"
             android:layout_gravity="center_vertical|start"
             android:layout_weight="9"
-            android:minHeight="56dp"
-            android:background="@color/background_dark">
+            android:minHeight="56dp">
 
         <TextView
                 android:layout_width="wrap_content"
@@ -41,28 +58,29 @@
                 android:minHeight="20dp"
                 android:gravity="bottom"
                 android:textColor="@color/surface_dark"/>
-
     </LinearLayout>
 
-    <LinearLayout
+    <GridLayout
             android:layout_width="wrap_content"
             android:layout_height="56dp"
             android:orientation="vertical"
             android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:background="@color/background_dark" >
+            android:layout_weight="1">
 
         <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:layout_gravity="end"
+                android:layout_gravity="end|bottom"
+                android:tint="@color/onError_dark"
                 android:id="@+id/state_icon_indicator"
                 android:visibility="gone"
-                android:contentDescription="@string/is_message_read_description"/>
+                android:contentDescription="@string/is_message_read_description"
+                android:src="@drawable/zero"/>
 
         <TextView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
+                android:background="@drawable/round_outline"
                 android:layout_gravity="end"
                 android:id="@+id/state_text_indicator"
                 android:visibility="gone"
@@ -72,9 +90,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/time"
-                android:layout_gravity="end"
+                android:layout_gravity="end|center_vertical"
                 android:textSize="11sp"
-                android:textColor="@color/surface_dark"/>
-    </LinearLayout>
+                android:textColor="@color/surface_dark"
+                android:layout_row="1"
+                android:layout_column="0"/>
+    </GridLayout>
 
+    <!--<LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1" >
+    </LinearLayout>-->
 </LinearLayout>
