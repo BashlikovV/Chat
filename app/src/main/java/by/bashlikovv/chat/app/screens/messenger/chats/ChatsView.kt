@@ -53,21 +53,21 @@ fun ChatsView(
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
     val searchedItems by messengerViewModel.searchedItems.collectAsState()
+    val chats = if (!messengerUiState.expanded) {
+        messengerUiState.chats
+    } else {
+        searchedItems
+    }
+    val adapter = ChatsAdapter(chats) { onOpenChat(it) }
 
     AndroidView(
         factory = { context ->
             val binding = ChatsListViewBinding.inflate(LayoutInflater.from(context))
-            val chats = if (!messengerUiState.expanded) {
-                messengerUiState.chats
-            } else {
-                searchedItems
-            }
-            val adapter = ChatsAdapter(chats) { onOpenChat(it) }
             binding.chatsListView.adapter = adapter
-            binding.root
+            binding.chatsListView
         },
-        update = {  },
-        modifier = modifier
+        update = { it.adapter = adapter },
+        modifier = modifier.background(MaterialTheme.colors.background)
     )
 //    LazyColumn(
 //        modifier = modifier.background(MaterialTheme.colors.background),
@@ -158,14 +158,14 @@ fun MessagesCountView(count: Int, modifier: Modifier = Modifier) {
 private fun AvatarBadge(chat: Chat) {
     if (Calendar.getInstance().time.time - chat.user.lastConnectionTime.time < 300000) {
         Icon(
-            painter = painterResource(id = R.drawable.avatarbadge),
+            painter = painterResource(id = R.drawable.avatar_badge),
             contentDescription = "Alive",
             tint = MaterialTheme.colors.onError,
             modifier = Modifier.size(10.dp)
         )
     } else {
         Icon(
-            painter = painterResource(id = R.drawable.avatarunfilledbadge),
+            painter = painterResource(id = R.drawable.avatar_unfilled_badge),
             contentDescription = "Alive",
             tint = MaterialTheme.colors.onError,
             modifier = Modifier.size(10.dp)

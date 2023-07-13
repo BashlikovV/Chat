@@ -1,16 +1,21 @@
 package by.bashlikovv.chat.app.screens.messenger.chats
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import by.bashlikovv.chat.R
 import by.bashlikovv.chat.app.struct.Chat
+import by.bashlikovv.chat.app.utils.buildTime
 import by.bashlikovv.chat.databinding.ChatsListItemBinding
+import java.util.Calendar
 
 typealias onChatActionListener = (Chat) -> Unit
 
@@ -26,7 +31,11 @@ class ChatsAdapter(
     override fun getItem(position: Int) = chats[position]
 
     override fun getItemId(position: Int): Long {
-        return chats.indexOf(chats[position]).toLong()
+        return position.toLong()
+    }
+
+    override fun hasStableIds(): Boolean {
+        return true
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
@@ -39,14 +48,14 @@ class ChatsAdapter(
             binding.root.background = R.color.background_dark.toDrawable()
         }
         binding.root.tag = chat
-        binding.time.text = chat.time
+        binding.time.text = buildTime(chat.time)
         binding.lastMessage.text = chat.messages.last().value
         binding.userName.text = chat.user.userName
         binding.userIcon.setImageBitmap(chat.user.userImage.userImageBitmap)
         if (chat.count == 0) {
             binding.stateTextIndicator.visibility = View.GONE
             binding.stateIconIndicator.apply {
-                setImageDrawable(R.drawable.readed.toDrawable())
+                setImageBitmap(R.drawable.zero.getBitmapFromImage(parent))
                 visibility = View.VISIBLE
             }
         } else {
@@ -55,6 +64,11 @@ class ChatsAdapter(
                 text = chat.count.toString()
                 visibility = View.VISIBLE
             }
+        }
+        if (Calendar.getInstance().time.time - chat.user.lastConnectionTime.time < 300000) {
+            binding.userActivity.setImageBitmap(R.drawable.avatar_badge.getBitmapFromImage(parent))
+        } else {
+            binding.userActivity.setImageBitmap(R.drawable.avatar_unfilled_badge.getBitmapFromImage(parent))
         }
 
         return binding.root
@@ -80,5 +94,17 @@ class ChatsAdapter(
         binding.root.setOnLongClickListener(this)
         binding.root.tag = binding
         return binding
+    }
+
+    private fun Int.getBitmapFromImage(parent: ViewGroup): Bitmap {
+        val db = ContextCompat.getDrawable(parent.context, this)
+        val bit = Bitmap.createBitmap(
+            db!!.intrinsicWidth, db.intrinsicHeight, Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bit)
+        db.setBounds(0, 0, canvas.width, canvas.height)
+        db.draw(canvas)
+
+        return bit
     }
 }

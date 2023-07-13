@@ -11,4 +11,5 @@
     <string name="success_message">Success!</string>
     <string name="is_message_read_description">is_message_read</string>
     <string name="user_image_description">user image</string>
+    <string name="user_activity_description">user activity</string>
 </resources>

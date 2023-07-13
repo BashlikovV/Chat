@@ -119,9 +119,9 @@ private fun ChatImageView(
             modifier = Modifier.size(40.dp)
         )
         if (Calendar.getInstance().time.time - chatUiState.chat.user.lastConnectionTime.time < 300000) {
-            ActivityIcon(icon = R.drawable.avatarbadge, isActive = true)
+            ActivityIcon(icon = R.drawable.avatar_badge, isActive = true)
         } else {
-            ActivityIcon(icon = R.drawable.avatarunfilledbadge, isActive = false)
+            ActivityIcon(icon = R.drawable.avatar_unfilled_badge, isActive = false)
         }
     }
 }
