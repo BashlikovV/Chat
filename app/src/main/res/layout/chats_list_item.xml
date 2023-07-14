@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="61dp"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:weightSum="10"
         android:background="@color/background_dark"
-        android:baselineAligned="false">
+        android:baselineAligned="false"
+        android:padding="5dp">
 
     <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent"
+            android:layout_marginEnd="5dp">
 
         <ImageView
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:layout_margin="5dp"
                 android:scaleType="centerCrop"
                 android:background="@drawable/round_outline"
                 android:contentDescription="@string/user_image_description"
-                android:id="@+id/user_icon"
-                android:layout_gravity="center_vertical" />
+                android:id="@+id/user_icon" />
 
         <ImageView
                 android:layout_width="10dp"
@@ -35,53 +35,47 @@
 
     <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="56dp"
+            android:layout_height="match_parent"
             android:orientation="vertical"
-            android:layout_gravity="center_vertical|start"
-            android:layout_weight="9"
-            android:minHeight="56dp">
+            android:layout_weight="8"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="5dp">
 
         <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="start"
                 android:id="@+id/user_name"
                 android:maxLines="1"
-                android:textColor="@color/onSurface_dark"/>
+                android:layout_gravity="top"
+                android:textColor="@color/onSurface_dark" />
 
         <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/last_message"
-                android:layout_marginTop="2dp"
                 android:maxLines="1"
                 android:textSize="11sp"
                 android:minHeight="20dp"
                 android:gravity="bottom"
-                android:textColor="@color/surface_dark"/>
+                android:layout_gravity="bottom"
+                android:textColor="@color/surface_dark"
+                android:ellipsize="end" />
     </LinearLayout>
 
-    <GridLayout
-            android:layout_width="wrap_content"
-            android:layout_height="56dp"
+    <FrameLayout
+            android:layout_width="56dp"
+            android:layout_height="match_parent"
             android:orientation="vertical"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1">
-
-        <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="end|bottom"
-                android:tint="@color/onError_dark"
-                android:id="@+id/state_icon_indicator"
-                android:visibility="gone"
-                android:contentDescription="@string/is_message_read_description"
-                android:src="@drawable/zero"/>
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="2">
 
         <TextView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:background="@drawable/round_outline"
-                android:layout_gravity="end"
+                android:gravity="center_horizontal"
+                android:layout_gravity="end|center_vertical"
                 android:id="@+id/state_text_indicator"
                 android:visibility="gone"
                 android:textColor="@color/surface_dark"/>
@@ -90,18 +84,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/time"
-                android:layout_gravity="end|center_vertical"
+                android:layout_gravity="end|bottom"
                 android:textSize="11sp"
-                android:textColor="@color/surface_dark"
-                android:layout_row="1"
-                android:layout_column="0"/>
-    </GridLayout>
-
-    <!--<LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="56dp"
-            android:orientation="vertical"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1" >
-    </LinearLayout>-->
+                android:textColor="@color/surface_dark"/>
+    </FrameLayout>
 </LinearLayout>
