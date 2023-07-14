@@ -49,17 +49,16 @@ class ChatsAdapter(
         }
         binding.root.tag = chat
         binding.time.text = buildTime(chat.time)
-        binding.lastMessage.text = chat.messages.last().value
+        binding.lastMessage.text = if (chat.messages.last().value.isNotEmpty()) {
+            "${chat.messages.last().user.userName}: ${chat.messages.last().value}"
+        } else {
+            ""
+        }
         binding.userName.text = chat.user.userName
         binding.userIcon.setImageBitmap(chat.user.userImage.userImageBitmap)
         if (chat.count == 0) {
             binding.stateTextIndicator.visibility = View.GONE
-            binding.stateIconIndicator.apply {
-                setImageBitmap(R.drawable.zero.getBitmapFromImage(parent))
-                visibility = View.VISIBLE
-            }
         } else {
-            binding.stateIconIndicator.visibility = View.GONE
             binding.stateTextIndicator.apply {
                 text = chat.count.toString()
                 visibility = View.VISIBLE
