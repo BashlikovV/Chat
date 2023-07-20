@@ -28,6 +28,7 @@ import java.io.DataInputStream
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.SocketException
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeoutException
 
@@ -37,7 +38,7 @@ class OkHttpMessagesSource(
 
     companion object {
         const val ARRAY_SIZE = 4
-        const val CONNECTION_TIMEOUT = 1000
+        const val CONNECTION_TIMEOUT = 2500
         const val IMAGE_COMPRESS_QUALITY = 50
     }
 
@@ -106,23 +107,25 @@ class OkHttpMessagesSource(
     private fun Socket.connect() {
         val ip = Const.BASE_URL.substringAfter("://").substringBefore(":")
         val port = Const.BASE_URL.substringAfter("$ip:").toInt()
-        this.use {
-            this.connect(InetSocketAddress(ip, port), CONNECTION_TIMEOUT)
+        try {
+            connect(InetSocketAddress(ip, port), CONNECTION_TIMEOUT)
+        } catch (e: SocketException) {
+            e.printStackTrace()
         }
     }
 
     suspend fun getImage(uri: String): Bitmap {
         var image: Bitmap? = null
-        val socket = Socket()
+        val socket = withContext(Dispatchers.IO) {
+            client.socketFactory.createSocket()
+        }
         val input: DataInputStream
         try {
-            socket.connect()
-
             val request = "GET /${HttpContract.UrlMethods.GET_IMAGE}?$uri\r\nContent-Type:image/jpg \r\n\r\n"
 
             withContext(Dispatchers.IO) {
+                socket.connect()
                 socket.getOutputStream().write(request.encodeToByteArray())
-                socket.getOutputStream().flush()
                 input = DataInputStream(socket.getInputStream())
 
                 val sizeAr = ByteArray(ARRAY_SIZE, init = { 0 })
@@ -134,7 +137,8 @@ class OkHttpMessagesSource(
 
                 image = BitmapFactory.decodeByteArray(imageAr, 0, size)
             }
-        } catch (_: IOException) {
+        } catch (e: Exception) {
+            e.printStackTrace()
         } finally {
             withContext(Dispatchers.IO) {
                 socket.close()
