@@ -43,6 +43,7 @@ class LogInActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Repositories.init(this)
+
         setContent {
             val logInUiState by logInViewModel.logInUiState.collectAsState()
 
