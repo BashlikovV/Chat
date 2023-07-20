@@ -9,7 +9,15 @@ import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.sources.HttpContract
 import by.bashlikovv.chat.sources.base.BaseOkHttpSource
 import by.bashlikovv.chat.sources.base.OkHttpConfig
-import by.bashlikovv.chat.sources.messages.entities.*
+import by.bashlikovv.chat.sources.messages.entities.AddImageRequestBody
+import by.bashlikovv.chat.sources.messages.entities.AddImageResponseBody
+import by.bashlikovv.chat.sources.messages.entities.AddMessageRequestBody
+import by.bashlikovv.chat.sources.messages.entities.AddMessageResponseBody
+import by.bashlikovv.chat.sources.messages.entities.DeleteMessageRequestBody
+import by.bashlikovv.chat.sources.messages.entities.GetServerMessagesResult
+import by.bashlikovv.chat.sources.messages.entities.ReadMessagesRequestBody
+import by.bashlikovv.chat.sources.messages.entities.RoomMessagesRequestBody
+import by.bashlikovv.chat.sources.messages.entities.RoomMessagesResponseBody
 import by.bashlikovv.chat.sources.structs.ServerMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,13 +25,21 @@ import okhttp3.MultipartBody
 import okhttp3.Request
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
+import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.nio.ByteBuffer
+import java.util.concurrent.TimeoutException
 
 class OkHttpMessagesSource(
     config: OkHttpConfig
 ) : BaseOkHttpSource(config) {
+
+    companion object {
+        const val ARRAY_SIZE = 4
+        const val CONNECTION_TIMEOUT = 1000
+        const val IMAGE_COMPRESS_QUALITY = 50
+    }
 
     suspend fun getRoomMessages(room: String, pagination: IntRange): GetServerMessagesResult {
         return try {
@@ -41,8 +57,7 @@ class OkHttpMessagesSource(
                 serverMessages = result.messages,
                 unreadMessagesCount = result.unreadMessagesCount
             )
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: TimeoutException) {
             GetServerMessagesResult()
         }
     }
@@ -66,8 +81,7 @@ class OkHttpMessagesSource(
                 .build()
             val response = client.newCall(request).suspendEnqueue()
             return response.parseJsonResponse<AddMessageResponseBody>().result
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
             "ERROR"
         }
     }
@@ -83,19 +97,17 @@ class OkHttpMessagesSource(
                 .build()
             val response = client.newCall(request).suspendEnqueue()
             response.message
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
             "ERROR"
         }
     }
 
+    @Throws(IOException::class)
     private fun Socket.connect() {
         val ip = Const.BASE_URL.substringAfter("://").substringBefore(":")
         val port = Const.BASE_URL.substringAfter("$ip:").toInt()
-        try {
-            this.connect(InetSocketAddress(ip, port), 1000)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        this.use {
+            this.connect(InetSocketAddress(ip, port), CONNECTION_TIMEOUT)
         }
     }
 
@@ -113,7 +125,7 @@ class OkHttpMessagesSource(
                 socket.getOutputStream().flush()
                 input = DataInputStream(socket.getInputStream())
 
-                val sizeAr = ByteArray(4, init = { 0 })
+                val sizeAr = ByteArray(ARRAY_SIZE, init = { 0 })
                 input.read(sizeAr)
                 val size = ByteBuffer.wrap(sizeAr).asIntBuffer().get()
 
@@ -122,8 +134,7 @@ class OkHttpMessagesSource(
 
                 image = BitmapFactory.decodeByteArray(imageAr, 0, size)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: IOException) {
         } finally {
             withContext(Dispatchers.IO) {
                 socket.close()
@@ -142,7 +153,7 @@ class OkHttpMessagesSource(
     ): String {
         try {
             val stream = ByteArrayOutputStream()
-            image.compress(Bitmap.CompressFormat.JPEG, 50, stream)
+            image.compress(Bitmap.CompressFormat.JPEG, IMAGE_COMPRESS_QUALITY, stream)
 
             val roomBytes = if (isSignUp) {
                 room.encodeToByteArray()
@@ -170,7 +181,6 @@ class OkHttpMessagesSource(
             val response = client.newCall(request).suspendEnqueue()
             return response.parseJsonResponse<AddImageResponseBody>().imageUri.decodeToString()
         } catch (e: Exception) {
-            e.printStackTrace()
             return e.message.toString()
         }
     }
@@ -183,8 +193,6 @@ class OkHttpMessagesSource(
                 .endpoint("/${HttpContract.UrlMethods.READ_MESSAGES}")
                 .build()
             client.newCall(request).suspendEnqueue()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {  }
     }
 }

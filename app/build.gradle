@@ -23,9 +23,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField 'boolean', 'DEVELOPER_MODE', 'true'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField 'boolean', 'DEVELOPER_MODE', 'false'
         }
     }
     buildTypes {
@@ -90,4 +94,6 @@ dependencies {
 
     implementation "androidx.navigation:navigation-compose:2.6.0"
     implementation 'androidx.work:work-runtime:2.8.1'
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
 }

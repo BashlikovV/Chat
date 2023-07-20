@@ -45,9 +45,7 @@ class OkHTTPMessagesRepository : MessagesRepository {
             )
             val  newValue = getMessagesResult.serverMessages.castListOfMessages()
             chatData = chatData.copy(messages = newValue)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {  }
 
         return chatData
     }

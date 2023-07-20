@@ -28,9 +28,7 @@ import by.bashlikovv.chat.app.struct.*
 import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
 import by.bashlikovv.chat.app.utils.StatusNotification
 import by.bashlikovv.chat.sources.structs.ServerMessage
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -93,12 +91,10 @@ class ChatViewModel(
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     private fun periodicUpdateWork() {
         var chatData: Chat
-        GlobalScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-
                 val getMessagesResult = messagesRepository.getRoomMessages(
                     _chatUiState.value.chat.token,
                     Pagination().getRange()

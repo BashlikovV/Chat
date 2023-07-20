@@ -11,11 +11,14 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.Message
 import android.os.Messenger
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import by.bashlikovv.chat.R
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 const val READ_ACTION = "by.bashlikovv.chat.services.ACTION_MESSAGE_READ"
 const val REPLY_ACTION = "by.bashlikovv.chat.services.ACTION_MESSAGE_REPLY"
@@ -26,6 +29,13 @@ class ChatMessagingService : Service() {
 
     private val mMessenger = Messenger(IncomingHandler())
     private lateinit var mNotificationManager: NotificationManagerCompat
+    private lateinit var executorService: ExecutorService
+
+    override fun onCreate() {
+        super.onCreate()
+        executorService = Executors.newFixedThreadPool(2)
+        executorService.execute(MyTask())
+    }
 
     override fun onBind(intent: Intent): IBinder {
         return mMessenger.binder
@@ -60,7 +70,7 @@ class ChatMessagingService : Service() {
             applicationContext,
             conversationId,
             createIntent(conversationId, READ_ACTION),
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
 
         // Build a RemoteInput for receiving voice input in a Car Notification
@@ -73,7 +83,7 @@ class ChatMessagingService : Service() {
             applicationContext,
             conversationId,
             createIntent(conversationId, REPLY_ACTION),
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
 
         // Create the UnreadConversation and populate it with the participant name,
@@ -121,6 +131,13 @@ class ChatMessagingService : Service() {
     internal inner class IncomingHandler : Handler(Looper.myLooper()!!) {
         override fun handleMessage(msg: Message) {
             sendNotification(1, "This is a sample message", "John Doe", System.currentTimeMillis())
+        }
+    }
+
+    inner class MyTask : Runnable {
+        override fun run() {
+            Log.i("MyTask", "run()")
+            mMessenger.send(Message())
         }
     }
 }
