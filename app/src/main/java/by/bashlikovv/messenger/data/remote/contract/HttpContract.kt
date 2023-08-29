@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.sources
+package by.bashlikovv.messenger.data.remote.contract
 
 object HttpContract {
 
