@@ -1,11 +1,11 @@
-package by.bashlikovv.chat.app.screens.messenger.chats
+package by.bashlikovv.messenger.presentation.view.messenger.chats
 
 import android.graphics.Bitmap
-import android.view.LayoutInflater
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
@@ -36,51 +38,37 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.R
-import by.bashlikovv.chat.app.screens.messenger.MessengerViewModel
-import by.bashlikovv.chat.app.struct.Chat
-import by.bashlikovv.chat.app.utils.buildTime
-import by.bashlikovv.chat.databinding.ChatsListViewBinding
+import by.bashlikovv.messenger.R
+import by.bashlikovv.messenger.domain.model.Chat
+import by.bashlikovv.messenger.presentation.viewmodel.MessengerViewModel
+import by.bashlikovv.messenger.utils.buildTime
+import org.koin.androidx.compose.koinViewModel
 import java.util.Calendar
 
 @Composable
 fun ChatsView(
     modifier: Modifier = Modifier,
-    messengerViewModel: MessengerViewModel = viewModel(LocalContext.current as ComponentActivity),
+    messengerViewModel: MessengerViewModel = koinViewModel(
+        viewModelStoreOwner = LocalContext.current as ComponentActivity
+    ),
     onOpenChat: (Chat) -> Unit
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
     val searchedItems by messengerViewModel.searchedItems.collectAsState()
-    val chats = if (!messengerUiState.expanded) {
-        messengerUiState.chats
-    } else {
-        searchedItems
-    }
-    val adapter = ChatsAdapter(chats) { onOpenChat(it) }
 
-    AndroidView(
-        factory = { context ->
-            val binding = ChatsListViewBinding.inflate(LayoutInflater.from(context))
-            binding.chatsListView.adapter = adapter
-            binding.chatsListView
-        },
-        update = { it.adapter = adapter },
-        modifier = modifier.background(MaterialTheme.colors.background)
-    )
-//    LazyColumn(
-//        modifier = modifier.background(MaterialTheme.colors.background),
-//        verticalArrangement = Arrangement.spacedBy(5.dp)
-//    ) {
-//        if (messengerUiState.chats.isNotEmpty()) {
-//            if (!messengerUiState.expanded) {
-//                items(messengerUiState.chats) { chat -> ChatItem(chat) { onOpenChat(it) } }
-//            } else {
-//                items(searchedItems) { chat -> ChatItem(chat) { onOpenChat(it) } }
-//            }
-//        }
-//    }
+    LazyColumn(
+        modifier = modifier.background(MaterialTheme.colors.background),
+        verticalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        if (messengerUiState.chats.isNotEmpty()) {
+            if (!messengerUiState.expanded) {
+                items(messengerUiState.chats) { chat -> ChatItem(chat) { onOpenChat(it) } }
+            } else {
+                items(searchedItems) { chat -> ChatItem(chat) { onOpenChat(it) } }
+            }
+        }
+    }
 }
 
 @Composable
@@ -177,7 +165,9 @@ private fun AvatarBadge(chat: Chat) {
 fun ChatItem(
     chat: Chat,
     modifier: Modifier = Modifier,
-    messengerViewModel: MessengerViewModel = viewModel(LocalContext.current as ComponentActivity),
+    messengerViewModel: MessengerViewModel = koinViewModel(
+        viewModelStoreOwner = LocalContext.current as ComponentActivity
+    ),
     onOpenChat: (Chat) -> Unit
 ) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
