@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app.views.dropmenu
+package by.bashlikovv.messenger.presentation.views.dropmenu
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.R
-import by.bashlikovv.chat.app.screens.chat.ChatViewModel
+import by.bashlikovv.messenger.R
+import by.bashlikovv.messenger.presentation.viewmodel.ChatViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
