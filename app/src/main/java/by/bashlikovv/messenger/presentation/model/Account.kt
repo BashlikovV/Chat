@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app.model.accounts.entities
+package by.bashlikovv.messenger.presentation.model
 
 data class Account(
     val id: Long,
