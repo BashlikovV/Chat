@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app.views.bottombar
+package by.bashlikovv.messenger.presentation.views.bottombar
 
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -15,10 +15,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.dp
-import by.bashlikovv.chat.app.views.bottombar.animation.Height
-import by.bashlikovv.chat.app.views.bottombar.animation.IndentAnimation
-import by.bashlikovv.chat.app.views.bottombar.animation.ShapeCornerRadius
-import by.bashlikovv.chat.app.views.bottombar.animation.shapeCornerRadius
+import by.bashlikovv.messenger.presentation.views.bottombar.animation.Height
+import by.bashlikovv.messenger.presentation.views.bottombar.animation.IndentAnimation
+import by.bashlikovv.messenger.presentation.views.bottombar.animation.ShapeCornerRadius
+import by.bashlikovv.messenger.presentation.views.bottombar.animation.shapeCornerRadius
 
 @Composable
 fun AnimatedNavigationBar(
