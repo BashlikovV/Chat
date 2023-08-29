@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app.views.bottombar.animation
+package by.bashlikovv.messenger.presentation.views.bottombar.animation
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FiniteAnimationSpec
@@ -18,11 +18,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import by.bashlikovv.chat.app.views.bottombar.utils.lerp
-import by.bashlikovv.chat.app.views.bottombar.utils.toPxf
-import by.bashlikovv.chat.app.views.bottombar.ballSize
-import by.bashlikovv.chat.app.views.bottombar.shape.IndentRectShape
-import by.bashlikovv.chat.app.views.bottombar.shape.IndentShapeData
+import by.bashlikovv.messenger.presentation.views.bottombar.ballSize
+import by.bashlikovv.messenger.presentation.views.bottombar.shape.IndentRectShape
+import by.bashlikovv.messenger.presentation.views.bottombar.shape.IndentShapeData
+import by.bashlikovv.messenger.presentation.views.bottombar.utils.lerp
+import by.bashlikovv.messenger.presentation.views.bottombar.utils.toPxf
 
 @Stable
 class Height(
