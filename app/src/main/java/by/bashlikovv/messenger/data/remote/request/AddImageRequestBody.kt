@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.sources.messages.entities
+package by.bashlikovv.messenger.data.remote.request
 
 data class AddImageRequestBody(
     val image: ByteArray,
@@ -21,22 +21,5 @@ data class AddImageRequestBody(
         result = 31 * result + room.contentHashCode()
         result = 31 * result + owner.contentHashCode()
         return result
-    }
-}
-
-data class AddImageResponseBody(
-    val imageUri: ByteArray
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as AddImageResponseBody
-
-        return imageUri.contentEquals(other.imageUri)
-    }
-
-    override fun hashCode(): Int {
-        return imageUri.contentHashCode()
     }
 }
