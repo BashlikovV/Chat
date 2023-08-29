@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app.screens.chat
+package by.bashlikovv.messenger.presentation.view.chat
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -34,14 +34,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.R
-import by.bashlikovv.chat.app.struct.Message
-import by.bashlikovv.chat.app.theme.MessageShape
-import by.bashlikovv.chat.app.utils.buildTime
+import by.bashlikovv.messenger.R
+import by.bashlikovv.messenger.domain.model.Message
+import by.bashlikovv.messenger.presentation.view.theme.MessageShape
+import by.bashlikovv.messenger.presentation.viewmodel.ChatViewModel
+import by.bashlikovv.messenger.utils.buildTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.koin.androidx.compose.koinViewModel
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -59,7 +61,7 @@ fun ChatView(onBackAction: () -> Unit) {
 @OptIn(ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = viewModel()) {
+fun ChatContent(modifier: Modifier = Modifier, chatViewModel: ChatViewModel = koinViewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
     val lazyListState by chatViewModel.lazyListState.collectAsState()
     val selectedItemsState by chatViewModel.selectedItemsState.collectAsState()
@@ -176,7 +178,7 @@ fun DateSeparator(it: Message) {
 @Composable
 private fun ChatItem(
     message: Message,
-    chatViewModel: ChatViewModel = viewModel(),
+    chatViewModel: ChatViewModel = koinViewModel(),
     selected: Boolean,
     onSelect: (message: Message) -> Unit
 ) {
@@ -207,7 +209,7 @@ private fun MessageView(
     message: Message,
     selected: Boolean,
     arrangement: Arrangement.Horizontal,
-    chatViewModel: ChatViewModel = viewModel()
+    chatViewModel: ChatViewModel = koinViewModel()
 ) {
     val pv = if (arrangement == Arrangement.End) {
         PaddingValues(end = 10.dp)
@@ -266,7 +268,7 @@ private fun MessageView(
 
 @Composable
 private fun MessageImageView(message: Message) {
-    var scaleState by remember { mutableStateOf(1f) }
+    var scaleState by remember { mutableFloatStateOf(1f) }
     var translationState by remember { mutableStateOf(Offset(0f, 0f)) }
     val state = rememberTransformableState { zoomChange, panChange, _ ->
         scaleState *= zoomChange
