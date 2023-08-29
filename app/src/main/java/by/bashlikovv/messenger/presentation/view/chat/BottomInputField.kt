@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app.screens.chat
+package by.bashlikovv.messenger.presentation.view.chat
 
 import android.net.Uri
 import android.os.Build
@@ -9,7 +9,12 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
@@ -32,12 +37,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import by.bashlikovv.chat.R
+import by.bashlikovv.messenger.R
+import by.bashlikovv.messenger.presentation.viewmodel.ChatViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun BottomChatBar(chatViewModel: ChatViewModel = viewModel()) {
+fun BottomChatBar(chatViewModel: ChatViewModel = koinViewModel()) {
     val chatUiState by chatViewModel.chatUiState.collectAsState()
     val context = LocalContext.current
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -104,7 +110,7 @@ private fun BottomBarIcon(
 @Composable
 private fun BottomBarInputField(
     modifier: Modifier = Modifier,
-    chatViewModel: ChatViewModel = viewModel()
+    chatViewModel: ChatViewModel = koinViewModel()
 ) {
     val chatInputState by chatViewModel.chatInputState.collectAsState()
 
