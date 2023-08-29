@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app
+package by.bashlikovv.messenger.presentation.view
 
 import android.os.Build
 import android.os.Bundle
@@ -20,24 +20,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewModelScope
-import by.bashlikovv.chat.Repositories
-import by.bashlikovv.chat.app.screens.chat.ChatView
-import by.bashlikovv.chat.app.screens.chat.ChatViewModel
-import by.bashlikovv.chat.app.struct.Chat
-import by.bashlikovv.chat.app.theme.MessengerTheme
-import by.bashlikovv.chat.app.utils.viewModelCreator
+import by.bashlikovv.messenger.domain.model.Chat
+import by.bashlikovv.messenger.presentation.view.chat.ChatView
+import by.bashlikovv.messenger.presentation.view.theme.MessengerTheme
+import by.bashlikovv.messenger.presentation.viewmodel.ChatViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ChatActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val chatViewModel: ChatViewModel by viewModelCreator {
-            ChatViewModel(Repositories.accountsRepository)
-        }
+        val chatViewModel: ChatViewModel by viewModel()
         backPressListener(chatViewModel)
         val darkTheme = intent.extras?.getBoolean(MessengerActivity.DARK_THEME)
         val data = intent.extras?.getParcelable<Chat>(MessengerActivity.CHAT)
@@ -46,7 +43,6 @@ class ChatActivity : ComponentActivity() {
             chatViewModel.applyChatData(data)
             chatViewModel.applyMe(token)
         }
-        Repositories.init(this)
 
         setContent {
             val updateVisibility by chatViewModel.updateVisibility.collectAsState()
