@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app.views.bottombar.utils
+package by.bashlikovv.messenger.presentation.views.bottombar.utils
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.unit.Density
