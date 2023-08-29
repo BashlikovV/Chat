@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app.screens.chat
+package by.bashlikovv.messenger.presentation.viewmodel
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -15,33 +15,50 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import by.bashlikovv.chat.Repositories.applicationContext
-import by.bashlikovv.chat.app.model.accounts.AccountsRepository
-import by.bashlikovv.chat.app.model.chats.OkHTTPRoomsRepository
-import by.bashlikovv.chat.app.model.chats.RoomsRepository
-import by.bashlikovv.chat.app.model.messages.MessagesRepository
-import by.bashlikovv.chat.app.model.messages.OkHTTPMessagesRepository
-import by.bashlikovv.chat.app.model.users.OkHTTPUsersRepository
-import by.bashlikovv.chat.app.model.users.UsersRepository
-import by.bashlikovv.chat.app.screens.login.UserImage
-import by.bashlikovv.chat.app.struct.*
-import by.bashlikovv.chat.app.utils.SecurityUtilsImpl
-import by.bashlikovv.chat.app.utils.StatusNotification
-import by.bashlikovv.chat.sources.structs.ServerMessage
+import by.bashlikovv.messenger.data.remote.model.ServerMessage
+import by.bashlikovv.messenger.data.remote.model.ServerUser
+import by.bashlikovv.messenger.domain.model.Chat
+import by.bashlikovv.messenger.domain.model.Message
+import by.bashlikovv.messenger.domain.model.PAGE_HEIGHT
+import by.bashlikovv.messenger.domain.model.Pagination
+import by.bashlikovv.messenger.domain.model.User
+import by.bashlikovv.messenger.domain.usecase.DeleteBookmarkUseCase
+import by.bashlikovv.messenger.domain.usecase.DeleteChatOnlineUseCase
+import by.bashlikovv.messenger.domain.usecase.DeleteMessageUseCase
+import by.bashlikovv.messenger.domain.usecase.GetAccountOfflineUseCase
+import by.bashlikovv.messenger.domain.usecase.GetMessagesOfflineUseCase
+import by.bashlikovv.messenger.domain.usecase.GetMessagesOnlineUseCase
+import by.bashlikovv.messenger.domain.usecase.GetRoomUseCase
+import by.bashlikovv.messenger.domain.usecase.GetUserImageOnlineUseCase
+import by.bashlikovv.messenger.domain.usecase.SendBookmarkUseCase
+import by.bashlikovv.messenger.domain.usecase.SendImageUseCase
+import by.bashlikovv.messenger.domain.usecase.SendMessageUseCase
+import by.bashlikovv.messenger.presentation.view.chat.ChatUiState
+import by.bashlikovv.messenger.presentation.view.login.UserImage
+import by.bashlikovv.messenger.utils.SecurityUtilsImpl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Calendar
 import kotlin.concurrent.thread
 
 class ChatViewModel(
-    accountsRepository: AccountsRepository,
-    private val messagesRepository: MessagesRepository = OkHTTPMessagesRepository(),
-    private val usersRepository: UsersRepository = OkHTTPUsersRepository(),
-    private val roomsRepository: RoomsRepository = OkHTTPRoomsRepository()
+    private val getRoomMessagesOnlineUseCase: GetMessagesOnlineUseCase,
+    private val getAccountOfflineUseCase: GetAccountOfflineUseCase,
+    private val getUserImageOnlineUseCase: GetUserImageOnlineUseCase,
+    private val getMessagesOfflineUseCase: GetMessagesOfflineUseCase,
+    private val getMessageImageOnlineUseCase: GetUserImageOnlineUseCase,
+    private val sendMessageUseCase: SendMessageUseCase,
+    private val getRoomUseCase: GetRoomUseCase,
+    private val deleteMessageUseCase: DeleteMessageUseCase,
+    private val sendImageUseCase: SendImageUseCase,
+    private val sendBookmarkUseCase: SendBookmarkUseCase,
+    private val deleteBookmarkUseCase: DeleteBookmarkUseCase,
+    private val deleteChatOnlineUseCase: DeleteChatOnlineUseCase,
+    private val getMessagesOnlineUseCase: GetMessagesOnlineUseCase
 ) : ViewModel() {
 
     private val _chatUiState = MutableStateFlow(ChatUiState())
@@ -64,7 +81,7 @@ class ChatViewModel(
     private val _selectedItemsState = MutableStateFlow(mapOf(Message() to false))
     val selectedItemsState = _selectedItemsState.asStateFlow()
 
-    private var me = by.bashlikovv.chat.sources.structs.ServerUser()
+    private var me = ServerUser()
 
     private val pagination = Pagination()
 
@@ -95,7 +112,7 @@ class ChatViewModel(
         var chatData: Chat
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val getMessagesResult = messagesRepository.getRoomMessages(
+                val getMessagesResult = getRoomMessagesOnlineUseCase.execute(
                     _chatUiState.value.chat.token,
                     Pagination().getRange()
                 )
@@ -105,11 +122,11 @@ class ChatViewModel(
                     return@launch
                 }
                 chatData = _chatUiState.value.chat.copy(messages = newValue)
-                StatusNotification.makeStatusNotification(
-                    message = "You have new messages from ${_chatUiState.value.chat.user.userName}",
-                    context = applicationContext,
-                    lastMessage = chatData.messages.last().value
-                )
+//                StatusNotification.makeStatusNotification(
+//                    message = "You have new messages from ${_chatUiState.value.chat.user.userName}",
+//                    context = ,
+//                    lastMessage = chatData.messages.last().value
+//                )
                 if (_chatUiState.value.chat.messages.map { it.value } != chatData.messages.map { it.value }) {
                     _chatUiState.update { it.copy(chat = chatData) }
                 }
@@ -133,21 +150,23 @@ class ChatViewModel(
 
     init {
         viewModelScope.launch {
-            me = me.copy(
-                token = SecurityUtilsImpl().stringToBytes(accountsRepository.getAccount().first()?.token ?: "")
-            )
+            getAccountOfflineUseCase.execute().collectLatest { account ->
+                me = me.copy(
+                    token = SecurityUtilsImpl().stringToBytes(account?.token ?: "")
+                )
+            }
         }
     }
 
     suspend fun getMessagesFromDb() {
         _chatUiState.update {
             it.copy(chat = it.chat.copy(user = it.chat.user.copy(
-                userImage = usersRepository.getUserImage(
+                userImage = getUserImageOnlineUseCase.execute(
                     uri = _chatUiState.value.chat.user.userImage.userImageUri.encodedPath.toString()
                 )
             )))
         }
-        val chatData = messagesRepository.getMessagesFromDb(_chatUiState.value)
+        val chatData = getMessagesOfflineUseCase.execute(_chatUiState.value)
         applyChatData(chatData)
         _lazyListState.update { LazyListState(chatData.messages.size) }
     }
@@ -156,7 +175,7 @@ class ChatViewModel(
         return this.map {
             var image: Bitmap? = null
             if (!it.image.contains("no image") && it.image.isNotEmpty()) {
-                image = messagesRepository.getImage(it.image).userImageBitmap
+                image = getMessageImageOnlineUseCase.execute(it.image).userImageBitmap
             }
 
             Message(
@@ -209,7 +228,7 @@ class ChatViewModel(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun onActionSend() {
-        val newValue = messagesRepository.onSend(
+        val newValue = sendMessageUseCase.execute(
             message = Message(
                 value = chatInputState.value,
                 user = User(
@@ -243,7 +262,7 @@ class ChatViewModel(
         val tmp = _chatUiState.value.chat.messages.toMutableList()
         val list = mutableListOf<ServerMessage>()
         val messages = _selectedItemsState.value.filter { it.value }.map { it.key }
-        val room = roomsRepository.getRoom(
+        val room = getRoomUseCase.execute(
             SecurityUtilsImpl().bytesToString(me.token),
             _chatUiState.value.chat.user.userToken
         )
@@ -259,7 +278,8 @@ class ChatViewModel(
                 } else {
                     room.user2
                 }
-                list.add(ServerMessage(
+                list.add(
+                    ServerMessage(
                     room = room,
                     image = if (message.isImage) message.value else "no image",
                     value = message.value.encodeToByteArray(),
@@ -267,10 +287,11 @@ class ChatViewModel(
                     owner = owner,
                     time = message.time,
                     from = SecurityUtilsImpl().bytesToString(owner.token)
-                ))
+                )
+                )
             }
         }
-        messagesRepository.deleteMessage(*list.toTypedArray())
+        deleteMessageUseCase.execute(list)
         _chatUiState.update {
             it.copy(chat = _chatUiState.value.chat.copy(messages = tmp))
         }
@@ -323,7 +344,7 @@ class ChatViewModel(
                 }
             }
             viewModelScope.launch(Dispatchers.IO) {
-                messagesRepository.sendImage(
+                sendImageUseCase.execute(
                     bitmap,
                     _chatUiState.value.chat.token,
                     SecurityUtilsImpl().bytesToString(me.token),
@@ -338,7 +359,7 @@ class ChatViewModel(
     }
 
     private suspend fun onSendBookmark(bookmark: Message) {
-        messagesRepository.onSendBookmark(bookmark)
+        sendBookmarkUseCase.execute(bookmark)
     }
 
     fun onDMenuAction(value: Boolean) {
@@ -346,14 +367,14 @@ class ChatViewModel(
     }
 
     private suspend fun onDeleteBookmark(bookmark: Message) {
-        messagesRepository.onDeleteBookmark(bookmark)
+        deleteBookmarkUseCase.execute(bookmark)
     }
 
     fun onActionDeleteChat() {
         val user1 = _chatUiState.value.usersData.first().userToken
         val user2 = _chatUiState.value.usersData.last().userToken
         viewModelScope.launch(Dispatchers.IO) {
-            roomsRepository.onDeleteChat(user1, user2)
+            deleteChatOnlineUseCase.execute(user1, user2)
         }
     }
 
@@ -377,7 +398,7 @@ class ChatViewModel(
     private suspend fun processRefresh() {
         val chatData: Chat
         try {
-            val getMessagesResult = messagesRepository.getRoomMessages(
+            val getMessagesResult = getMessagesOnlineUseCase.execute(
                 _chatUiState.value.chat.token,
                 pagination = pagination.getRange()
             )
@@ -395,7 +416,6 @@ class ChatViewModel(
         _updateVisibility.update { newValue }
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     fun selectMessage(selectedMessage: Message) {
         val tmp = _selectedItemsState.value.toMutableMap()
         tmp.merge(selectedMessage, tmp[selectedMessage] ?: true) { _, _ ->
