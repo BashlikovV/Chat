@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.sources.messages.entities
+package by.bashlikovv.messenger.data.remote.request
 
 data class AddMessageRequestBody(
     val image: String,
@@ -35,7 +35,3 @@ data class AddMessageRequestBody(
         return result
     }
 }
-
-data class AddMessageResponseBody(
-    val result: String
-)
