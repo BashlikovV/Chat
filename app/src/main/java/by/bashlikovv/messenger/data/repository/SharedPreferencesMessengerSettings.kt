@@ -1,12 +1,13 @@
-package by.bashlikovv.chat.app.model.settings
+package by.bashlikovv.messenger.data.repository
 
 import android.content.Context
-import by.bashlikovv.chat.app.model.settings.MessengerSettings.Companion.NO_ACCOUNT_ID
-import by.bashlikovv.chat.app.model.settings.MessengerSettings.Companion.NO_ACCOUNT_THEME
+import by.bashlikovv.messenger.domain.repository.IMessengerSettings
+import by.bashlikovv.messenger.domain.repository.IMessengerSettings.Companion.NO_ACCOUNT_ID
+import by.bashlikovv.messenger.domain.repository.IMessengerSettings.Companion.NO_ACCOUNT_THEME
 
 class SharedPreferencesMessengerSettings(
     applicationContext: Context
-) : MessengerSettings {
+) : IMessengerSettings {
     private val sharedPreferences = applicationContext.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
     override fun setCurrentAccountId(accountId: Long) {
