@@ -1,11 +1,11 @@
-package by.bashlikovv.chat.app.model.accounts
+package by.bashlikovv.messenger.domain.repository
 
-import by.bashlikovv.chat.app.model.accounts.entities.Account
-import by.bashlikovv.chat.app.model.accounts.entities.SignUpData
-import by.bashlikovv.chat.app.struct.Message
+import by.bashlikovv.messenger.domain.model.Message
+import by.bashlikovv.messenger.presentation.model.Account
+import by.bashlikovv.messenger.presentation.model.SignUpData
 import kotlinx.coroutines.flow.Flow
 
-interface AccountsRepository {
+interface IAccountsRepository {
     suspend fun isSignedIn(): Boolean
 
     suspend fun signIn(email: String, password: String)
