@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app.views.bottombar
+package by.bashlikovv.messenger.presentation.views.bottombar
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
