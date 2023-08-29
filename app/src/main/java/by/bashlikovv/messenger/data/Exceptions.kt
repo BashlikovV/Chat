@@ -1,6 +1,6 @@
-package by.bashlikovv.chat.app.model
+package by.bashlikovv.messenger.data
 
-open class AppException : RuntimeException {
+sealed class AppException : RuntimeException {
     constructor() : super()
     constructor(cause: Throwable) : super(cause)
 }
