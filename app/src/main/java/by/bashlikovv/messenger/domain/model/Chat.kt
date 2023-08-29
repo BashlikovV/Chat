@@ -1,4 +1,4 @@
-package by.bashlikovv.chat.app.struct
+package by.bashlikovv.messenger.domain.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
