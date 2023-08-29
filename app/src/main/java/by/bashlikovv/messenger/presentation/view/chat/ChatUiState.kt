@@ -1,7 +1,7 @@
-package by.bashlikovv.chat.app.screens.chat
+package by.bashlikovv.messenger.presentation.view.chat
 
-import by.bashlikovv.chat.app.struct.Chat
-import by.bashlikovv.chat.app.struct.User
+import by.bashlikovv.messenger.domain.model.Chat
+import by.bashlikovv.messenger.domain.model.User
 
 data class ChatUiState(
     val chat: Chat = Chat(),
