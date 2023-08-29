@@ -1,4 +1,4 @@
-package by.bashlikovv.chat
+package by.bashlikovv.messenger
 
 import org.junit.Test
 
