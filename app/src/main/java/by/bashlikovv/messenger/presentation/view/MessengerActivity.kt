@@ -1,7 +1,6 @@
 package by.bashlikovv.messenger.presentation.view
 
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -33,7 +32,8 @@ import by.bashlikovv.messenger.presentation.viewmodel.MessengerViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MessengerActivity : ComponentActivity() {
-    private val messengerViewModel: MessengerViewModel by viewModel()
+
+    private val messengerViewModel: MessengerViewModel by viewModel<MessengerViewModel>()
 
     companion object {
         const val DARK_THEME = "dark theme"
@@ -97,11 +97,7 @@ class MessengerActivity : ComponentActivity() {
                 CHAT,
                 chat.copy(
                     user = chat.user.copy(
-                        userImage = chat.user.userImage.copy(
-                            userImageBitmap = Bitmap.createBitmap(
-                                1, 1, Bitmap.Config.ARGB_8888
-                            )
-                        )
+                        userImage = chat.user.userImage
                     ),
                     messages = listOf()
                 )
