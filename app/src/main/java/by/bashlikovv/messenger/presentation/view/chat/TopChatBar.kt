@@ -2,7 +2,6 @@ package by.bashlikovv.messenger.presentation.view.chat
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,13 +20,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import by.bashlikovv.messenger.R
 import by.bashlikovv.messenger.presentation.viewmodel.ChatViewModel
+import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
 import java.util.Calendar
 import java.util.Date
@@ -114,8 +113,8 @@ private fun ChatImageView(
         modifier = Modifier.padding(start = 27.dp),
         contentAlignment = Alignment.BottomEnd
     ) {
-        Image(
-            bitmap = chatUiState.chat.user.userImage.userImageBitmap.asImageBitmap(),
+        AsyncImage(
+            model = chatUiState.chat.user.userImage,
             contentDescription = "Icon",
             modifier = Modifier.size(40.dp)
         )
