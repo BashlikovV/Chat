@@ -8,7 +8,7 @@ import by.bashlikovv.messenger.domain.usecase.DeleteChatOnlineUseCase
 import by.bashlikovv.messenger.domain.usecase.DeleteMessageUseCase
 import by.bashlikovv.messenger.domain.usecase.GetAccountOfflineUseCase
 import by.bashlikovv.messenger.domain.usecase.GetBookmarksOfflineUseCase
-import by.bashlikovv.messenger.domain.usecase.GetMessagesOfflineUseCase
+import by.bashlikovv.messenger.domain.usecase.GetMessagesUseCase
 import by.bashlikovv.messenger.domain.usecase.GetMessagesOnlineUseCase
 import by.bashlikovv.messenger.domain.usecase.GetRoomUseCase
 import by.bashlikovv.messenger.domain.usecase.GetRoomsOnlineUseCase
@@ -31,7 +31,7 @@ import org.koin.dsl.module
 
 val domainModule = module {
 
-    single<SignInOnlineUseCase> {
+    factory<SignInOnlineUseCase> {
         SignInOnlineUseCase(usersRepository = get())
     }
 
@@ -114,8 +114,8 @@ val domainModule = module {
         GetUsersOnlineUseCase(usersRepository = get())
     }
 
-    factory<GetMessagesOfflineUseCase> {
-        GetMessagesOfflineUseCase(messagesRepository = get())
+    factory<GetMessagesUseCase> {
+        GetMessagesUseCase(messagesRepository = get())
     }
 
     factory<SendMessageUseCase> {
