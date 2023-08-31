@@ -76,7 +76,7 @@ fun UsersItem(chat: Chat, modifier: Modifier = Modifier, onCreateChat: (Chat) ->
                 .padding(end = 12.dp)
         ) {
             UserImageView(
-                chat.user.userImage.userImageBitmap,
+                chat.user.userImage,
                 username = chat.user.userName
             )
         }
