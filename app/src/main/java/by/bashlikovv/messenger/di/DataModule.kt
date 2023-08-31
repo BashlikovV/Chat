@@ -1,18 +1,15 @@
 package by.bashlikovv.messenger.di
 
+import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.net.ConnectivityManager
 import by.bashlikovv.messenger.data.local.MessengerSQLiteHelper
 import by.bashlikovv.messenger.data.remote.base.OkHttpConfig
-import by.bashlikovv.messenger.data.repository.OkHTTPMessagesRepository
+import by.bashlikovv.messenger.data.repository.MessagesRepository
 import by.bashlikovv.messenger.data.repository.OkHTTPRoomsRepository
 import by.bashlikovv.messenger.data.repository.OkHTTPUsersRepository
 import by.bashlikovv.messenger.data.repository.SQLiteAccountsRepository
 import by.bashlikovv.messenger.data.repository.SharedPreferencesMessengerSettings
-import by.bashlikovv.messenger.domain.repository.IAccountsRepository
-import by.bashlikovv.messenger.domain.repository.IMessagesRepository
-import by.bashlikovv.messenger.domain.repository.IMessengerSettings
-import by.bashlikovv.messenger.domain.repository.IRoomsRepository
-import by.bashlikovv.messenger.domain.repository.IUsersRepository
 import by.bashlikovv.messenger.utils.Constants
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
@@ -25,7 +22,7 @@ val dataModule = module {
         MessengerSQLiteHelper(applicationContext = get()).writableDatabase
     }
 
-    single<IMessengerSettings> {
+    single<SharedPreferencesMessengerSettings> {
         SharedPreferencesMessengerSettings(applicationContext = get())
     }
 
@@ -47,30 +44,35 @@ val dataModule = module {
         )
     }
 
-    single<IAccountsRepository> {
+    single<ConnectivityManager> {
+        val context: Context = get()
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    }
+
+    single<SQLiteAccountsRepository> {
         SQLiteAccountsRepository(
             db = get(),
             messengerSettings = get()
         )
     }
 
-    single<IRoomsRepository> {
+    single<OkHTTPRoomsRepository> {
         OkHTTPRoomsRepository(okHttpConfig = get())
     }
 
-    single<IMessagesRepository> {
-        OkHTTPMessagesRepository(
+    single<MessagesRepository> {
+        MessagesRepository(
             okHttpConfig = get(),
-            sendBookmarkUseCase = get(),
-            deleteBookmarkUseCase = get()
+            accountsRepository = get(),
+            cm = get()
         )
     }
 
-    single<IMessengerSettings> {
+    single<SharedPreferencesMessengerSettings> {
         SharedPreferencesMessengerSettings(applicationContext = get())
     }
 
-    single<IUsersRepository> {
+    single<OkHTTPUsersRepository> {
         OkHTTPUsersRepository(okHttpConfig = get())
     }
 
