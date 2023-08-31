@@ -24,7 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,7 +52,7 @@ fun BottomChatBar(chatViewModel: ChatViewModel = koinViewModel()) {
             chatViewModel.applyImageUri(context = context, imageUri = it ?: Uri.EMPTY)
         }
     )
-    var iconState by rememberSaveable { mutableStateOf(R.drawable.micro) }
+    var iconState by rememberSaveable { mutableIntStateOf(R.drawable.micro) }
     iconState = if (chatUiState.isCanSend) R.drawable.send else  R.drawable.micro
     val iconAnimation by animateIntAsState(targetValue = iconState, label = "")
 
