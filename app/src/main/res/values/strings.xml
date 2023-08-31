@@ -1,4 +1,15 @@
 <resources>
     <string name="app_name">Chat</string>
     <string name="title_activity_chat">ChatActivity</string>
+    <string name="network_error">Network error</string>
+    <string name="authentication_error">Authentication error</string>
+    <string name="authentication_with_message_error">Authentication error %1$s</string>
+    <string name="token_value">token: %1$s</string>
+    <string name="image_not_found_error">Image not found</string>
+    <string name="storage_process_error">Storage process exception</string>
+    <string name="account_already_exists_error">Account already exists</string>
+    <string name="success_message">Success!</string>
+    <string name="is_message_read_description">is_message_read</string>
+    <string name="user_image_description">user image</string>
+    <string name="user_activity_description">user activity</string>
 </resources>

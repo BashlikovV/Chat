@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace 'by.bashlikovv.chat'
-    compileSdk 33
+    namespace 'by.bashlikovv.messenger'
+    compileSdk 34
 
     defaultConfig {
-        applicationId "by.bashlikovv.chat"
-        minSdk 21
-        targetSdk 33
+        applicationId "by.bashlikovv.messenger"
+        minSdk 24
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -23,9 +23,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField 'boolean', 'DEVELOPER_MODE', 'true'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField 'boolean', 'DEVELOPER_MODE', 'false'
         }
     }
     buildTypes {
@@ -34,17 +38,18 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_9
-        targetCompatibility JavaVersion.VERSION_1_9
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     kotlinOptions {
         jvmTarget = '1.8'
     }
     buildFeatures {
         compose true
+        viewBinding = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.2.0'
+        kotlinCompilerExtensionVersion '1.5.2'
     }
     packagingOptions {
         resources {
@@ -54,17 +59,16 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.10.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    def lifecycle_version = "2.6.1"
-    def constraint_layout_compose_version = "1.0.1"
+//    implementation project(path: ':domain')
+//    implementation project(path: ':data')
 
-    implementation 'androidx.core:core-ktx:1.10.0'
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
-    implementation 'androidx.activity:activity-compose:1.7.1'
+    implementation 'androidx.activity:activity-compose:1.7.2'
     implementation "androidx.compose.ui:ui:$compose_ui_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_ui_version"
-    implementation 'androidx.compose.material:material:1.4.3'
+    implementation 'androidx.compose.material:material:1.5.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
@@ -72,18 +76,30 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
 
-    implementation "androidx.compose.material3:material3:1.0.1"
-
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
-
-    implementation "androidx.constraintlayout:constraintlayout-compose:$constraint_layout_compose_version"
-    
+    //Material3
+    implementation("androidx.compose.material3:material3:1.1.1")
+    //ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+    //Constraint layout
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    //Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-
+    //Gson
     implementation("com.google.code.gson:gson:2.10.1")
+    //OkHttp3
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
-
-    implementation "androidx.work:work-runtime-ktx:2.8.1"
+    //Kotlin-bom
     implementation(platform('org.jetbrains.kotlin:kotlin-bom:1.8.21'))
+    //Navigation
+    implementation("androidx.navigation:navigation-compose:2.7.1")
+    //Koin
+//    implementation("io.insert-koin:koin-core:3.4.3")
+//    implementation("io.insert-koin:koin-android:3.4.3")
+//    implementation("io.insert-koin:koin-compose:1.0.4")
+    implementation("io.insert-koin:koin-androidx-compose:3.4.6")
+//    ksp "io.insert-koin:koin-ksp-compiler:$ksp_version"
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    //Leakcanary
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
 }
