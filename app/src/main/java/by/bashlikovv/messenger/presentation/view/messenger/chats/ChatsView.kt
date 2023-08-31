@@ -1,6 +1,5 @@
 package by.bashlikovv.messenger.presentation.view.messenger.chats
 
-import android.graphics.Bitmap
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -38,11 +36,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.messenger.R
 import by.bashlikovv.messenger.domain.model.Chat
 import by.bashlikovv.messenger.presentation.viewmodel.MessengerViewModel
 import by.bashlikovv.messenger.utils.buildTime
+import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
 import java.util.Calendar
 
@@ -72,9 +70,9 @@ fun ChatsView(
 }
 
 @Composable
-fun UserImageView(image: Bitmap, username: String) {
-    Image(
-        bitmap = image.asImageBitmap(),
+fun UserImageView(image: String, username: String) {
+    AsyncImage(
+        model = image,
         contentDescription = "chat with $username",
         contentScale = ContentScale.Crop,
         modifier = Modifier
@@ -204,7 +202,7 @@ fun ChatItem(
                 contentAlignment = Alignment.BottomEnd
             ) {
                 UserImageView(
-                    chat.user.userImage.userImageBitmap,
+                    chat.user.userImage,
                     username = chat.user.userName
                 )
                 AvatarBadge(chat)
