@@ -22,13 +22,13 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
-import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.messenger.R
 import by.bashlikovv.messenger.presentation.viewmodel.ChatViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ChatMenu(chatViewModel: ChatViewModel = viewModel()) {
+fun ChatMenu(chatViewModel: ChatViewModel = koinViewModel()) {
     val dMenuState by chatViewModel.dMenuExpanded.collectAsState()
     val screenWidth = LocalConfiguration.current.screenWidthDp
 
