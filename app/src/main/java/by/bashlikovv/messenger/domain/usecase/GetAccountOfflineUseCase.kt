@@ -1,10 +1,10 @@
 package by.bashlikovv.messenger.domain.usecase
 
-import by.bashlikovv.messenger.domain.repository.IAccountsRepository
-import by.bashlikovv.messenger.presentation.model.Account
+import by.bashlikovv.messenger.data.repository.SQLiteAccountsRepository
+import by.bashlikovv.messenger.data.local.model.Account
 import kotlinx.coroutines.flow.Flow
 
-class GetAccountOfflineUseCase(private val accountsRepository: IAccountsRepository) {
+class GetAccountOfflineUseCase(private val accountsRepository: SQLiteAccountsRepository) {
 
     suspend fun execute(): Flow<Account?> {
         return accountsRepository.getAccount()

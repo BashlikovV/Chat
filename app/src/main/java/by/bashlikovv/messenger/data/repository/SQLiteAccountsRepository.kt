@@ -3,18 +3,16 @@ package by.bashlikovv.messenger.data.repository
 import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.core.content.contentValuesOf
 import by.bashlikovv.messenger.data.AccountAlreadyExistsException
 import by.bashlikovv.messenger.data.AuthException
 import by.bashlikovv.messenger.data.EmptyFieldException
 import by.bashlikovv.messenger.data.StorageException
 import by.bashlikovv.messenger.data.local.contract.MessengerSQLiteContract
+import by.bashlikovv.messenger.data.local.model.Account
 import by.bashlikovv.messenger.domain.model.Message
 import by.bashlikovv.messenger.domain.repository.IAccountsRepository
 import by.bashlikovv.messenger.domain.repository.IMessengerSettings
-import by.bashlikovv.messenger.presentation.model.Account
 import by.bashlikovv.messenger.presentation.model.SignUpData
 import by.bashlikovv.messenger.utils.AsyncLoader
 import kotlinx.coroutines.CoroutineDispatcher
@@ -25,11 +23,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 
 class SQLiteAccountsRepository(
     private val db: SQLiteDatabase,
-    private val messengerSettings: IMessengerSettings
+    private val messengerSettings: SharedPreferencesMessengerSettings
 ) : IAccountsRepository {
 
     private val currentAccountIdFlow = AsyncLoader {
@@ -157,16 +154,13 @@ class SQLiteAccountsRepository(
     override suspend fun addBookmark(bookmark: Message) {
         try {
             val photo = bookmark.imageBitmap
-            val bos = ByteArrayOutputStream()
-            photo.compress(Bitmap.CompressFormat.PNG, 10, bos)
-            val input = bos.toByteArray()
 
             db.insertOrThrow(
                 MessengerSQLiteContract.BookmarksTable.TABLE_NAME,
                 null,
                 contentValuesOf(
                     MessengerSQLiteContract.BookmarksTable.COLUMN_MESSAGE to bookmark.value,
-                    MessengerSQLiteContract.BookmarksTable.COLUMN_IMAGE to input,
+                    MessengerSQLiteContract.BookmarksTable.COLUMN_IMAGE to photo,
                     MessengerSQLiteContract.BookmarksTable.COLUMN_HAS_IMAGE to bookmark.isImage,
                     MessengerSQLiteContract.BookmarksTable.COLUMN_TIME to bookmark.time
                 )
@@ -238,10 +232,9 @@ class SQLiteAccountsRepository(
             cursor.moveToFirst()
             val result = mutableListOf<Message>()
             while (cursor.moveToNext()) {
-                val tmp = cursor.getBlob(
+                val image = cursor.getString(
                     cursor.getColumnIndexOrThrow(MessengerSQLiteContract.BookmarksTable.COLUMN_IMAGE)
                 )
-                val bitmap = BitmapFactory.decodeByteArray(tmp, 0, tmp.size)
                 result.add(
                     Message(
                         value = cursor.getString(
@@ -250,7 +243,7 @@ class SQLiteAccountsRepository(
                         isImage = cursor.getInt(
                             cursor.getColumnIndexOrThrow(MessengerSQLiteContract.BookmarksTable.COLUMN_HAS_IMAGE)
                         ) > 0,
-                        imageBitmap = bitmap ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888),
+                        imageBitmap = image ?: "no image",
                         time = cursor.getString(
                             cursor.getColumnIndexOrThrow(MessengerSQLiteContract.BookmarksTable.COLUMN_TIME)
                         )

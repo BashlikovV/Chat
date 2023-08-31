@@ -1,7 +1,6 @@
 package by.bashlikovv.messenger.domain.model
 
 import android.os.Parcelable
-import by.bashlikovv.messenger.presentation.view.login.UserImage
 import kotlinx.parcelize.Parcelize
 import java.util.Date
 
@@ -13,5 +12,5 @@ data class User(
     val userPassword: String = "",
     val userToken: String = "",
     val lastConnectionTime: Date = Date(),
-    val userImage: UserImage = UserImage()
+    val userImage: String = ""
 ) : Parcelable

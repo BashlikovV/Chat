@@ -1,7 +1,7 @@
 package by.bashlikovv.messenger.domain.repository
 
 import by.bashlikovv.messenger.domain.model.Message
-import by.bashlikovv.messenger.presentation.model.Account
+import by.bashlikovv.messenger.data.local.model.Account
 import by.bashlikovv.messenger.presentation.model.SignUpData
 import kotlinx.coroutines.flow.Flow
 

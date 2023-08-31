@@ -1,10 +1,13 @@
 package by.bashlikovv.messenger.domain.usecase
 
 import android.graphics.Bitmap
-import by.bashlikovv.messenger.domain.repository.IMessagesRepository
+import android.os.Build
+import androidx.annotation.RequiresApi
+import by.bashlikovv.messenger.data.repository.MessagesRepository
 
-class SendImageUseCase(private val messagesRepository: IMessagesRepository) {
+class SendImageUseCase(private val messagesRepository: MessagesRepository) {
 
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun execute(
         image: Bitmap,
         room: String,

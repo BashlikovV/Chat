@@ -1,4 +1,4 @@
-package by.bashlikovv.messenger.presentation.model
+package by.bashlikovv.messenger.data.local.model
 
 data class Account(
     val id: Long,

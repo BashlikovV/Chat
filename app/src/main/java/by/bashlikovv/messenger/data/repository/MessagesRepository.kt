@@ -1,7 +1,8 @@
 package by.bashlikovv.messenger.data.repository
 
 import android.graphics.Bitmap
-import android.net.Uri
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.annotation.RequiresApi
 import by.bashlikovv.messenger.data.remote.OkHttpMessagesSource
@@ -17,20 +18,17 @@ import by.bashlikovv.messenger.domain.model.Message
 import by.bashlikovv.messenger.domain.model.Pagination
 import by.bashlikovv.messenger.domain.model.User
 import by.bashlikovv.messenger.domain.repository.IMessagesRepository
-import by.bashlikovv.messenger.domain.usecase.DeleteBookmarkUseCase
-import by.bashlikovv.messenger.domain.usecase.SendBookmarkUseCase
 import by.bashlikovv.messenger.presentation.view.chat.ChatUiState
-import by.bashlikovv.messenger.presentation.view.login.UserImage
 import by.bashlikovv.messenger.utils.SecurityUtilsImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-class OkHTTPMessagesRepository(
+class MessagesRepository(
     okHttpConfig: OkHttpConfig,
-    private val sendBookmarkUseCase: SendBookmarkUseCase,
-    private val deleteBookmarkUseCase: DeleteBookmarkUseCase
+    private val cm: ConnectivityManager?,
+    private val accountsRepository: SQLiteAccountsRepository
 ): IMessagesRepository {
 
     private val messagesSource: OkHttpMessagesSource = OkHttpMessagesSource(okHttpConfig)
@@ -38,28 +36,41 @@ class OkHTTPMessagesRepository(
     private val roomsSource: OkHttpRoomsSource = OkHttpRoomsSource(okHttpConfig)
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override suspend fun getMessagesFromDb(
+    override suspend fun getMessages(
         chatUiState: ChatUiState
     ): Chat {
+        return if (isConnected()) {
+            getMessagesOnline(chatUiState)
+        } else {
+            getMessagesOffline(chatUiState)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun getMessagesOnline(chatUiState: ChatUiState): Chat {
         var chatData = chatUiState.chat
         try {
             val getMessagesResult = messagesSource.getRoomMessages(
                 chatUiState.chat.token,
                 Pagination().getRange()
             )
-            val  newValue = getMessagesResult.serverMessages.castListOfMessages()
+            val newValue = getMessagesResult.serverMessages.castListOfMessages()
             chatData = chatData.copy(messages = newValue)
         } catch (_: Exception) {  }
 
         return chatData
     }
 
+    private suspend fun getMessagesOffline(chatUiState: ChatUiState): Chat {
+        TODO()
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun List<ServerMessage>.castListOfMessages(): List<Message> {
         return this.map {
-            var image: Bitmap? = null
+            var image: String? = null
             if (!it.image.contains("no image") && it.image.isNotEmpty()) {
-                image = messagesSource.getImage(it.image)
+                image = it.image
             }
 
             Message(
@@ -73,21 +84,21 @@ class OkHTTPMessagesRepository(
                 isRead = it.isRead,
                 from = it.from,
                 isImage = image != null,
-                imageBitmap = image ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+                imageBitmap = image ?: "no image"
             )
         }
     }
 
     override suspend fun onSendBookmark(bookmark: Message) {
-        sendBookmarkUseCase.execute(bookmark = bookmark)
+        accountsRepository.addBookmark(bookmark)
     }
 
     override suspend fun onDeleteBookmark(bookmark: Message) {
-        deleteBookmarkUseCase.execute(bookmark = bookmark)
+        accountsRepository.deleteBookmark(bookmark)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun onSend(
+    override suspend fun sendMessage(
         message: Message,
         chatUiState: ChatUiState,
         me: ServerUser
@@ -183,13 +194,6 @@ class OkHTTPMessagesRepository(
         messagesSource.readRoomMessages(token)
     }
 
-    override suspend fun getImage(uri: String): UserImage {
-        return UserImage(
-            messagesSource.getImage(uri),
-            userImageUri = Uri.parse(uri)
-        )
-    }
-
     override suspend fun getRoomMessages(
         room: String,
         pagination: IntRange
@@ -211,4 +215,19 @@ class OkHTTPMessagesRepository(
         return messagesSource.sendImage(image, room, owner, isSignUp)
     }
 
+    private fun isConnected(): Boolean {
+        var isConnected = false
+        cm?.run {
+            cm.getNetworkCapabilities(cm.activeNetwork)?.run {
+                isConnected = when {
+                    hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                    hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+                    hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                    else -> false
+                }
+            }
+        }
+
+        return isConnected
+    }
 }

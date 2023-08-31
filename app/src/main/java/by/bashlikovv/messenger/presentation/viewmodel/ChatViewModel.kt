@@ -1,18 +1,16 @@
 package by.bashlikovv.messenger.presentation.viewmodel
 
 import android.content.Context
-import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
-import android.provider.MediaStore.Images.Media.getBitmap
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.bashlikovv.messenger.data.remote.model.ServerMessage
@@ -26,15 +24,14 @@ import by.bashlikovv.messenger.domain.usecase.DeleteBookmarkUseCase
 import by.bashlikovv.messenger.domain.usecase.DeleteChatOnlineUseCase
 import by.bashlikovv.messenger.domain.usecase.DeleteMessageUseCase
 import by.bashlikovv.messenger.domain.usecase.GetAccountOfflineUseCase
-import by.bashlikovv.messenger.domain.usecase.GetMessagesOfflineUseCase
 import by.bashlikovv.messenger.domain.usecase.GetMessagesOnlineUseCase
+import by.bashlikovv.messenger.domain.usecase.GetMessagesUseCase
 import by.bashlikovv.messenger.domain.usecase.GetRoomUseCase
 import by.bashlikovv.messenger.domain.usecase.GetUserImageOnlineUseCase
 import by.bashlikovv.messenger.domain.usecase.SendBookmarkUseCase
 import by.bashlikovv.messenger.domain.usecase.SendImageUseCase
 import by.bashlikovv.messenger.domain.usecase.SendMessageUseCase
 import by.bashlikovv.messenger.presentation.view.chat.ChatUiState
-import by.bashlikovv.messenger.presentation.view.login.UserImage
 import by.bashlikovv.messenger.utils.SecurityUtilsImpl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,7 +46,7 @@ class ChatViewModel(
     private val getRoomMessagesOnlineUseCase: GetMessagesOnlineUseCase,
     private val getAccountOfflineUseCase: GetAccountOfflineUseCase,
     private val getUserImageOnlineUseCase: GetUserImageOnlineUseCase,
-    private val getMessagesOfflineUseCase: GetMessagesOfflineUseCase,
+    private val getMessagesUseCase: GetMessagesUseCase,
     private val getMessageImageOnlineUseCase: GetUserImageOnlineUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
     private val getRoomUseCase: GetRoomUseCase,
@@ -158,24 +155,25 @@ class ChatViewModel(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getMessagesFromDb() {
         _chatUiState.update {
             it.copy(chat = it.chat.copy(user = it.chat.user.copy(
                 userImage = getUserImageOnlineUseCase.execute(
-                    uri = _chatUiState.value.chat.user.userImage.userImageUri.encodedPath.toString()
+                    uri = _chatUiState.value.chat.user.userImage
                 )
             )))
         }
-        val chatData = getMessagesOfflineUseCase.execute(_chatUiState.value)
+        val chatData = getMessagesUseCase.execute(_chatUiState.value)
         applyChatData(chatData)
         _lazyListState.update { LazyListState(chatData.messages.size) }
     }
 
     private suspend fun List<ServerMessage>.castListOfMessages(): List<Message> {
         return this.map {
-            var image: Bitmap? = null
+            var image: String? = null
             if (!it.image.contains("no image") && it.image.isNotEmpty()) {
-                image = getMessageImageOnlineUseCase.execute(it.image).userImageBitmap
+                image = getMessageImageOnlineUseCase.execute(it.image)
             }
 
             Message(
@@ -189,7 +187,7 @@ class ChatViewModel(
                 isRead = it.isRead,
                 from = it.from,
                 isImage = image != null,
-                imageBitmap = image ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+                imageBitmap = image ?: ""
             )
         }
     }
@@ -228,32 +226,31 @@ class ChatViewModel(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun onActionSend() {
-        val newValue = sendMessageUseCase.execute(
-            message = Message(
-                value = chatInputState.value,
-                user = User(
-                    userId = me.id.toLong(),
-                    userName = me.username,
-                    userEmail = me.email,
-                    userToken = SecurityUtilsImpl().bytesToString(me.token),
-                    userImage = UserImage(
-                        userImageUri = me.image.decodeToString().toUri(),
-                        userImageUrl = me.image.decodeToString()
-                    )
+        viewModelScope.launch {
+            val newValue = sendMessageUseCase.execute(
+                message = Message(
+                    value = chatInputState.value,
+                    user = User(
+                        userId = me.id.toLong(),
+                        userName = me.username,
+                        userEmail = me.email,
+                        userToken = SecurityUtilsImpl().bytesToString(me.token),
+                        userImage = me.image.decodeToString()
+                    ),
+                    time = Calendar.getInstance().time.toString(),
+                    isRead = true
                 ),
-                time = Calendar.getInstance().time.toString(),
-                isRead = true
-            ),
-            chatUiState = _chatUiState.value,
-            me = me
-        )
-        clearInput()
-        _chatUiState.update {
-            it.copy(
-                chat = _chatUiState.value.chat.copy(
-                    messages = newValue
-                )
+                chatUiState = _chatUiState.value,
+                me = me
             )
+            clearInput()
+            _chatUiState.update {
+                it.copy(
+                    chat = _chatUiState.value.chat.copy(
+                        messages = newValue
+                    )
+                )
+            }
         }
         _lazyListState.update { LazyListState(_chatUiState.value.chat.messages.size) }
     }
@@ -325,12 +322,12 @@ class ChatViewModel(
         return result
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun applyImageUri(imageUri: Uri, context: Context) {
         try {
-            val bitmap = getBitmap(context.contentResolver, imageUri)
             val message = Message(
                 isImage = true,
-                imageBitmap = bitmap,
+                imageBitmap = imageUri.toString(),
                 value = "",
                 time = Calendar.getInstance().time.toString(),
                 from = SecurityUtilsImpl().bytesToString(me.token)
@@ -345,7 +342,7 @@ class ChatViewModel(
             }
             viewModelScope.launch(Dispatchers.IO) {
                 sendImageUseCase.execute(
-                    bitmap,
+                    BitmapFactory.decodeFile(imageUri.encodedPath),
                     _chatUiState.value.chat.token,
                     SecurityUtilsImpl().bytesToString(me.token),
                     false

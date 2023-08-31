@@ -2,11 +2,10 @@ package by.bashlikovv.messenger.domain.repository
 
 import android.graphics.Bitmap
 import by.bashlikovv.messenger.data.remote.model.ServerUser
-import by.bashlikovv.messenger.presentation.view.login.UserImage
 
 interface IUsersRepository {
 
-    suspend fun getUserImage(uri: String): UserImage
+    suspend fun getUserImage(uri: String): String
 
     suspend fun getUsers(token: String): List<ServerUser>
 

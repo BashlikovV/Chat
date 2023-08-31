@@ -36,9 +36,9 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class LogInActivity : ComponentActivity() {
-    private val logInViewModel: LogInViewModel by viewModel()
+    private val logInViewModel: LogInViewModel by viewModel<LogInViewModel>()
 
-    private val checkSignedInUseCase: CheckSignedInUseCase by inject()
+    private val checkSignedInUseCase: CheckSignedInUseCase by inject<CheckSignedInUseCase>()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {

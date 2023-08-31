@@ -32,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -41,6 +40,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import by.bashlikovv.messenger.R
 import by.bashlikovv.messenger.presentation.viewmodel.LogInViewModel
+import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -52,7 +52,7 @@ fun LogInView(logInViewModel: LogInViewModel = koinViewModel()) {
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = {
-            logInViewModel.applyUserImage(context, it ?: Uri.EMPTY)
+            logInViewModel.applyUserImage(context)
         }
     )
 
@@ -73,7 +73,7 @@ fun LogInView(logInViewModel: LogInViewModel = koinViewModel()) {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            if (logInUiState.userImageBitmap.userImageUrl == "") {
+                            if (logInUiState.userImageBitmap == "") {
                                 DefaultImage(cameraLauncher)
                             } else {
                                 UserImage(res = cameraLauncher)
@@ -194,8 +194,8 @@ fun DefaultImage(res: ManagedActivityResultLauncher<String, Uri?>) {
 fun UserImage(logInViewModel: LogInViewModel = koinViewModel(), res: ManagedActivityResultLauncher<String, Uri?>) {
     val logInUiState by logInViewModel.logInUiState.collectAsState()
 
-    Image(
-        bitmap = logInUiState.userImageBitmap.userImageBitmap.asImageBitmap(),
+    AsyncImage(
+        model = logInUiState.userImageBitmap,
         contentDescription = "Your image",
         contentScale = ContentScale.Crop,
         modifier = Modifier

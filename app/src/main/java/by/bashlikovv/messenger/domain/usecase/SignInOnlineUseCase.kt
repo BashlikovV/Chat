@@ -1,8 +1,8 @@
 package by.bashlikovv.messenger.domain.usecase
 
-import by.bashlikovv.messenger.domain.repository.IUsersRepository
+import by.bashlikovv.messenger.data.repository.OkHTTPUsersRepository
 
-class SignInOnlineUseCase(private val usersRepository: IUsersRepository) {
+class SignInOnlineUseCase(private val usersRepository: OkHTTPUsersRepository) {
 
     suspend fun execute(email: String, password: String): String {
         return usersRepository.signIn(email, password)

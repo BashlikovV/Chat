@@ -1,20 +1,19 @@
 package by.bashlikovv.messenger.domain.repository
 
 import android.graphics.Bitmap
-import by.bashlikovv.messenger.data.remote.model.GetServerMessagesResult
-import by.bashlikovv.messenger.domain.model.Chat
-import by.bashlikovv.messenger.domain.model.Message
-import by.bashlikovv.messenger.domain.model.Pagination
 import by.bashlikovv.messenger.data.remote.model.GetMessagesResult
-import by.bashlikovv.messenger.presentation.view.chat.ChatUiState
-import by.bashlikovv.messenger.presentation.view.login.UserImage
+import by.bashlikovv.messenger.data.remote.model.GetServerMessagesResult
 import by.bashlikovv.messenger.data.remote.model.ServerMessage
 import by.bashlikovv.messenger.data.remote.model.ServerRoom
 import by.bashlikovv.messenger.data.remote.model.ServerUser
+import by.bashlikovv.messenger.domain.model.Chat
+import by.bashlikovv.messenger.domain.model.Message
+import by.bashlikovv.messenger.domain.model.Pagination
+import by.bashlikovv.messenger.presentation.view.chat.ChatUiState
 
 interface IMessagesRepository {
 
-    suspend fun getMessagesFromDb(chatUiState: ChatUiState): Chat
+    suspend fun getMessages(chatUiState: ChatUiState): Chat
 
     suspend fun List<ServerMessage>.castListOfMessages(): List<Message>
 
@@ -22,7 +21,7 @@ interface IMessagesRepository {
 
     suspend fun onDeleteBookmark(bookmark: Message)
 
-    fun onSend(
+    suspend fun sendMessage(
         message: Message,
         chatUiState: ChatUiState,
         me: ServerUser
@@ -35,8 +34,6 @@ interface IMessagesRepository {
     ): GetMessagesResult
 
     suspend fun readRoomMessages(token: String)
-
-    suspend fun getImage(uri: String): UserImage
 
     suspend fun getRoomMessages(
         room: String,

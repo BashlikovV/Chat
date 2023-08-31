@@ -1,11 +1,10 @@
 package by.bashlikovv.messenger.domain.usecase
 
-import by.bashlikovv.messenger.domain.repository.IUsersRepository
-import by.bashlikovv.messenger.presentation.view.login.UserImage
+import by.bashlikovv.messenger.data.repository.OkHTTPUsersRepository
 
-class GetUserImageOnlineUseCase(private val usersRepository: IUsersRepository) {
+class GetUserImageOnlineUseCase(private val usersRepository: OkHTTPUsersRepository) {
 
-    suspend fun execute(uri: String): UserImage {
+    suspend fun execute(uri: String): String {
         return usersRepository.getUserImage(uri)
     }
 }
