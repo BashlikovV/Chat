@@ -41,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
@@ -52,10 +51,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
-import androidx.lifecycle.viewmodel.compose.viewModel
 import by.bashlikovv.messenger.R
 import by.bashlikovv.messenger.presentation.view.LogInActivity
 import by.bashlikovv.messenger.presentation.viewmodel.MessengerViewModel
+import coil.compose.AsyncImage
+import org.koin.androidx.compose.koinViewModel
 
 private fun getDrawerContentConstraints(): ConstraintSet {
     return ConstraintSet {
@@ -167,14 +167,14 @@ fun MessengerDrawerContent() {
 }
 
 @Composable
-fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
+fun TopContent(messengerViewModel: MessengerViewModel = koinViewModel()) {
     val messengerUiState by messengerViewModel.messengerUiState.collectAsState()
     val me by messengerViewModel.me.collectAsState()
     var imageSize by remember { mutableStateOf(75.dp) }
     val size by animateDpAsState(targetValue = imageSize, label = "")
 
-    Image(
-        bitmap = me.userImage.userImageBitmap.asImageBitmap(),
+    AsyncImage(
+        model = me.userImage,
         contentDescription = "user image",
         contentScale = ContentScale.Crop,
         modifier = Modifier
@@ -215,7 +215,7 @@ fun TopContent(messengerViewModel: MessengerViewModel = viewModel()) {
 }
 
 @Composable
-fun BottomContent(messengerViewModel: MessengerViewModel = viewModel()) {
+fun BottomContent(messengerViewModel: MessengerViewModel = koinViewModel()) {
     val context = LocalContext.current
     val activity = (LocalContext.current as? Activity)
     var settingsVisibility by rememberSaveable { mutableStateOf(false) }
