@@ -1,16 +1,14 @@
 package by.bashlikovv.messenger.presentation.viewmodel
 
 import android.content.Context
-import android.net.Uri
+import android.graphics.BitmapFactory
 import android.os.Build
-import android.provider.MediaStore
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import by.bashlikovv.messenger.R
 import by.bashlikovv.messenger.data.AccountAlreadyExistsException
 import by.bashlikovv.messenger.data.EmptyFieldException
 import by.bashlikovv.messenger.data.PasswordMismatchException
@@ -23,14 +21,12 @@ import by.bashlikovv.messenger.domain.usecase.SignUpOfflineUseCase
 import by.bashlikovv.messenger.domain.usecase.SignUpOnlineUseCase
 import by.bashlikovv.messenger.presentation.model.SignUpData
 import by.bashlikovv.messenger.presentation.view.login.LogInUiState
-import by.bashlikovv.messenger.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.util.*
 
 class LogInViewModel(
     private val signInOnlineUseCase: SignInOnlineUseCase,
@@ -64,15 +60,9 @@ class LogInViewModel(
         _logInUiState.update { it.copy(isHaveAccount = newValue) }
     }
 
-    fun applyUserImage(context: Context, imageUri: Uri) {
+    fun applyUserImage(context: Context) {
         try {
-            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri).asImageBitmap()
-            val value = _logInUiState.value.userImageBitmap.copy(
-                userImageUri = imageUri,
-                userImageBitmap = bitmap.asAndroidBitmap(),
-                userImageUrl = imageUri.path.toString()
-            )
-            _logInUiState.update { it.copy(userImageBitmap = value) }
+            _logInUiState.update { it.copy(userImageBitmap = _logInUiState.value.userImageBitmap) }
         } catch (e: Exception) {
             showToast(context, R.string.image_not_found_error)
         }
@@ -152,7 +142,7 @@ class LogInViewModel(
                 email = signUpData.email,
                 password = signUpData.password,
                 username = signUpData.username,
-                image = _logInUiState.value.userImageBitmap.userImageBitmap
+                image = BitmapFactory.decodeFile(_logInUiState.value.userImageBitmap)
             )
 //            _logInUiState.update { it.copy(token = Repositories.myToken) }
             if (!_logInUiState.value.token.contains("500")) {
