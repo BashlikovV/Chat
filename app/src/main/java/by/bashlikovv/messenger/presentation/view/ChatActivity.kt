@@ -34,7 +34,7 @@ class ChatActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val chatViewModel: ChatViewModel by viewModel()
+        val chatViewModel: ChatViewModel by viewModel<ChatViewModel>()
         backPressListener(chatViewModel)
         val darkTheme = intent.extras?.getBoolean(MessengerActivity.DARK_THEME)
         val data = intent.extras?.getParcelable<Chat>(MessengerActivity.CHAT)
