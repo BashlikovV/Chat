@@ -1,9 +1,9 @@
 package by.bashlikovv.messenger.presentation.viewmodel
 
+import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.material.DrawerState
@@ -11,6 +11,7 @@ import androidx.compose.material.DrawerValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import by.bashlikovv.messenger.R
 import by.bashlikovv.messenger.data.remote.model.ServerRoom
 import by.bashlikovv.messenger.domain.model.Chat
 import by.bashlikovv.messenger.domain.model.Message
@@ -29,10 +30,8 @@ import by.bashlikovv.messenger.domain.usecase.LogOutOfflineUseCase
 import by.bashlikovv.messenger.domain.usecase.ReadRoomMessagesOnlineUseCase
 import by.bashlikovv.messenger.domain.usecase.SetDarkThemeUseCase
 import by.bashlikovv.messenger.domain.usecase.UpdateUsernameUseCase
-import by.bashlikovv.messenger.presentation.view.login.UserImage
 import by.bashlikovv.messenger.presentation.view.messenger.MessengerUiState
 import by.bashlikovv.messenger.utils.SecurityUtilsImpl
-import by.bashlikovv.messenger.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,8 +77,12 @@ class MessengerViewModel(
     private val _me = MutableStateFlow(User())
     var me = _me.asStateFlow()
 
-    private val bookmarkBitmap by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        R.drawable.bookmark.getBitmapFromImage(context)
+    private val bookmarkBitmap by lazy {
+        val rId = R.drawable.bookmark
+        ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
+                context.resources.getResourcePackageName(rId) + '/' +
+                context.resources.getResourceTypeName(rId) + '/' +
+                context.resources.getResourceEntryName(rId)
     }
 
     /**
@@ -229,7 +232,6 @@ class MessengerViewModel(
                 getAccountOfflineUseCase.execute().collectLatest { data ->
                     val user = getUserOnlineUseCase.execute(data?.token ?: "")
                     val userBitmapImageUrl = user.image.decodeToString()
-                    val userImage = getUserImageOnlineUseCase.execute(userBitmapImageUrl)
                     continuation.resumeWith(
                         Result.success(
                             User(
@@ -237,7 +239,7 @@ class MessengerViewModel(
                                 userName = data?.username ?: "unknown user",
                                 userEmail = data?.email ?: "unknown email",
                                 userToken = data?.token ?: "token error",
-                                userImage = userImage
+                                userImage = userBitmapImageUrl
                             )
                         )
                     )
@@ -273,8 +275,8 @@ class MessengerViewModel(
         }
     }
 
-    private suspend fun getImage(imageUri: String): Bitmap {
-        return getUserImageOnlineUseCase.execute(imageUri).userImageBitmap
+    private suspend fun getImage(imageUri: String): String {
+        return getUserImageOnlineUseCase.execute(imageUri)
     }
 
     fun setUpdateVisibility(newValue: Boolean) {
@@ -309,9 +311,7 @@ class MessengerViewModel(
             val data = listOf(
                 Chat(
                     user = User(
-                        userName = "Bookmarks", userImage = UserImage(
-                            userImageBitmap = bookmarkBitmap
-                        )
+                        userName = "Bookmarks", userImage = bookmarkBitmap
                     ),
                     messages = tmp
                 )
@@ -339,6 +339,7 @@ class MessengerViewModel(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun ServerRoom.castServerRoom(): Chat {
         val user = if (this.user2.username == getUser().userName) {
             this.user1
@@ -351,10 +352,6 @@ class MessengerViewModel(
             firstUserName = getUser().userName
         )
         val messages = tmp.messages
-        val image = UserImage(
-            userImageBitmap = getImage(user.image.decodeToString()),
-            userImageUri = Uri.parse(user.image.decodeToString())
-        )
         val time = try {
             Date(user.createdAt.toLong())
         } catch (e: Exception) {
@@ -365,7 +362,7 @@ class MessengerViewModel(
             user = User(
                 userName = user.username,
                 userToken = SecurityUtilsImpl().bytesToString(user.token),
-                userImage = image,
+                userImage = user.image.decodeToString(),
                 lastConnectionTime = time
             ),
             messages = messages,
